@@ -262,9 +262,19 @@
                       Delicious fresh treats at Sweet Treats Bakery! Grab your custom cakes, cookies & cupcakes today.
                     </p>
                     
-                    <div class="social-image-block">
+                    <div class="social-image-block" id="social-image-block">
                       <img src="ad-banner.png" alt="Ad Campaign Banner" id="mock-social-image">
+                      <div class="image-upload-overlay" id="upload-overlay">
+                        <div class="overlay-content">
+                          <i class="fa-solid fa-cloud-arrow-up"></i>
+                          <span>Upload Custom Banner</span>
+                        </div>
+                      </div>
+                      <button type="button" class="reset-banner-btn hidden" id="reset-banner-btn" title="Reset to AI Banner">
+                        <i class="fa-solid fa-rotate-left"></i> Reset
+                      </button>
                     </div>
+                    <input type="file" id="manual-banner-input" accept="image/*" style="display: none;">
                     
                     <div class="social-details-block">
                       <div class="social-details-text">

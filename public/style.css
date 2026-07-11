@@ -1051,12 +1051,14 @@ select {
 }
 
 .social-image-block {
+  position: relative;
   width: 100%;
   max-height: 250px;
   overflow: hidden;
   border-top: 1px solid #e4e6eb;
   border-bottom: 1px solid #e4e6eb;
   background: #f0f2f5;
+  cursor: pointer;
 }
 
 .social-image-block img {
@@ -1064,6 +1066,78 @@ select {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* Custom Banner Upload Overlay */
+.image-upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+}
+
+.social-image-block:hover .image-upload-overlay {
+  opacity: 1;
+}
+
+.overlay-content {
+  text-align: center;
+  color: #ffffff;
+  font-family: var(--font-family);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.overlay-content i {
+  font-size: 2rem;
+  color: var(--accent-cyan);
+}
+
+.overlay-content span {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Reset Banner Button */
+.reset-banner-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(17, 24, 39, 0.85);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 3;
+  transition: var(--transition-smooth);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.reset-banner-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+.reset-banner-btn.hidden {
+  display: none;
 }
 
 .social-details-block {

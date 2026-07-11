@@ -63,6 +63,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const regenerateBtn = document.getElementById('regenerate-btn');
   const approveBtn = document.getElementById('approve-btn');
 
+  // Manual Upload Elements
+  const socialImageBlock = document.getElementById('social-image-block');
+  const manualBannerInput = document.getElementById('manual-banner-input');
+  const resetBannerBtn = document.getElementById('reset-banner-btn');
+
   // Internal connection states (synced with localStorage)
   let connections = {
     'Google Search': null, // holds mock account ID when connected, e.g. 'act_google_1283'
@@ -134,6 +139,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
     lastSubmittedParams = params;
     await triggerCampaignGeneration(params);
+  });
+
+  // Manual banner upload event listeners
+  socialImageBlock.addEventListener('click', () => {
+    manualBannerInput.click();
+  });
+
+  manualBannerInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64Data = event.target.result;
+        mockSocialImage.src = base64Data;
+        
+        if (currentCampaignPayload && currentCampaignPayload.ad_creative) {
+          currentCampaignPayload.ad_creative.manual_banner_base64 = base64Data;
+        }
+        resetBannerBtn.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  resetBannerBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent triggering file input click on the container
+    manualBannerInput.value = '';
+    
+    if (currentCampaignPayload && currentCampaignPayload.ad_creative) {
+      delete currentCampaignPayload.ad_creative.manual_banner_base64;
+      
+      const generatedUrl = currentCampaignPayload.ad_creative.generated_image_url;
+      if (generatedUrl) {
+        mockSocialImage.src = generatedUrl;
+      } else {
+        const imagePrompt = currentCampaignPayload.ad_creative.image_prompt;
+        if (imagePrompt) {
+          const urlEncodedPrompt = encodeURIComponent(imagePrompt);
+          mockSocialImage.src = `https://image.pollinations.ai/prompt/${urlEncodedPrompt}?width=800&height=450&nologo=true&seed=${Math.floor(Math.random() * 100000)}`;
+        } else {
+          mockSocialImage.src = 'ad-banner.png';
+        }
+      }
+    } else {
+      mockSocialImage.src = 'ad-banner.png';
+    }
+    resetBannerBtn.classList.add('hidden');
   });
 
   // Regenerate Campaign listener
@@ -371,12 +423,23 @@ document.addEventListener('DOMContentLoaded', () => {
     mockSocialHeadline.textContent = headlines[0] || 'Exclusive Campaign Offer';
     mockSocialCta.textContent = campaign.ad_creative?.call_to_action || 'Learn More';
 
+    // Clear manual banner elements upon new campaign generation
+    if (resetBannerBtn) resetBannerBtn.classList.add('hidden');
+    if (manualBannerInput) manualBannerInput.value = '';
+    if (campaign.ad_creative) {
+      delete campaign.ad_creative.manual_banner_base64;
+    }
+
     // Dynamically update the social ad mockup poster using Pollinations AI based on Gemini's image_prompt
     const mockSocialImage = document.getElementById('mock-social-image');
     const imagePrompt = campaign.ad_creative?.image_prompt;
     if (mockSocialImage && imagePrompt) {
       const urlEncodedPrompt = encodeURIComponent(imagePrompt);
-      mockSocialImage.src = `https://image.pollinations.ai/prompt/${urlEncodedPrompt}?width=800&height=450&nologo=true&seed=${Math.floor(Math.random() * 100000)}`;
+      const generatedUrl = `https://image.pollinations.ai/prompt/${urlEncodedPrompt}?width=800&height=450&nologo=true&seed=${Math.floor(Math.random() * 100000)}`;
+      campaign.ad_creative.generated_image_url = generatedUrl;
+      mockSocialImage.src = generatedUrl;
+    } else {
+      mockSocialImage.src = 'ad-banner.png';
     }
 
     strategicRationaleText.textContent = campaign.strategic_rationale || 'N/A';
