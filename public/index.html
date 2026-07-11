@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AstraAds - Automated Digital Ad Campaign Manager</title>
+  <meta name="description" content="Generate, validate, and launch high-performance digital ad campaigns using advanced AI and human-in-the-loop review.">
+  <!-- Google Fonts: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo">
+        <i class="fa-solid fa-wand-magic-sparkles logo-icon"></i>
+        <span>Astra<span class="logo-accent">Ads</span></span>
+      </div>
+      <div class="header-tagline">Autonomous Ad Ops for Small Businesses</div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="app-workspace">
+      <!-- Left Panel: Onboarding Form -->
+      <section class="panel onboarding-panel" id="onboarding-section">
+        <div class="panel-header">
+          <h2><i class="fa-solid fa-sliders header-icon"></i> Campaign Parameters</h2>
+          <p class="panel-subtitle">Define your business profile and objectives to build a tailor-made ad campaign.</p>
+        </div>
+
+        <form id="onboarding-form" class="onboarding-form">
+          <div class="form-group">
+            <label for="businessName">Business Name</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-briefcase input-icon"></i>
+              <input type="text" id="businessName" name="businessName" placeholder="e.g. Apex Bakery, FitLife Studio" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="products">Products & Services</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-box-open input-icon"></i>
+              <textarea id="products" name="products" rows="3" placeholder="e.g. Artisan sourdough breads, custom cakes, and morning pastries." required></textarea>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="targetAudience">Target Audience</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-users input-icon"></i>
+              <input type="text" id="targetAudience" name="targetAudience" placeholder="e.g. Local foodies, organic-only shoppers, wedding planners" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Target Ad Channels</label>
+            <div class="checkbox-group-row">
+              <label class="checkbox-container">
+                <input type="checkbox" name="platforms" value="Google Search" checked>
+                <span class="checkbox-custom"></span>
+                <span class="checkbox-label"><i class="fa-brands fa-google"></i> Google</span>
+              </label>
+              <label class="checkbox-container">
+                <input type="checkbox" name="platforms" value="Facebook / Instagram" checked>
+                <span class="checkbox-custom"></span>
+                <span class="checkbox-label"><i class="fa-brands fa-facebook"></i> Meta Social</span>
+              </label>
+              <label class="checkbox-container">
+                <input type="checkbox" name="platforms" value="LinkedIn">
+                <span class="checkbox-custom"></span>
+                <span class="checkbox-label"><i class="fa-brands fa-linkedin"></i> LinkedIn</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Connected Ad Accounts Section -->
+          <div class="form-group">
+            <label>🔌 Connected Ad Accounts</label>
+            <div class="connection-items">
+              <div class="connection-item" data-platform="Google Search">
+                <span class="platform-name"><i class="fa-brands fa-google"></i> Google Ads</span>
+                <div class="connection-status-row">
+                  <span class="status-badge status-disconnected" id="status-text-google">Disconnected</span>
+                  <button type="button" class="btn-connect" id="connect-google">Connect</button>
+                </div>
+              </div>
+              <div class="connection-item" data-platform="Facebook / Instagram">
+                <span class="platform-name"><i class="fa-brands fa-facebook"></i> Meta Ads</span>
+                <div class="connection-status-row">
+                  <span class="status-badge status-disconnected" id="status-text-meta">Disconnected</span>
+                  <button type="button" class="btn-connect" id="connect-meta">Connect</button>
+                </div>
+              </div>
+              <div class="connection-item" data-platform="LinkedIn">
+                <span class="platform-name"><i class="fa-brands fa-linkedin"></i> LinkedIn Ads</span>
+                <div class="connection-status-row">
+                  <span class="status-badge status-disconnected" id="status-text-linkedin">Disconnected</span>
+                  <button type="button" class="btn-connect" id="connect-linkedin">Connect</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group-row">
+            <div class="form-group">
+              <label for="monthlyBudget">Monthly Budget ($)</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-dollar-sign input-icon"></i>
+                <input type="number" id="monthlyBudget" name="monthlyBudget" min="10" placeholder="e.g. 900" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="primaryGoal">Primary Goal</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-bullseye input-icon"></i>
+                <select id="primaryGoal" name="primaryGoal" required>
+                  <option value="" disabled selected>Select Goal</option>
+                  <option value="Lead Generation">Lead Generation</option>
+                  <option value="Online Sales / Conversions">Online Sales</option>
+                  <option value="Store Visits / Local Traffic">Store Visits</option>
+                  <option value="Brand Awareness">Brand Awareness</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" id="submit-btn" class="btn btn-primary btn-glowing">
+            <span>Generate Campaign</span>
+            <i class="fa-solid fa-circle-notch fa-spin btn-loading-icon"></i>
+            <i class="fa-solid fa-arrow-right btn-arrow-icon"></i>
+          </button>
+        </form>
+      </section>
+
+      <!-- Right Panel: Campaign Review Dashboard (Initially Hidden / Overlay Placeholder) -->
+      <section class="panel review-panel" id="review-section">
+        <!-- Placeholder State when no campaign generated -->
+        <div class="dashboard-placeholder" id="dashboard-placeholder">
+          <div class="placeholder-content">
+            <div class="floating-icons">
+              <i class="fa-solid fa-chart-line placeholder-floating-icon p-icon-1"></i>
+              <i class="fa-solid fa-bullhorn placeholder-floating-icon p-icon-2"></i>
+              <i class="fa-solid fa-robot placeholder-floating-icon p-icon-3"></i>
+            </div>
+            <h3>Waiting for Inputs</h3>
+            <p>Fill out the Campaign Parameters form and submit to generate your custom AI campaign.</p>
+          </div>
+        </div>
+
+        <!-- Campaign Review Dashboard (Content Wrapper) -->
+        <div class="dashboard-content hidden" id="dashboard-content">
+          <div class="dashboard-header">
+            <div>
+              <h1 id="campaign-title">Spring Promotion Campaign</h1>
+              <div class="campaign-meta-row">
+                <span class="meta-label">Status:</span>
+                <div class="status-pill status-draft" id="campaign-status">
+                  <span class="status-indicator"></span>
+                  <span class="status-text">Draft Review</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-grid">
+            <!-- Card 1: Budget Strategy -->
+            <div class="card card-budget">
+              <div class="card-header">
+                <i class="fa-solid fa-piggy-bank card-icon"></i>
+                <h3>Budget & Strategy</h3>
+              </div>
+              <div class="card-body">
+                <div class="budget-stat">
+                  <div class="budget-value" id="daily-budget">$0.00</div>
+                  <div class="budget-label">Recommended Daily Budget</div>
+                </div>
+                <div class="strategy-box">
+                  <strong>Staging Strategy</strong>
+                  <p id="budget-strategy">Optimized for local reach and search impressions during weekend spikes.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 2: Targeting tags -->
+            <div class="card card-targeting">
+              <div class="card-header">
+                <i class="fa-solid fa-crosshairs card-icon"></i>
+                <h3>Audience Targeting</h3>
+              </div>
+              <div class="card-body">
+                <div class="tag-group">
+                  <h4>Target Keywords</h4>
+                  <div class="tag-container" id="keywords-container">
+                    <!-- Dynamic tags -->
+                  </div>
+                </div>
+                <div class="tag-group">
+                  <h4>Audience Interests</h4>
+                  <div class="tag-container" id="interests-container">
+                    <!-- Dynamic tags -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 3: Ad Creative Preview with Length Calculator -->
+            <div class="card card-creative span-two-cols">
+              <div class="card-header">
+                <i class="fa-solid fa-ad card-icon"></i>
+                <h3>Ad Creative Previews</h3>
+              </div>
+              <div class="card-body creative-layout">
+                <!-- Live Mock Ad Panel -->
+                <div class="ad-mockup-container">
+                  <div class="mockup-header-tabs">
+                    <button type="button" class="mockup-tab-btn active" id="tab-btn-search">
+                      <i class="fa-brands fa-google"></i> Google Search
+                    </button>
+                    <button type="button" class="mockup-tab-btn" id="tab-btn-social">
+                      <i class="fa-brands fa-facebook"></i> Social Media Feed
+                    </button>
+                  </div>
+                  
+                  <!-- Google Search Mock -->
+                  <div class="google-ad-mock" id="search-ad-mock">
+                    <div class="ad-url">
+                      https://www.example.com/<span id="mock-path">bakery</span>
+                      <i class="fa-solid fa-ellipsis-vertical ad-menu-icon"></i>
+                    </div>
+                    <a href="#" class="ad-title-link" id="mock-ad-title">
+                      Best Sourdough Bakery | Golden Crust Bread
+                    </a>
+                    <p class="ad-description-text" id="mock-ad-desc">
+                      Freshly baked artisan sourdough, pastries & custom cakes. Order online for local store pickup!
+                    </p>
+                    <div class="ad-extension-row">
+                      <span class="ad-extension-item" id="mock-ad-cta">Shop Now</span>
+                    </div>
+                  </div>
+
+                  <!-- Social Media Mockup (Facebook layout) -->
+                  <div class="social-ad-mock hidden" id="social-ad-mock">
+                    <div class="social-profile-header">
+                      <div class="social-profile-avatar">
+                        <i class="fa-solid fa-store"></i>
+                      </div>
+                      <div class="social-profile-meta">
+                        <div class="social-page-name" id="mock-social-page-name">Sweet Treats Bakery</div>
+                        <div class="social-sponsored-tag">Sponsored · <i class="fa-solid fa-earth-americas"></i></div>
+                      </div>
+                      <i class="fa-solid fa-ellipsis social-menu-icon"></i>
+                    </div>
+                    
+                    <p class="social-caption-text" id="mock-social-caption">
+                      Delicious fresh treats at Sweet Treats Bakery! Grab your custom cakes, cookies & cupcakes today.
+                    </p>
+                    
+                    <div class="social-image-block">
+                      <img src="ad-banner.png" alt="Ad Campaign Banner" id="mock-social-image">
+                    </div>
+                    
+                    <div class="social-details-block">
+                      <div class="social-details-text">
+                        <div class="social-display-url" id="mock-social-display-url">sweettreatsbakery.com</div>
+                        <div class="social-headline" id="mock-social-headline">Premium Bakery Cakes & Cupcakes</div>
+                      </div>
+                      <div class="social-cta-wrapper">
+                        <span class="social-cta-btn" id="mock-social-cta">Shop Now</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Structured Editor/Validator -->
+                <div class="creative-validator">
+                  <div class="validation-group">
+                    <h4>Headlines (Max 30 Chars)</h4>
+                    <div class="creative-list" id="headlines-list">
+                      <!-- Dynamic headlines -->
+                    </div>
+                  </div>
+
+                  <div class="validation-group">
+                    <h4>Descriptions (Max 90 Chars)</h4>
+                    <div class="creative-list" id="descriptions-list">
+                      <!-- Dynamic descriptions -->
+                    </div>
+                  </div>
+
+                  <div class="validation-group">
+                    <h4>Social Post Caption (Max 125 Chars)</h4>
+                    <div class="creative-list" id="social-caption-list">
+                      <!-- Dynamic post caption validation -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 4: AI Strategic Rationale -->
+            <div class="card card-rationale span-two-cols">
+              <div class="card-header">
+                <i class="fa-solid fa-brain card-icon"></i>
+                <h3>AI Strategic Rationale</h3>
+              </div>
+              <div class="card-body">
+                <p id="strategic-rationale-text">
+                  This campaign focuses on capture local foodies searching specifically for artisan baked products. 
+                  By aligning budget to local Google Search, the campaigns drive higher-intent clicks with lower waste.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-footer">
+            <button id="regenerate-btn" class="btn btn-secondary">
+              <i class="fa-solid fa-rotate"></i>
+              <span>Regenerate Creative</span>
+            </button>
+            <button id="approve-btn" class="btn btn-success btn-glowing">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Approve & Launch Live</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Mock OAuth Modal Overlay -->
+  <div class="modal-overlay hidden" id="oauth-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <i class="fa-solid fa-shield-halved modal-shield-icon"></i>
+        <h3>Secure OAuth Authorization</h3>
+      </div>
+      <div class="modal-body">
+        <div class="loading-oauth" id="oauth-loading-block">
+          <i class="fa-solid fa-circle-notch fa-spin oauth-spinner"></i>
+          <p id="oauth-loading-text">Connecting to Ad Account Service...</p>
+        </div>
+        <div class="oauth-success hidden" id="oauth-success-block">
+          <i class="fa-solid fa-circle-check oauth-success-icon"></i>
+          <h4>Authorization Successful</h4>
+          <p id="oauth-success-text">Meta Ads sandbox account act_meta_9247 has been connected successfully.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
