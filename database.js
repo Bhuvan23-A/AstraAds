@@ -3,9 +3,14 @@ import { open } from 'sqlite';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import fs from 'fs';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const dbPath = path.resolve(__dirname, 'astraads.db');
+
+// Render persistent disk path config (fallback to local directory on PC)
+const dbFolder = fs.existsSync('/var/data') ? '/var/data' : __dirname;
+const dbPath = path.resolve(dbFolder, 'astraads.db');
 
 let db = null;
 
