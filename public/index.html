@@ -12,6 +12,8 @@
   <!-- FontAwesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
+  <!-- Chart.js for leads analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="app-container">
@@ -22,12 +24,23 @@
         <span>Astra<span class="logo-accent">Ads</span></span>
       </div>
       <div class="header-tagline">Autonomous Ad Ops for Small Businesses</div>
+      <!-- Tab Navigation Switcher -->
+      <nav class="tab-navigation">
+        <button class="nav-tab active" data-tab="campaign-builder">
+          <i class="fa-solid fa-rocket"></i> Campaign Builder
+        </button>
+        <button class="nav-tab" data-tab="leads-manager">
+          <i class="fa-solid fa-users"></i> Leads Manager
+        </button>
+      </nav>
     </header>
 
     <!-- Main Workspace -->
     <main class="app-workspace">
-      <!-- Left Panel: Onboarding Form -->
-      <section class="panel onboarding-panel" id="onboarding-section">
+      <!-- 1. CAMPAIGN BUILDER TAB -->
+      <div id="tab-campaign-builder" class="tab-panel active">
+        <!-- Left Panel: Onboarding Form -->
+        <section class="panel onboarding-panel" id="onboarding-section">
         <div class="panel-header">
           <h2><i class="fa-solid fa-sliders header-icon"></i> Campaign Parameters</h2>
           <p class="panel-subtitle">Define your business profile and objectives to build a tailor-made ad campaign.</p>
@@ -342,7 +355,204 @@
           </div>
         </div>
       </section>
+      </div>
+
+      <!-- 2. LEADS MANAGER TAB -->
+      <div id="tab-leads-manager" class="tab-panel hidden">
+        <div class="leads-layout-wrapper">
+          <div class="leads-header-row">
+            <div class="leads-title">
+              <h2><i class="fa-solid fa-users header-icon"></i> Leads Pipeline</h2>
+              <p class="panel-subtitle">Manage, monitor, and qualify leads captured directly from Meta campaigns.</p>
+            </div>
+            <div class="leads-actions">
+              <select id="client-selector" class="leads-select">
+                <option value="All">All Clients</option>
+              </select>
+              <button class="btn btn-secondary btn-sm" id="btn-refresh-leads">
+                <i class="fa-solid fa-rotate"></i> Sync Database
+              </button>
+            </div>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-header">
+                <span>Total Leads</span>
+                <i class="fa-solid fa-users-viewfinder"></i>
+              </div>
+              <div class="metric-value" id="metric-total">0</div>
+              <div class="metric-trend trend-up"><i class="fa-solid fa-chart-line"></i> Ingested Live</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-header">
+                <span>New Leads</span>
+                <i class="fa-solid fa-user-plus"></i>
+              </div>
+              <div class="metric-value" id="metric-new">0</div>
+              <div class="metric-trend trend-neutral">Needs follow-up</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-header">
+                <span>Qualified Leads</span>
+                <i class="fa-solid fa-circle-check"></i>
+              </div>
+              <div class="metric-value" id="metric-qualified">0</div>
+              <div class="metric-trend trend-up">Converted</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-header">
+                <span>Conversion Rate</span>
+                <i class="fa-solid fa-percent"></i>
+              </div>
+              <div class="metric-value" id="metric-conversion">0%</div>
+              <div class="metric-trend trend-neutral">Lead to Sale ratio</div>
+            </div>
+          </div>
+
+          <div class="leads-charts-row">
+            <div class="card chart-card">
+              <div class="card-header">
+                <i class="fa-solid fa-chart-column card-icon"></i>
+                <h3>Campaign Performance</h3>
+              </div>
+              <div class="card-body chart-container">
+                <canvas id="campaignChart"></canvas>
+              </div>
+            </div>
+            <div class="card chart-card">
+              <div class="card-header">
+                <i class="fa-solid fa-chart-pie card-icon"></i>
+                <h3>Leads by Pipeline Status</h3>
+              </div>
+              <div class="card-body chart-container">
+                <canvas id="statusChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="leads-details-layout">
+            <!-- Leads List Card -->
+            <div class="card leads-list-card">
+              <div class="card-header leads-list-header">
+                <div class="header-with-search">
+                  <i class="fa-solid fa-address-book card-icon"></i>
+                  <h3>Prospects List</h3>
+                </div>
+                <div class="leads-filter-controls">
+                  <input type="text" id="search-input" class="leads-input" placeholder="Search by name, email...">
+                  <select id="status-filter" class="leads-select">
+                    <option value="All">All Statuses</option>
+                    <option value="New">New</option>
+                    <option value="Contacted">Contacted</option>
+                    <option value="Qualified">Qualified</option>
+                    <option value="Lost">Lost</option>
+                  </select>
+                </div>
+              </div>
+              <div class="card-body table-responsive">
+                <table class="leads-table">
+                  <thead>
+                    <tr>
+                      <th>Prospect Info</th>
+                      <th>Campaign</th>
+                      <th>Source</th>
+                      <th>Date Ingested</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="leads-table-body">
+                    <!-- Dynamic lead rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Webhook Integration Card -->
+            <div class="card webhook-card">
+              <div class="card-header">
+                <i class="fa-solid fa-circle-nodes card-icon"></i>
+                <h3>Meta Webhook Bridge</h3>
+              </div>
+              <div class="card-body">
+                <p class="webhook-desc">Meta lead generation webhooks only send IDs. Use Make.com to resolve the form entries and forward them to AstraAds.</p>
+                <div class="webhook-display-box">
+                  <span class="webhook-label">Target Webhook Endpoint URL</span>
+                  <div class="webhook-url-row">
+                    <code id="webhook-url-display">http://localhost:3000/api/webhooks/leads</code>
+                    <button class="btn btn-secondary btn-sm" id="btn-copy-webhook">Copy</button>
+                  </div>
+                </div>
+                
+                <div class="webhook-test-box">
+                  <h4>Test Local Webhook</h4>
+                  <p>Trigger a sandbox POST request with sample lead data mapped to one of your active campaigns.</p>
+                  <button class="btn btn-primary" id="btn-trigger-test-webhook">Send Live Test Lead</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
+
+  <!-- Lead Detail Modal Overlay -->
+  <div class="modal-overlay hidden" id="lead-detail-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <i class="fa-solid fa-user-tie modal-shield-icon"></i>
+        <h3>Lead Prospect Details</h3>
+        <button class="modal-close-btn" id="btn-close-lead-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="info-row">
+          <span class="info-label">Lead ID</span>
+          <span class="info-val" id="modal-lead-id">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Full Name</span>
+          <span class="info-val" id="modal-lead-name">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Email Address</span>
+          <span class="info-val" id="modal-lead-email">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Phone Number</span>
+          <span class="info-val" id="modal-lead-phone">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Campaign Name</span>
+          <span class="info-val" id="modal-lead-campaign">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Channel Source</span>
+          <span class="info-val" id="modal-lead-platform">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Client Account</span>
+          <span class="info-val" id="modal-lead-client">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Date Submitted</span>
+          <span class="info-val" id="modal-lead-date">-</span>
+        </div>
+
+        <div class="status-select-container">
+          <label>Update Action Plan Status</label>
+          <div class="status-select-wrapper">
+            <button class="status-pill-btn new" data-status="New">New</button>
+            <button class="status-pill-btn contacted" data-status="Contacted">Contacted</button>
+            <button class="status-pill-btn qualified" data-status="Qualified">Qualified</button>
+            <button class="status-pill-btn lost" data-status="Lost">Lost</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Center -->
+  <div class="toast-container" id="toast-container"></div>
   </div>
 
   <!-- Mock OAuth Modal Overlay -->

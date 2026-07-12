@@ -1354,3 +1354,482 @@ select {
     flex-direction: column;
   }
 }
+
+/* ==========================================================================
+   Tab Navigation & Switcher
+   ========================================================================== */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.logo-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-navigation {
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(17, 24, 39, 0.4);
+  padding: 0.25rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.nav-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.5rem 1rem;
+  font-family: var(--font-family);
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--transition-smooth);
+}
+
+.nav-tab:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.nav-tab.active {
+  color: #ffffff;
+  background: var(--accent-blue);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
+}
+
+.tab-panel {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.tab-panel.active {
+  display: flex;
+  animation: fadeIn 0.4s ease;
+}
+
+.tab-panel.hidden {
+  display: none !important;
+}
+
+/* Campaign Builder Layout Wrapper */
+#tab-campaign-builder {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  gap: 1.5rem;
+}
+
+/* ==========================================================================
+   Leads Pipeline Dashboard Layout
+   ========================================================================== */
+.leads-layout-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+}
+
+.leads-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.leads-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.leads-select {
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  color: var(--text-main);
+  font-family: var(--font-family);
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.leads-select:focus {
+  border-color: var(--accent-cyan);
+}
+
+.leads-input {
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  color: var(--text-main);
+  font-family: var(--font-family);
+  font-size: 0.85rem;
+  outline: none;
+  width: 220px;
+}
+
+.leads-input:focus {
+  border-color: var(--accent-cyan);
+}
+
+/* Leads Charts Row */
+.leads-charts-row {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .leads-charts-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-card {
+  min-height: 330px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-container {
+  position: relative;
+  flex: 1;
+  height: 250px;
+  width: 100%;
+}
+
+/* Leads Details Grid Layout (Table and Webhook Card) */
+.leads-details-layout {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .leads-details-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.leads-list-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.leads-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-with-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.leads-filter-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Responsive Table */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.leads-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+.leads-table th {
+  padding: 0.75rem 1rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.5px;
+}
+
+.leads-table tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.leads-table tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.leads-table td {
+  padding: 1rem;
+}
+
+.lead-name-primary {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.lead-email-secondary {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+/* Status Badges */
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-tag.new {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.status-tag.contacted {
+  color: #fb923c;
+  background: rgba(251, 146, 60, 0.1);
+  border: 1px solid rgba(251, 146, 60, 0.2);
+}
+
+.status-tag.qualified {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.status-tag.lost {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
+/* Webhook Card Details */
+.webhook-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.webhook-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.webhook-display-box {
+  background: rgba(17, 24, 39, 0.6);
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.webhook-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.webhook-url-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.webhook-url-row code {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--accent-cyan);
+  word-break: break-all;
+  user-select: all;
+}
+
+.webhook-test-box {
+  border-top: 1px dashed var(--border-color);
+  padding-top: 1.25rem;
+}
+
+.webhook-test-box h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: var(--text-main);
+}
+
+.webhook-test-box p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 1rem;
+}
+
+/* Modal updates */
+.info-row {
+  display: grid;
+  grid-template-columns: 1fr 2.5fr;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  font-size: 0.85rem;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.info-val {
+  color: var(--text-main);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.status-select-container {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.status-select-container label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.status-select-wrapper {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.status-pill-btn {
+  flex: 1;
+  padding: 0.4rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.01);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.status-pill-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+}
+
+.status-pill-btn.new.active {
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+.status-pill-btn.contacted.active {
+  background: rgba(251, 146, 60, 0.1);
+  color: #fb923c;
+  border-color: #fb923c;
+}
+
+.status-pill-btn.qualified.active {
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
+  border-color: #34d399;
+}
+
+.status-pill-btn.lost.active {
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+  border-color: #f87171;
+}
+
+/* Toast Alerts */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.toast {
+  background: var(--card-bg);
+  border-left: 4px solid var(--accent-blue);
+  border-top: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 0.75rem 1.25rem;
+  border-radius: 0 8px 8px 0;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.45);
+  min-width: 280px;
+  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s ease;
+  font-family: var(--font-family);
+}
+
+.toast.success {
+  border-left-color: var(--accent-cyan);
+}
+
+.toast-msg h5 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+}
+
+.toast-msg p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}

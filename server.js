@@ -3,12 +3,20 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { generateAdCampaign } from './aiService.js';
+import { getDatabase, initializeDatabase } from './database.js';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Initialize database on start
+initializeDatabase().then(() => {
+  console.log('SQLite Database ready.');
+}).catch(err => {
+  console.error('Failed to initialize database:', err);
+});
 
 // Resolve directories for serving static files
 const __filename = fileURLToPath(import.meta.url);
@@ -181,6 +189,203 @@ app.post('/api/campaigns/launch', async (req, res) => {
       error: 'Failed to deploy campaign.',
       details: error.message 
     });
+  }
+});
+
+// GET: Fetch all leads (with optional client filtering)
+app.get('/api/leads', async (req, res) => {
+  const { client } = req.query;
+  try {
+    const db = await getDatabase();
+    let leads;
+    if (client && client !== 'All') {
+      leads = await db.all('SELECT * FROM leads WHERE client_name = ? ORDER BY created_at DESC', [client]);
+    } else {
+      leads = await db.all('SELECT * FROM leads ORDER BY created_at DESC');
+    }
+    res.json(leads);
+  } catch (error) {
+    console.error('Error fetching leads:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// PUT: Update lead status
+app.put('/api/leads/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  
+  const validStatuses = ['New', 'Contacted', 'Qualified', 'Lost'];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ error: 'Invalid status' });
+  }
+
+  try {
+    const db = await getDatabase();
+    const result = await db.run('UPDATE leads SET status = ? WHERE id = ?', [status, id]);
+    
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Lead not found' });
+    }
+    
+    const updatedLead = await db.get('SELECT * FROM leads WHERE id = ?', [id]);
+    res.json(updatedLead);
+  } catch (error) {
+    console.error('Error updating lead status:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// POST: Webhook receiver (Make.com integration)
+app.post('/api/webhooks/leads', async (req, res) => {
+  const { name, email, phone, campaign_name, platform, client_name } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ error: 'Name is a required field' });
+  }
+
+  try {
+    const db = await getDatabase();
+    const newLead = {
+      id: `lead_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      name: name,
+      email: email || '',
+      phone: phone || '',
+      campaign_name: campaign_name || 'Direct / Unknown Campaign',
+      status: 'New',
+      created_at: new Date().toISOString(),
+      platform: platform || 'Facebook',
+      client_name: client_name || 'Sanna Innovations'
+    };
+
+    await db.run(
+      `INSERT INTO leads (id, name, email, phone, campaign_name, status, created_at, platform, client_name)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [newLead.id, newLead.name, newLead.email, newLead.phone, newLead.campaign_name, newLead.status, newLead.created_at, newLead.platform, newLead.client_name]
+    );
+
+    console.log('Successfully ingested new lead from Webhook:', newLead);
+    res.status(201).json({ message: 'Lead ingested successfully', lead: newLead });
+  } catch (error) {
+    console.error('Error ingesting webhook lead:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// POST: Trigger a mock webhook lead for manual testing
+app.post('/api/webhooks/test', async (req, res) => {
+  const firstNames = ['Liam', 'Olivia', 'Noah', 'Emma', 'Oliver', 'Ava', 'Elijah', 'Charlotte', 'William', 'Sophia'];
+  const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
+  const campaigns = ['Summer Promo 2026', 'AI Automation Leads', 'Retargeting Q3', 'E-commerce Scale 2026', 'ASHIRWADA LEADS 1st may'];
+  const platforms = ['Facebook', 'Instagram'];
+  const clients = ['Sanna Innovations', 'Apex Marketing', 'Cyberdyne Systems', 'Ashirwada Leads'];
+
+  const randomName = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+  const randomEmail = `${randomName.toLowerCase().replace(' ', '.')}@example.com`;
+  const randomPhone = `+1 (555) 01${Math.floor(10 + Math.random() * 90)}-${Math.floor(1000 + Math.random() * 9000)}`;
+  const randomCampaign = campaigns[Math.floor(Math.random() * campaigns.length)];
+  const randomPlatform = platforms[Math.floor(Math.random() * platforms.length)];
+  const randomClient = clients[Math.floor(Math.random() * clients.length)];
+
+  try {
+    const db = await getDatabase();
+    const testLead = {
+      id: `lead_${Date.now()}_test`,
+      name: randomName,
+      email: randomEmail,
+      phone: randomPhone,
+      campaign_name: randomCampaign,
+      status: 'New',
+      created_at: new Date().toISOString(),
+      platform: randomPlatform,
+      client_name: randomClient
+    };
+
+    await db.run(
+      `INSERT INTO leads (id, name, email, phone, campaign_name, status, created_at, platform, client_name)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [testLead.id, testLead.name, testLead.email, testLead.phone, testLead.campaign_name, testLead.status, testLead.created_at, testLead.platform, testLead.client_name]
+    );
+
+    console.log('Injected test lead:', testLead);
+    res.status(201).json({ message: 'Test lead injected successfully', lead: testLead });
+  } catch (error) {
+    console.error('Error generating test lead:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// GET: Fetch analytics metrics
+app.get('/api/stats', async (req, res) => {
+  const { client } = req.query;
+  const filterClient = client && client !== 'All';
+
+  try {
+    const db = await getDatabase();
+    
+    let totalQuery = 'SELECT COUNT(*) as count FROM leads';
+    let statusQuery = 'SELECT status, COUNT(*) as count FROM leads';
+    let campaignQuery = 'SELECT campaign_name, COUNT(*) as count FROM leads';
+    let platformQuery = 'SELECT platform, COUNT(*) as count FROM leads';
+    
+    const params = [];
+    if (filterClient) {
+      totalQuery += ' WHERE client_name = ?';
+      statusQuery += ' WHERE client_name = ?';
+      campaignQuery += ' WHERE client_name = ?';
+      platformQuery += ' WHERE client_name = ?';
+      params.push(client);
+    }
+    
+    statusQuery += ' GROUP BY status';
+    campaignQuery += ' GROUP BY campaign_name ORDER BY count DESC LIMIT 5';
+    platformQuery += ' GROUP BY platform';
+
+    // Total Leads
+    const totalRow = await db.get(totalQuery, params);
+    const totalLeads = totalRow.count;
+
+    // Status breakdown
+    const statusRows = await db.all(statusQuery, params);
+    const statusStats = { New: 0, Contacted: 0, Qualified: 0, Lost: 0 };
+    statusRows.forEach(row => {
+      statusStats[row.status] = row.count;
+    });
+
+    // Campaign breakdown
+    const campaignRows = await db.all(campaignQuery, params);
+
+    // Platform breakdown
+    const platformRows = await db.all(platformQuery, params);
+
+    // Conversion rate (Qualified / Total)
+    const conversionRate = totalLeads > 0 
+      ? Math.round((statusStats.Qualified / totalLeads) * 100) 
+      : 0;
+
+    res.json({
+      total: totalLeads,
+      byStatus: statusStats,
+      byCampaign: campaignRows,
+      byPlatform: platformRows,
+      conversionRate
+    });
+  } catch (error) {
+    console.error('Error calculating statistics:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// GET: Fetch list of unique clients
+app.get('/api/clients', async (req, res) => {
+  try {
+    const db = await getDatabase();
+    const rows = await db.all('SELECT DISTINCT client_name FROM leads ORDER BY client_name ASC');
+    const clients = rows.map(r => r.client_name);
+    res.json(clients);
+  } catch (error) {
+    console.error('Error fetching clients list:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 

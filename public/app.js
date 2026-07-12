@@ -565,6 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Simple HTML Escaper helper
   function escapeHtml(str) {
+    if (!str) return '';
     return str
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -572,4 +573,408 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
   }
+
+  // ==========================================================================
+  // Leads Manager Implementation
+  // ==========================================================================
+  
+  // Leads Manager State
+  const leadsState = {
+    leads: [],
+    stats: {},
+    selectedClient: 'All',
+    clients: [],
+    charts: {
+      campaign: null,
+      status: null
+    },
+    selectedLead: null
+  };
+
+  // Leads Manager DOM Elements
+  const leadsElements = {
+    clientSelector: document.getElementById('client-selector'),
+    btnRefreshLeads: document.getElementById('btn-refresh-leads'),
+    metricTotal: document.getElementById('metric-total'),
+    metricNew: document.getElementById('metric-new'),
+    metricQualified: document.getElementById('metric-qualified'),
+    metricConversion: document.getElementById('metric-conversion'),
+    campaignChart: document.getElementById('campaignChart'),
+    statusChart: document.getElementById('statusChart'),
+    searchInput: document.getElementById('search-input'),
+    statusFilter: document.getElementById('status-filter'),
+    leadsTableBody: document.getElementById('leads-table-body'),
+    webhookUrlDisplay: document.getElementById('webhook-url-display'),
+    btnCopyWebhook: document.getElementById('btn-copy-webhook'),
+    btnTriggerTestWebhook: document.getElementById('btn-trigger-test-webhook'),
+    
+    // Modal
+    leadDetailModal: document.getElementById('lead-detail-modal'),
+    btnCloseLeadModal: document.getElementById('btn-close-lead-modal'),
+    modalLeadId: document.getElementById('modal-lead-id'),
+    modalLeadName: document.getElementById('modal-lead-name'),
+    modalLeadEmail: document.getElementById('modal-lead-email'),
+    modalLeadPhone: document.getElementById('modal-lead-phone'),
+    modalLeadCampaign: document.getElementById('modal-lead-campaign'),
+    modalLeadPlatform: document.getElementById('modal-lead-platform'),
+    modalLeadClient: document.getElementById('modal-lead-client'),
+    modalLeadDate: document.getElementById('modal-lead-date'),
+    modalStatusBtns: document.querySelectorAll('#lead-detail-modal .status-pill-btn'),
+    
+    // Toast
+    toastContainer: document.getElementById('toast-container')
+  };
+
+  function setupTabNavigation() {
+    const tabs = document.querySelectorAll('.nav-tab');
+    const panels = document.querySelectorAll('.tab-panel');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        panels.forEach(p => p.classList.add('hidden'));
+        
+        tab.classList.add('active');
+        const targetId = `tab-${tab.getAttribute('data-tab')}`;
+        const targetPanel = document.getElementById(targetId);
+        if (targetPanel) {
+          targetPanel.classList.remove('hidden');
+        }
+        
+        if (tab.getAttribute('data-tab') === 'leads-manager') {
+          refreshLeadsData();
+        }
+      });
+    });
+  }
+
+  function setupLeadsEventListeners() {
+    leadsElements.btnRefreshLeads.addEventListener('click', refreshLeadsData);
+    leadsElements.btnTriggerTestWebhook.addEventListener('click', triggerTestWebhook);
+    
+    leadsElements.clientSelector.addEventListener('change', (e) => {
+      leadsState.selectedClient = e.target.value;
+      refreshLeadsData();
+    });
+    
+    leadsElements.searchInput.addEventListener('input', renderLeadsTable);
+    leadsElements.statusFilter.addEventListener('change', renderLeadsTable);
+    
+    leadsElements.btnCopyWebhook.addEventListener('click', () => {
+      navigator.clipboard.writeText(leadsElements.webhookUrlDisplay.textContent)
+        .then(() => showLeadsToast('Success', 'Webhook URL copied to clipboard!', 'success'))
+        .catch(() => showLeadsToast('Error', 'Failed to copy URL', 'error'));
+    });
+    
+    leadsElements.btnCloseLeadModal.addEventListener('click', () => {
+      leadsElements.leadDetailModal.classList.add('hidden');
+      leadsState.selectedLead = null;
+    });
+    
+    leadsElements.leadDetailModal.addEventListener('click', (e) => {
+      if (e.target === leadsElements.leadDetailModal) {
+        leadsElements.leadDetailModal.classList.add('hidden');
+        leadsState.selectedLead = null;
+      }
+    });
+    
+    leadsElements.modalStatusBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const newStatus = btn.getAttribute('data-status');
+        if (leadsState.selectedLead && leadsState.selectedLead.status !== newStatus) {
+          updateLeadStatus(leadsState.selectedLead.id, newStatus);
+        }
+      });
+    });
+  }
+
+  async function refreshLeadsData() {
+    try {
+      leadsElements.btnRefreshLeads.classList.add('loading');
+      
+      const clientParam = encodeURIComponent(leadsState.selectedClient);
+      const [statsRes, leadsRes, clientsRes] = await Promise.all([
+        fetch(`/api/stats?client=${clientParam}`),
+        fetch(`/api/leads?client=${clientParam}`),
+        fetch('/api/clients')
+      ]);
+      
+      leadsState.stats = await statsRes.json();
+      leadsState.leads = await leadsRes.json();
+      leadsState.clients = await clientsRes.json();
+      
+      updateClientDropdown();
+      updateLeadsMetrics();
+      renderLeadsTable();
+      renderLeadsCharts();
+      
+      leadsElements.btnRefreshLeads.classList.remove('loading');
+    } catch (error) {
+      console.error('Error syncing database:', error);
+      leadsElements.btnRefreshLeads.classList.remove('loading');
+      showLeadsToast('Sync Failed', 'Could not sync database with server.', 'error');
+    }
+  }
+
+  function updateClientDropdown() {
+    const currentVal = leadsState.selectedClient;
+    leadsElements.clientSelector.innerHTML = '<option value="All">All Clients</option>';
+    
+    leadsState.clients.forEach(client => {
+      const option = document.createElement('option');
+      option.value = client;
+      option.textContent = client;
+      if (client === currentVal) {
+        option.selected = true;
+      }
+      leadsElements.clientSelector.appendChild(option);
+    });
+  }
+
+  function updateLeadsMetrics() {
+    leadsElements.metricTotal.textContent = leadsState.stats.total || 0;
+    leadsElements.metricNew.textContent = leadsState.stats.byStatus ? leadsState.stats.byStatus.New : 0;
+    leadsElements.metricQualified.textContent = leadsState.stats.byStatus ? leadsState.stats.byStatus.Qualified : 0;
+    leadsElements.metricConversion.textContent = `${leadsState.stats.conversionRate || 0}%`;
+  }
+
+  function renderLeadsTable() {
+    leadsElements.leadsTableBody.innerHTML = '';
+    
+    const searchQuery = leadsElements.searchInput.value.toLowerCase().trim();
+    const statusVal = leadsElements.statusFilter.value;
+    
+    const filtered = leadsState.leads.filter(lead => {
+      const matchesSearch = 
+        lead.name.toLowerCase().includes(searchQuery) ||
+        (lead.email && lead.email.toLowerCase().includes(searchQuery)) ||
+        (lead.phone && lead.phone.toLowerCase().includes(searchQuery)) ||
+        (lead.campaign_name && lead.campaign_name.toLowerCase().includes(searchQuery));
+        
+      const matchesStatus = statusVal === 'All' || lead.status === statusVal;
+      return matchesSearch && matchesStatus;
+    });
+    
+    if (filtered.length === 0) {
+      leadsElements.leadsTableBody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            No matching leads found.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+    
+    filtered.forEach(lead => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>
+          <div class="lead-name-primary">${escapeHtml(lead.name)}</div>
+          <div class="lead-email-secondary">${escapeHtml(lead.email || 'N/A')}</div>
+        </td>
+        <td>${escapeHtml(lead.campaign_name)}</td>
+        <td>
+          <span class="platform-tag" style="font-size:0.75rem; color:var(--text-muted); display:inline-flex; align-items:center; gap:4px;">
+            <i class="fa-brands fa-${lead.platform.toLowerCase() === 'facebook' || lead.platform.toLowerCase() === 'instagram' ? 'facebook' : 'globe'}"></i> ${lead.platform}
+          </span>
+        </td>
+        <td style="color:var(--text-muted); font-size:0.8rem;">${formatLeadsDate(lead.created_at)}</td>
+        <td>
+          <span class="status-tag ${lead.status.toLowerCase()}">${lead.status}</span>
+        </td>
+      `;
+      tr.addEventListener('click', () => openLeadModal(lead));
+      leadsElements.leadsTableBody.appendChild(tr);
+    });
+  }
+
+  function openLeadModal(lead) {
+    leadsState.selectedLead = lead;
+    
+    leadsElements.modalLeadId.textContent = lead.id;
+    leadsElements.modalLeadName.textContent = lead.name;
+    leadsElements.modalLeadEmail.textContent = lead.email || 'N/A';
+    leadsElements.modalLeadPhone.textContent = lead.phone || 'N/A';
+    leadsElements.modalLeadCampaign.textContent = lead.campaign_name;
+    leadsElements.modalLeadPlatform.textContent = lead.platform;
+    leadsElements.modalLeadClient.textContent = lead.client_name || 'Sanna Innovations';
+    leadsElements.modalLeadDate.textContent = formatLeadsDate(lead.created_at);
+    
+    leadsElements.modalStatusBtns.forEach(btn => {
+      const btnStatus = btn.getAttribute('data-status');
+      if (btnStatus === lead.status) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+    
+    leadsElements.leadDetailModal.classList.remove('hidden');
+  }
+
+  async function updateLeadStatus(id, newStatus) {
+    try {
+      const res = await fetch(`/api/leads/${id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      
+      if (res.ok) {
+        const updatedLead = await res.json();
+        showLeadsToast('Status Updated', `Prospect "${updatedLead.name}" marked as ${newStatus}.`, 'success');
+        
+        // Sync active button selection in modal
+        leadsElements.modalStatusBtns.forEach(btn => {
+          const btnStatus = btn.getAttribute('data-status');
+          if (btnStatus === newStatus) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+        
+        leadsState.selectedLead = updatedLead;
+        await refreshLeadsData();
+      } else {
+        showLeadsToast('Update Failed', 'Server rejected status update.', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      showLeadsToast('Network Error', 'Could not save status change.', 'error');
+    }
+  }
+
+  async function triggerTestWebhook() {
+    try {
+      const res = await fetch('/api/webhooks/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const data = await res.json();
+      if (res.ok) {
+        showLeadsToast('Lead Ingested', `New lead "${data.lead.name}" captured!`, 'success');
+        await refreshLeadsData();
+      } else {
+        showLeadsToast('Ingestion Error', data.error || 'Failed to trigger lead', 'error');
+      }
+    } catch (error) {
+      console.error('Error triggering lead:', error);
+      showLeadsToast('Network Error', 'Could not connect to server webhook.', 'error');
+    }
+  }
+
+  function renderLeadsCharts() {
+    // 1. Leads by Status doughnut
+    const statusLabels = ['New', 'Contacted', 'Qualified', 'Lost'];
+    const statusCounts = statusLabels.map(s => leadsState.stats.byStatus ? leadsState.stats.byStatus[s] || 0 : 0);
+    
+    const ctxStatus = leadsElements.statusChart.getContext('2d');
+    if (leadsState.charts.status) {
+      leadsState.charts.status.destroy();
+    }
+    
+    leadsState.charts.status = new Chart(ctxStatus, {
+      type: 'doughnut',
+      data: {
+        labels: statusLabels,
+        datasets: [{
+          data: statusCounts,
+          backgroundColor: ['#38bdf8', '#fb923c', '#34d399', '#f87171'],
+          borderWidth: 2,
+          borderColor: '#111827'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+              color: '#9ca3af',
+              font: { family: 'Outfit', size: 11 }
+            }
+          }
+        },
+        cutout: '65%'
+      }
+    });
+
+    // 2. Campaign horizontal bar chart
+    const campaignData = leadsState.stats.byCampaign || [];
+    const campaignLabels = campaignData.map(c => c.campaign_name.length > 18 ? c.campaign_name.substring(0, 15) + '...' : c.campaign_name);
+    const campaignCounts = campaignData.map(c => c.count);
+
+    const ctxCampaign = leadsElements.campaignChart.getContext('2d');
+    if (leadsState.charts.campaign) {
+      leadsState.charts.campaign.destroy();
+    }
+
+    leadsState.charts.campaign = new Chart(ctxCampaign, {
+      type: 'bar',
+      data: {
+        labels: campaignLabels.length > 0 ? campaignLabels : ['No Campaign Data'],
+        datasets: [{
+          label: 'Leads Count',
+          data: campaignCounts.length > 0 ? campaignCounts : [0],
+          backgroundColor: 'rgba(59, 130, 246, 0.7)',
+          hoverBackgroundColor: '#3b82f6',
+          borderRadius: 6,
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        scales: {
+          x: {
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: { color: '#6b7280', precision: 0 }
+          },
+          y: {
+            grid: { display: false },
+            ticks: { color: '#9ca3af' }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  }
+
+  function formatLeadsDate(dateString) {
+    const date = new Date(dateString);
+    if (isNaN(date)) return dateString;
+    const options = { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
+    return date.toLocaleDateString('en-US', options);
+  }
+
+  function showLeadsToast(title, message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type === 'success' ? 'success' : ''}`;
+    toast.innerHTML = `
+      <div class="toast-msg">
+        <h5>${escapeHtml(title)}</h5>
+        <p>${escapeHtml(message)}</p>
+      </div>
+    `;
+    leadsElements.toastContainer.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.transform = 'translateX(120%)';
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 3500);
+  }
+
+  // Initialize Webhook URLs and handlers
+  const origin = window.location.origin;
+  leadsElements.webhookUrlDisplay.textContent = `${origin}/api/webhooks/leads`;
+  
+  setupTabNavigation();
+  setupLeadsEventListeners();
 });
