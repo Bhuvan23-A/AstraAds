@@ -76,24 +76,24 @@ export async function initializeDatabase() {
       {
         id: 'lead_003',
         name: 'Karan Johar',
-        email: 'karan@sannainteriors.com',
+        email: 'karan@sannainnovations.com',
         phone: '+91 98888-77777',
         campaign_name: 'sanna interiors',
         status: 'Contacted',
         created_at: new Date(Date.now() - 24 * 3600000).toISOString(),
         platform: 'Facebook',
-        client_name: 'Sanna Interiors'
+        client_name: 'Sanna Innovations'
       },
       {
         id: 'lead_004',
         name: 'Rajesh Patel',
         email: 'rajesh@jalmahal.com',
         phone: '+91 97777-66666',
-        campaign_name: 'swimming - Jalmahal',
+        campaign_name: 'Jal Mahal - Women\'s Day',
         status: 'Qualified',
         created_at: new Date(Date.now() - 3 * 24 * 3600000).toISOString(),
         platform: 'Instagram',
-        client_name: 'Jalmahal Resorts'
+        client_name: 'Jal Mahal Resort & Spa'
       },
       {
         id: 'lead_005',
@@ -122,11 +122,11 @@ export async function initializeDatabase() {
         name: 'Meera Sen',
         email: 'meera.sen@gmail.com',
         phone: '+91 94444-33333',
-        campaign_name: 'sanna ads 18 sep',
+        campaign_name: 'Sanna ads 18 sep',
         status: 'Lost',
         created_at: new Date(Date.now() - 6 * 24 * 3600000).toISOString(),
         platform: 'Facebook',
-        client_name: 'Sanna Interiors'
+        client_name: 'Sanna Innovations'
       }
     ];
 
