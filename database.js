@@ -53,47 +53,80 @@ export async function initializeDatabase() {
     const mockLeads = [
       {
         id: 'lead_001',
-        name: 'Sarah Connor',
-        email: 'sarah.c@cyberdyne.com',
-        phone: '+1 (555) 019-2834',
-        campaign_name: 'Summer Promo 2026',
+        name: 'Aditya Kumar',
+        email: 'aditya.kumar@alis.tech',
+        phone: '+91 98765-43210',
+        campaign_name: 'ALIS Technology',
         status: 'New',
         created_at: new Date(Date.now() - 30 * 60000).toISOString(),
         platform: 'Facebook',
-        client_name: 'Sanna Innovations'
+        client_name: 'ALIS Technology'
       },
       {
         id: 'lead_002',
-        name: 'John Doe',
-        email: 'john.doe@gmail.com',
-        phone: '+1 (555) 349-8234',
-        campaign_name: 'AI Automation Leads',
-        status: 'Contacted',
+        name: 'Aria Sharma',
+        email: 'aria.sharma@gmail.com',
+        phone: '+91 99999-88888',
+        campaign_name: 'ASHIRWADA LEADS 1st may',
+        status: 'Qualified',
         created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
-        platform: 'Instagram',
-        client_name: 'Apex Marketing'
+        platform: 'Facebook',
+        client_name: 'Ashirwada Leads'
       },
       {
         id: 'lead_003',
-        name: 'Alice Johnson',
-        email: 'alice.j@enterprise.co',
-        phone: '+1 (555) 987-6543',
-        campaign_name: 'Summer Promo 2026',
-        status: 'Qualified',
+        name: 'Karan Johar',
+        email: 'karan@sannainteriors.com',
+        phone: '+91 98888-77777',
+        campaign_name: 'sanna interiors',
+        status: 'Contacted',
         created_at: new Date(Date.now() - 24 * 3600000).toISOString(),
         platform: 'Facebook',
-        client_name: 'Sanna Innovations'
+        client_name: 'Sanna Interiors'
       },
       {
         id: 'lead_004',
-        name: 'Bob Smith',
-        email: 'bob.smith@outlook.com',
-        phone: '+1 (555) 123-4567',
-        campaign_name: 'Retargeting Q3',
-        status: 'Lost',
+        name: 'Rajesh Patel',
+        email: 'rajesh@jalmahal.com',
+        phone: '+91 97777-66666',
+        campaign_name: 'swimming - Jalmahal',
+        status: 'Qualified',
         created_at: new Date(Date.now() - 3 * 24 * 3600000).toISOString(),
+        platform: 'Instagram',
+        client_name: 'Jalmahal Resorts'
+      },
+      {
+        id: 'lead_005',
+        name: 'Priya Nair',
+        email: 'priya.nair@nova.co',
+        phone: '+91 96666-55555',
+        campaign_name: 'Nova_30th april',
+        status: 'New',
+        created_at: new Date(Date.now() - 4 * 24 * 3600000).toISOString(),
         platform: 'Facebook',
-        client_name: 'Cyberdyne Systems'
+        client_name: 'Nova'
+      },
+      {
+        id: 'lead_006',
+        name: 'Rohan Das',
+        email: 'rohan.das@gmail.com',
+        phone: '+91 95555-44444',
+        campaign_name: 'ALIS Technology',
+        status: 'Contacted',
+        created_at: new Date(Date.now() - 5 * 24 * 3600000).toISOString(),
+        platform: 'Facebook',
+        client_name: 'ALIS Technology'
+      },
+      {
+        id: 'lead_007',
+        name: 'Meera Sen',
+        email: 'meera.sen@gmail.com',
+        phone: '+91 94444-33333',
+        campaign_name: 'sanna ads 18 sep',
+        status: 'Lost',
+        created_at: new Date(Date.now() - 6 * 24 * 3600000).toISOString(),
+        platform: 'Facebook',
+        client_name: 'Sanna Interiors'
       }
     ];
 
