@@ -11,9 +11,38 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Auto-subscribe Meta pages to Webhook App
+async function subscribeAllPages() {
+  try {
+    const db = await getDatabase();
+    const rows = await db.all('SELECT * FROM page_configs');
+    console.log(`[Meta Subscriptions] Running auto-subscription check for ${rows.length} pages...`);
+    for (const row of rows) {
+      const subscribeUrl = `https://graph.facebook.com/v19.0/${row.page_id}/subscribed_apps`;
+      const subscribeResponse = await fetch(subscribeUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subscribed_fields: 'leadgen',
+          access_token: row.access_token
+        })
+      });
+      const result = await subscribeResponse.json();
+      if (result.success || result.success === true) {
+        console.log(`[Meta Subscriptions] Successfully subscribed Page ID ${row.page_id} (${row.client_name}) to AstraAds App.`);
+      } else {
+        console.warn(`[Meta Subscriptions] Page subscription response for ${row.page_id}:`, result);
+      }
+    }
+  } catch (error) {
+    console.error('[Meta Subscriptions] Auto-subscription error:', error.message);
+  }
+}
+
 // Initialize database on start
-initializeDatabase().then(() => {
+initializeDatabase().then(async () => {
   console.log('SQLite Database ready.');
+  await subscribeAllPages();
 }).catch(err => {
   console.error('Failed to initialize database:', err);
 });
