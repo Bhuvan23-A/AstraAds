@@ -272,6 +272,195 @@ app.post('/api/webhooks/leads', async (req, res) => {
   }
 });
 
+// GET: Meta Webhook Verification
+app.get('/api/webhooks/meta', (req, res) => {
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+
+  const verifyToken = process.env.META_VERIFY_TOKEN || 'astraads_verify_token_secret';
+
+  if (mode === 'subscribe' && token === verifyToken) {
+    console.log('[Meta Webhook] Verification successful.');
+    return res.status(200).send(challenge);
+  } else {
+    console.warn('[Meta Webhook] Verification failed. Token mismatch.');
+    return res.sendStatus(403);
+  }
+});
+
+// POST: Meta Webhook Receiver (Direct Integration)
+app.post('/api/webhooks/meta', async (req, res) => {
+  // Meta sends a success status code back immediately to prevent retries
+  res.status(200).send('EVENT_RECEIVED');
+
+  try {
+    const entry = req.body.entry;
+    if (!entry || !Array.isArray(entry)) return;
+
+    const db = await getDatabase();
+
+    for (const item of entry) {
+      const changes = item.changes;
+      if (!changes || !Array.isArray(changes)) continue;
+
+      for (const change of changes) {
+        if (change.field !== 'leadgen') continue;
+
+        const value = change.value;
+        const leadgenId = value.leadgen_id;
+        const pageId = value.page_id;
+
+        console.log(`[Meta Webhook] Received leadgen event: ID ${leadgenId} for page ${pageId}`);
+
+        // 1. Fetch Page Token Config from DB
+        const pageConfig = await db.get('SELECT * FROM page_configs WHERE page_id = ?', [pageId]);
+        
+        let accessToken = process.env.META_ACCESS_TOKEN; // Fallback to global token
+        let clientName = 'ALIS Technology';
+
+        if (pageConfig) {
+          accessToken = pageConfig.access_token;
+          clientName = pageConfig.client_name;
+        }
+
+        if (!accessToken) {
+          console.error(`[Meta Webhook] Access token not configured for page ID: ${pageId}. Skipping.`);
+          continue;
+        }
+
+        // 2. Fetch Lead Details from Meta Graph API
+        const graphUrl = `https://graph.facebook.com/v19.0/${leadgenId}?fields=created_time,id,field_data,campaign_name&access_token=${accessToken}`;
+        const graphResponse = await fetch(graphUrl);
+        const leadData = await graphResponse.json();
+
+        if (leadData.error) {
+          console.error(`[Meta Webhook] Meta Graph API Error fetching lead ${leadgenId}:`, leadData.error.message);
+          continue;
+        }
+
+        // 3. Extract Field Values from Meta JSON structure
+        const fieldData = leadData.field_data || [];
+        
+        const nameObj = fieldData.find(f => f.name === 'full_name' || f.name.includes('name'));
+        const emailObj = fieldData.find(f => f.name === 'email');
+        const phoneObj = fieldData.find(f => f.name === 'phone_number' || f.name.includes('phone'));
+
+        const name = nameObj && nameObj.values ? nameObj.values[0] : 'Meta Lead';
+        const email = emailObj && emailObj.values ? emailObj.values[0] : '';
+        const phone = phoneObj && phoneObj.values ? phoneObj.values[0] : '';
+        const campaignName = leadData.campaign_name || 'Meta Direct Campaign';
+
+        // 4. Save lead to SQLite database
+        const newLead = {
+          id: `lead_${leadgenId || Date.now()}_${Math.random().toString(36).substr(2, 3)}`,
+          name: name,
+          email: email,
+          phone: phone,
+          campaign_name: campaignName,
+          status: 'New',
+          created_at: leadData.created_time || new Date().toISOString(),
+          platform: 'Facebook',
+          client_name: clientName
+        };
+
+        await db.run(
+          `INSERT INTO leads (id, name, email, phone, campaign_name, status, created_at, platform, client_name)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [newLead.id, newLead.name, newLead.email, newLead.phone, newLead.campaign_name, newLead.status, newLead.created_at, newLead.platform, newLead.client_name]
+        );
+
+        console.log(`[Meta Webhook] Lead ${newLead.id} ingested successfully for client "${clientName}"`);
+      }
+    }
+  } catch (err) {
+    console.error('[Meta Webhook] Processing failed:', err.message);
+  }
+});
+
+// POST: Google Webhook Receiver (Direct Integration)
+app.post('/api/webhooks/google', async (req, res) => {
+  const { lead_id, user_column_data, campaign_id, google_key } = req.body;
+  const clientName = req.query.client || 'ALIS Technology'; // Passed as ?client=Name in URL
+
+  // Optional key check for security
+  const verifyKey = process.env.GOOGLE_VERIFY_KEY || 'astraads_google_key_secret';
+  if (google_key && google_key !== verifyKey) {
+    console.warn('[Google Webhook] Unauthorized request. Key mismatch.');
+    return res.status(401).json({ error: 'Unauthorized key' });
+  }
+
+  if (!user_column_data || !Array.isArray(user_column_data)) {
+    return res.status(400).json({ error: 'Invalid Google Ads payload' });
+  }
+
+  try {
+    const db = await getDatabase();
+
+    // Parse Google's user_column_data structure
+    const nameObj = user_column_data.find(c => c.column_id === 'FULL_NAME' || c.column_name?.toLowerCase().includes('name'));
+    const emailObj = user_column_data.find(c => c.column_id === 'EMAIL' || c.column_name?.toLowerCase().includes('email'));
+    const phoneObj = user_column_data.find(c => c.column_id === 'PHONE_NUMBER' || c.column_name?.toLowerCase().includes('phone'));
+
+    const name = nameObj ? nameObj.string_value : 'Google Lead';
+    const email = emailObj ? emailObj.string_value : '';
+    const phone = phoneObj ? phoneObj.string_value : '';
+    const campaignName = `Google Campaign (ID: ${campaign_id || 'Direct'})`;
+
+    const newLead = {
+      id: `lead_${lead_id || Date.now()}_${Math.random().toString(36).substr(2, 3)}`,
+      name: name,
+      email: email,
+      phone: phone,
+      campaign_name: campaignName,
+      status: 'New',
+      created_at: new Date().toISOString(),
+      platform: 'Google',
+      client_name: clientName
+    };
+
+    await db.run(
+      `INSERT INTO leads (id, name, email, phone, campaign_name, status, created_at, platform, client_name)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [newLead.id, newLead.name, newLead.email, newLead.phone, newLead.campaign_name, newLead.status, newLead.created_at, newLead.platform, newLead.client_name]
+    );
+
+    console.log(`[Google Webhook] Ingested Google Ads lead successfully for client "${clientName}":`, newLead);
+    res.status(201).json({ message: 'Google lead ingested successfully', lead: newLead });
+  } catch (error) {
+    console.error('[Google Webhook] Error ingesting lead:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// POST: Register page ID access tokens for direct Meta webhooks
+app.post('/api/webhooks/meta/config', async (req, res) => {
+  const { page_id, access_token, client_name, secret_key } = req.body;
+
+  const adminSecret = process.env.ADMIN_SECRET_KEY || 'astraads_admin_secret_998';
+  if (secret_key !== adminSecret) {
+    return res.status(401).json({ error: 'Unauthorized secret' });
+  }
+
+  if (!page_id || !access_token || !client_name) {
+    return res.status(400).json({ error: 'Missing config properties page_id, access_token, or client_name' });
+  }
+
+  try {
+    const db = await getDatabase();
+    await db.run(
+      `INSERT OR REPLACE INTO page_configs (page_id, access_token, client_name)
+       VALUES (?, ?, ?)`,
+      [page_id, access_token, client_name]
+    );
+    console.log(`[Webhook Config] Registered token for Page: ${page_id} (${client_name})`);
+    res.json({ success: true, message: `Configuration saved for client: ${client_name}` });
+  } catch (error) {
+    console.error('[Webhook Config] Save failed:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // POST: Trigger a mock webhook lead for manual testing
 app.post('/api/webhooks/test', async (req, res) => {
   const firstNames = ['Liam', 'Olivia', 'Noah', 'Emma', 'Oliver', 'Ava', 'Elijah', 'Charlotte', 'William', 'Sophia'];

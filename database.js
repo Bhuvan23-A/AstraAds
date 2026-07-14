@@ -39,6 +39,14 @@ export async function initializeDatabase() {
     )
   `);
 
+  await database.exec(`
+    CREATE TABLE IF NOT EXISTS page_configs (
+      page_id TEXT PRIMARY KEY,
+      access_token TEXT NOT NULL,
+      client_name TEXT NOT NULL
+    )
+  `);
+
   // Migration check for existing databases
   const tableInfo = await database.all("PRAGMA table_info(leads)");
   const hasClientName = tableInfo.some(column => column.name === 'client_name');

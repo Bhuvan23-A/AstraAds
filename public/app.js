@@ -765,7 +765,18 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
-    filtered.forEach(lead => {
+      let iconClass = 'globe';
+      const platLower = lead.platform.toLowerCase();
+      if (platLower.includes('facebook')) {
+        iconClass = 'facebook';
+      } else if (platLower.includes('instagram')) {
+        iconClass = 'instagram';
+      } else if (platLower.includes('google')) {
+        iconClass = 'google';
+      } else if (platLower.includes('linkedin')) {
+        iconClass = 'linkedin-in';
+      }
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>
@@ -775,7 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${escapeHtml(lead.campaign_name)}</td>
         <td>
           <span class="platform-tag" style="font-size:0.75rem; color:var(--text-muted); display:inline-flex; align-items:center; gap:4px;">
-            <i class="fa-brands fa-${lead.platform.toLowerCase() === 'facebook' || lead.platform.toLowerCase() === 'instagram' ? 'facebook' : 'globe'}"></i> ${lead.platform}
+            <i class="fa-brands fa-${iconClass}"></i> ${lead.platform}
           </span>
         </td>
         <td style="color:var(--text-muted); font-size:0.8rem;">${formatLeadsDate(lead.created_at)}</td>
