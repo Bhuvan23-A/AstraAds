@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  astraads:
+    build: .
+    container_name: astraads-app
+    restart: always
+    ports:
+      - "8090:3000"
+    volumes:
+      - astraads-data:/var/data
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - META_VERIFY_TOKEN=astraads_verify_token_secret
+      - GOOGLE_VERIFY_KEY=astraads_google_key_secret
+
+volumes:
+  astraads-data:
