@@ -764,7 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
       return;
     }
-    
+    filtered.forEach(lead => {
       let iconClass = 'globe';
       const platLower = lead.platform.toLowerCase();
       if (platLower.includes('facebook')) {
