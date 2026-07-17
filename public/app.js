@@ -225,6 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const launchPayload = {
       ...currentCampaignPayload,
       client_name: lastSubmittedParams?.businessName,
+      primaryGoal: lastSubmittedParams?.primaryGoal,
       linked_accounts: {
         google: connections['Google Search'],
         meta: connections['Facebook / Instagram'],
@@ -241,11 +242,18 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify(launchPayload)
       });
 
-      if (!response.ok) {
-        throw new Error('Launch network response was not successful');
+      const receipt = await response.json().catch(() => ({}));
+
+      if (!response.ok || receipt.success === false) {
+        const logLines = Array.isArray(receipt.deployment_log)
+          ? receipt.deployment_log
+              .filter(entry => entry.status === 'error' || entry.status === 'warning')
+              .map(entry => `${entry.step}: ${entry.message}${entry.details ? ` (${entry.details})` : ''}`)
+          : [];
+        const detailMessage = receipt.error || receipt.details || 'Launch network response was not successful';
+        throw new Error([detailMessage, ...logLines].filter(Boolean).join('\n'));
       }
 
-      const receipt = await response.json();
       console.log('Campaign successfully staged/launched live:', receipt);
       
       // Update DOM Status Pill to "Active & Live"
@@ -264,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error('Launch failed:', err);
-      alert('Failed to launch campaign. Please try again.');
+      alert(`Failed to launch campaign:\n\n${err.message}`);
       approveBtn.disabled = false;
       approveBtn.innerHTML = originalContent;
     }
@@ -462,15 +470,29 @@ document.addEventListener('DOMContentLoaded', () => {
   // Dynamic connection checker for Meta Ads
   async function checkClientMetaConnection(clientName) {
     if (!clientName) {
+      connections['Facebook / Instagram'] = null;
       updateConnectionDOM('Facebook / Instagram', statusMeta, connectBtnMeta, false);
+      saveConnectionsToStorage();
       return;
     }
     try {
       const res = await fetch(`/api/clients/connections?client=${encodeURIComponent(clientName)}`);
       const data = await res.json();
-      if (data.connected) {
-        connections['Facebook / Instagram'] = data.page_id;
-        updateConnectionDOM('Facebook / Instagram', statusMeta, connectBtnMeta, true, `Connected: ${data.page_name}`);
+      if (data.connected && data.ads_ready) {
+        connections['Facebook / Instagram'] = data.ad_account_id || data.page_id;
+        const label = data.ad_account_id
+          ? `Ads ready: ${data.page_name || clientName}`
+          : `Connected via server credentials`;
+        updateConnectionDOM('Facebook / Instagram', statusMeta, connectBtnMeta, true, label);
+      } else if (data.page_linked) {
+        connections['Facebook / Instagram'] = null;
+        updateConnectionDOM(
+          'Facebook / Instagram',
+          statusMeta,
+          connectBtnMeta,
+          false,
+          'Page linked — finish OAuth for ads'
+        );
       } else {
         connections['Facebook / Instagram'] = null;
         updateConnectionDOM('Facebook / Instagram', statusMeta, connectBtnMeta, false);
@@ -570,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
       buttonEl.classList.add('btn-disconnect');
     } else {
       statusEl.className = 'status-badge status-disconnected';
-      statusEl.textContent = 'Disconnected';
+      statusEl.textContent = customLabel || 'Disconnected';
       buttonEl.textContent = 'Connect';
       buttonEl.classList.remove('btn-disconnect');
     }

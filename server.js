@@ -466,39 +466,36 @@ app.post('/api/campaigns/launch', async (req, res) => {
 
     const buildImageUploadPayload = async (accessToken) => {
       let imageBytes;
-      let mimeType = 'image/jpeg';
-      let filename = `${sanitizeFileName(campaign_name)}.jpg`;
 
       if (ad_creative?.manual_banner_base64) {
         const rawValue = String(ad_creative.manual_banner_base64).trim();
         const dataUri = rawValue.match(/^data:(.*?);base64,(.*)$/);
         const base64Content = dataUri ? dataUri[2] : rawValue;
-        mimeType = dataUri?.[1] || mimeType;
         imageBytes = Buffer.from(base64Content, 'base64');
         if (!imageBytes || imageBytes.length === 0) {
           throw new Error('manual_banner_base64 did not contain valid image bytes.');
         }
         logStep('ad_image_prepare', 'success', 'Prepared image bytes from ad_creative.manual_banner_base64.');
       } else if (ad_creative?.generated_image_url) {
-        const imageResponse = await fetch(ad_creative.generated_image_url);
+        const imageResponse = await fetch(ad_creative.generated_image_url, {
+          signal: AbortSignal.timeout(30000)
+        });
         if (!imageResponse.ok) {
           throw new Error(`Failed to download generated image URL. HTTP ${imageResponse.status}`);
         }
         imageBytes = Buffer.from(await imageResponse.arrayBuffer());
-        mimeType = imageResponse.headers.get('content-type') || mimeType;
-        filename = `${sanitizeFileName(campaign_name)}-generated.jpg`;
         if (!imageBytes || imageBytes.length === 0) {
           throw new Error('Generated image URL response did not contain bytes.');
         }
         logStep('ad_image_prepare', 'success', 'Downloaded image bytes from ad_creative.generated_image_url.');
       } else {
-        throw new Error('No image source provided. Supply ad_creative.manual_banner_base64 or ad_creative.generated_image_url.');
+        throw new Error('No image source provided. Upload a banner image in the preview panel or wait for the AI image to finish generating.');
       }
 
-      const imageForm = new FormData();
-      imageForm.append('access_token', accessToken);
-      imageForm.append('filename', new Blob([imageBytes], { type: mimeType }), filename);
-      return imageForm;
+      const imagePayload = new URLSearchParams();
+      imagePayload.append('access_token', accessToken);
+      imagePayload.append('bytes', imageBytes.toString('base64'));
+      return imagePayload;
     };
 
     if (shouldLaunchMeta) {
@@ -1318,18 +1315,48 @@ app.get('/api/clients/connections', async (req, res) => {
   try {
     const db = await getDatabase();
     const config = await db.get(
-      'SELECT page_id, page_name, ad_account_id FROM page_configs WHERE lower(client_name) = lower(?) LIMIT 1',
+      'SELECT page_id, page_name, ad_account_id, user_access_token, access_token FROM page_configs WHERE lower(client_name) = lower(?) LIMIT 1',
       [client.trim()]
     );
+
+    const hasEnvFallback = Boolean(
+      process.env.META_ACCESS_TOKEN?.trim() && process.env.META_AD_ACCOUNT_ID?.trim()
+    );
+    const hasDbAdsCredentials = Boolean(
+      config?.ad_account_id?.trim() &&
+      (config?.user_access_token?.trim() || config?.access_token?.trim())
+    );
+    const adsReady = hasDbAdsCredentials || hasEnvFallback;
+
     if (config) {
       res.json({
-        connected: true,
+        connected: adsReady,
+        page_linked: true,
+        ads_ready: adsReady,
         page_id: config.page_id,
         page_name: config.page_name || 'Linked Page',
-        ad_account_id: config.ad_account_id
+        ad_account_id: config.ad_account_id || null,
+        message: adsReady
+          ? 'Meta page and ad account are ready for campaign launch.'
+          : 'Facebook Page is linked for lead webhooks, but no ad account is connected. Click Connect and complete OAuth to enable campaign launch.'
+      });
+    } else if (hasEnvFallback) {
+      res.json({
+        connected: true,
+        page_linked: false,
+        ads_ready: true,
+        page_id: process.env.META_PAGE_ID?.trim() || null,
+        page_name: 'Environment credentials',
+        ad_account_id: process.env.META_AD_ACCOUNT_ID?.trim() || null,
+        message: 'Using META_ACCESS_TOKEN and META_AD_ACCOUNT_ID from server environment.'
       });
     } else {
-      res.json({ connected: false });
+      res.json({
+        connected: false,
+        page_linked: false,
+        ads_ready: false,
+        message: 'No Meta connection found. Enter your business name and click Connect to link your ad account.'
+      });
     }
   } catch (error) {
     console.error('Error checking client connection:', error);
