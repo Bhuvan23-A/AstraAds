@@ -311,6 +311,8 @@ app.post('/api/campaigns/launch', async (req, res) => {
   const parseMetaError = (metaError) => {
     if (!metaError) return 'Unknown Meta API error';
     const parts = [metaError.message];
+    if (metaError.error_user_title) parts.push(`User Title: ${metaError.error_user_title}`);
+    if (metaError.error_user_msg) parts.push(`User Message: ${metaError.error_user_msg}`);
     if (metaError.code) parts.push(`Code: ${metaError.code}`);
     if (metaError.error_subcode) parts.push(`Subcode: ${metaError.error_subcode}`);
     if (metaError.fbtrace_id) parts.push(`Trace: ${metaError.fbtrace_id}`);
