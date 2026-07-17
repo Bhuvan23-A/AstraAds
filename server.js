@@ -432,7 +432,7 @@ app.post('/api/campaigns/launch', async (req, res) => {
       return result;
     };
 
-    const resolveMetaInterestTargets = async (audienceInterests) => {
+    const resolveMetaInterestTargets = async (audienceInterests, accessToken) => {
       const cleanInterests = Array.isArray(audienceInterests)
         ? audienceInterests.map(value => String(value).trim()).filter(Boolean).slice(0, 5)
         : [];
@@ -444,7 +444,7 @@ app.post('/api/campaigns/launch', async (req, res) => {
             type: 'adinterest',
             q: interest,
             limit: '1',
-            access_token: metaAccessToken
+            access_token: accessToken
           });
           const searchResponse = await fetch(`https://graph.facebook.com/v20.0/search?${params.toString()}`);
           const searchResult = await searchResponse.json().catch(() => ({}));
@@ -584,7 +584,7 @@ app.post('/api/campaigns/launch', async (req, res) => {
       logStep('meta_campaign_create', 'success', 'Campaign created in PAUSED state.', { campaign_id: metaEntities.campaign_id });
 
       // 2) Ad Set
-      const mappedInterests = await resolveMetaInterestTargets(targeting?.audience_interests);
+      const mappedInterests = await resolveMetaInterestTargets(targeting?.audience_interests, metaAccessToken);
       const targetingSpec = {
         geo_locations: { countries: ['IN', 'US'] },
         age_min: 21,
