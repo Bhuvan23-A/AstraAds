@@ -39,20 +39,43 @@ export async function initializeDatabase() {
     )
   `);
 
+  // Create page_configs table with columns for SaaS OAuth connections
   await database.exec(`
     CREATE TABLE IF NOT EXISTS page_configs (
       page_id TEXT PRIMARY KEY,
       access_token TEXT NOT NULL,
-      client_name TEXT NOT NULL
+      client_name TEXT NOT NULL,
+      ad_account_id TEXT,
+      user_access_token TEXT,
+      page_name TEXT
     )
   `);
 
-  // Migration check for existing databases
-  const tableInfo = await database.all("PRAGMA table_info(leads)");
-  const hasClientName = tableInfo.some(column => column.name === 'client_name');
-  if (!hasClientName) {
+  // Migration: Add columns to page_configs if they don't exist
+  const pcColumns = await database.all("PRAGMA table_info(page_configs)");
+  const hasAdAccount = pcColumns.some(c => c.name === 'ad_account_id');
+  const hasUserToken = pcColumns.some(c => c.name === 'user_access_token');
+  const hasPageNameCol = pcColumns.some(c => c.name === 'page_name');
+
+  if (!hasAdAccount) {
+    await database.exec("ALTER TABLE page_configs ADD COLUMN ad_account_id TEXT");
+    console.log('Database migrated: Added ad_account_id column to page_configs.');
+  }
+  if (!hasUserToken) {
+    await database.exec("ALTER TABLE page_configs ADD COLUMN user_access_token TEXT");
+    console.log('Database migrated: Added user_access_token column to page_configs.');
+  }
+  if (!hasPageNameCol) {
+    await database.exec("ALTER TABLE page_configs ADD COLUMN page_name TEXT");
+    console.log('Database migrated: Added page_name column to page_configs.');
+  }
+
+  // Migration: Add client_name column to leads table if it doesn't exist
+  const leadColumns = await database.all("PRAGMA table_info(leads)");
+  const hasLeadClientName = leadColumns.some(c => c.name === 'client_name');
+  if (!hasLeadClientName) {
     await database.exec("ALTER TABLE leads ADD COLUMN client_name TEXT DEFAULT 'Sanna Innovations'");
-    console.log('Database migrated: Added client_name column to leads table.');
+    console.log('Database migrated: Added client_name column to leads.');
   }
 
   // Insert some default mock leads if database is empty

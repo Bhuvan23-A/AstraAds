@@ -448,7 +448,81 @@ document.addEventListener('DOMContentLoaded', () => {
   /**
    * Manages connecting/disconnecting platforms.
    */
+  // Listen for the OAuth success postMessage
+  window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'META_AUTH_SUCCESS') {
+      const client = document.getElementById('businessName')?.value?.trim();
+      if (client && event.data.client.toLowerCase() === client.toLowerCase()) {
+        checkClientMetaConnection(client);
+      }
+    }
+  });
+
+  // Dynamic connection checker for Meta Ads
+  async function checkClientMetaConnection(clientName) {
+    if (!clientName) {
+      updateConnectionDOM('Facebook / Instagram', statusMeta, connectBtnMeta, false);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/clients/connections?client=${encodeURIComponent(clientName)}`);
+      const data = await res.json();
+      if (data.connected) {
+        connections['Facebook / Instagram'] = data.page_id;
+        updateConnectionDOM('Facebook / Instagram', statusMeta, connectBtnMeta, true, `Connected: ${data.page_name}`);
+      } else {
+        connections['Facebook / Instagram'] = null;
+        updateConnectionDOM('Facebook / Instagram', statusMeta, connectBtnMeta, false);
+      }
+      saveConnectionsToStorage();
+    } catch (err) {
+      console.error('Error checking Meta connection:', err);
+    }
+  }
+
+  // Monitor Business Name input to update connection status dynamically
+  const businessNameInput = document.getElementById('businessName');
+  if (businessNameInput) {
+    let checkTimeout;
+    businessNameInput.addEventListener('input', (e) => {
+      clearTimeout(checkTimeout);
+      const val = e.target.value.trim();
+      checkTimeout = setTimeout(() => {
+        checkClientMetaConnection(val);
+      }, 500);
+    });
+  }
+
+  /**
+   * Manages connecting/disconnecting platforms.
+   */
   function handleConnectClick(platformKey, displayName, statusEl, buttonEl) {
+    if (platformKey === 'Facebook / Instagram') {
+      const client = document.getElementById('businessName')?.value?.trim();
+      if (!client) {
+        alert('Please enter your Business Name first to connect Meta Ads.');
+        return;
+      }
+      if (connections[platformKey]) {
+        if (confirm(`Do you want to disconnect Meta Ads for "${client}"?`)) {
+          connections[platformKey] = null;
+          saveConnectionsToStorage();
+          updateConnectionDOM(platformKey, statusEl, buttonEl, false);
+        }
+        return;
+      }
+      // Open real OAuth Popup
+      const width = 600, height = 720;
+      const left = (window.innerWidth - width) / 2;
+      const top = (window.innerHeight - height) / 2;
+      window.open(
+        `/api/auth/facebook?client=${encodeURIComponent(client)}`,
+        'meta_oauth',
+        `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
+      );
+      return;
+    }
+
     if (connections[platformKey]) {
       // Disconnect action
       connections[platformKey] = null;
@@ -486,11 +560,11 @@ document.addEventListener('DOMContentLoaded', () => {
   /**
    * Syncs connection status directly to the DOM connection boxes.
    */
-  function updateConnectionDOM(platformKey, statusEl, buttonEl) {
-    const isConnected = !!connections[platformKey];
+  function updateConnectionDOM(platformKey, statusEl, buttonEl, overrideConnected = null, customLabel = null) {
+    const isConnected = overrideConnected !== null ? overrideConnected : !!connections[platformKey];
     if (isConnected) {
       statusEl.className = 'status-badge status-connected';
-      statusEl.textContent = 'Connected';
+      statusEl.textContent = customLabel || 'Connected';
       buttonEl.textContent = 'Disconnect';
       buttonEl.classList.add('btn-disconnect');
     } else {
@@ -515,8 +589,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // Update elements on startup
     updateConnectionDOM('Google Search', statusGoogle, connectBtnGoogle);
-    updateConnectionDOM('Facebook / Instagram', statusMeta, connectBtnMeta);
     updateConnectionDOM('LinkedIn', statusLinkedin, connectBtnLinkedin);
+    
+    // Check Meta connection status dynamically based on current business name input
+    const initialClientName = document.getElementById('businessName')?.value?.trim();
+    if (initialClientName) {
+      checkClientMetaConnection(initialClientName);
+    } else {
+      updateConnectionDOM('Facebook / Instagram', statusMeta, connectBtnMeta);
+    }
   }
 
   function saveConnectionsToStorage() {

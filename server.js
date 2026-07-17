@@ -500,14 +500,39 @@ app.post('/api/campaigns/launch', async (req, res) => {
     };
 
     if (shouldLaunchMeta) {
-      const metaAccessToken = process.env.META_ACCESS_TOKEN?.trim();
-      const metaAdAccountId = normalizeAdAccountId(process.env.META_AD_ACCOUNT_ID?.trim());
+      // Resolve Meta Access Token and Ad Account ID dynamically for this client from database
+      const db = await getDatabase();
+      let metaAccessToken = null;
+      let metaAdAccountId = null;
+      let targetPageId = null;
+
+      if (client_name) {
+        const clientConfig = await db.get(
+          'SELECT access_token, user_access_token, ad_account_id, page_id FROM page_configs WHERE lower(client_name) = lower(?) LIMIT 1',
+          [client_name.trim()]
+        );
+        if (clientConfig) {
+          // Use user_access_token if present (OAuth), fallback to page access token
+          metaAccessToken = clientConfig.user_access_token?.trim() || clientConfig.access_token?.trim();
+          metaAdAccountId = normalizeAdAccountId(clientConfig.ad_account_id?.trim());
+          targetPageId = clientConfig.page_id?.trim();
+        }
+      }
+
+      // Fallback to environment variables if not configured in db (ensures backward compatibility)
+      if (!metaAccessToken) {
+        metaAccessToken = process.env.META_ACCESS_TOKEN?.trim();
+      }
+      if (!metaAdAccountId) {
+        metaAdAccountId = normalizeAdAccountId(process.env.META_AD_ACCOUNT_ID?.trim());
+      }
+
       if (!metaAccessToken || !metaAdAccountId) {
         logStep(
           'meta_preflight',
           'error',
           'Meta Ads credentials are missing.',
-          'Set META_ACCESS_TOKEN and META_AD_ACCOUNT_ID in .env to run the Meta publishing pipeline.'
+          'Connect your Meta account on the dashboard or set META_ACCESS_TOKEN and META_AD_ACCOUNT_ID.'
         );
         return res.status(400).json({
           success: false,
@@ -1274,6 +1299,347 @@ app.get('/api/clients', async (req, res) => {
   } catch (error) {
     console.error('Error fetching clients list:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// GET: Check connection status for a client
+app.get('/api/clients/connections', async (req, res) => {
+  const { client } = req.query;
+  if (!client) {
+    return res.status(400).json({ error: 'Client query parameter is required.' });
+  }
+  try {
+    const db = await getDatabase();
+    const config = await db.get(
+      'SELECT page_id, page_name, ad_account_id FROM page_configs WHERE lower(client_name) = lower(?) LIMIT 1',
+      [client.trim()]
+    );
+    if (config) {
+      res.json({
+        connected: true,
+        page_id: config.page_id,
+        page_name: config.page_name || 'Linked Page',
+        ad_account_id: config.ad_account_id
+      });
+    } else {
+      res.json({ connected: false });
+    }
+  } catch (error) {
+    console.error('Error checking client connection:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// GET: Start Facebook/Meta Ads OAuth flow
+app.get('/api/auth/facebook', (req, res) => {
+  const client = req.query.client;
+  if (!client) {
+    return res.status(400).send('Client parameter is required.');
+  }
+
+  const appId = process.env.META_APP_ID;
+  const redirectUri = encodeURIComponent(
+    process.env.META_REDIRECT_URI || `http://localhost:${PORT}/api/auth/facebook/callback`
+  );
+  
+  if (!appId) {
+    return res.status(500).send('META_APP_ID is not configured in environment variables.');
+  }
+
+  const scopes = 'ads_management,pages_read_engagement,pages_show_list,leads_retrieval';
+  const oauthUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=${scopes}&state=${encodeURIComponent(client)}`;
+  
+  res.redirect(oauthUrl);
+});
+
+// GET: Facebook/Meta Ads OAuth callback
+app.get('/api/auth/facebook/callback', async (req, res) => {
+  const { code, state: clientName, error_description } = req.query;
+
+  if (error_description) {
+    return res.status(400).send(`OAuth Error: ${error_description}`);
+  }
+  if (!code || !clientName) {
+    return res.status(400).send('OAuth Error: Missing authorization code or client context.');
+  }
+
+  const appId = process.env.META_APP_ID;
+  const appSecret = process.env.META_APP_SECRET;
+  const redirectUri = encodeURIComponent(
+    process.env.META_REDIRECT_URI || `http://localhost:${PORT}/api/auth/facebook/callback`
+  );
+
+  try {
+    // 1. Exchange temporary authorization code for user access token
+    const tokenUrl = `https://graph.facebook.com/v20.0/oauth/access_token?client_id=${appId}&redirect_uri=${redirectUri}&client_secret=${appSecret}&code=${code}`;
+    const tokenResponse = await fetch(tokenUrl);
+    const tokenData = await tokenResponse.json();
+
+    if (!tokenResponse.ok || !tokenData.access_token) {
+      throw new Error(tokenData.error?.message || 'Failed to exchange OAuth code.');
+    }
+
+    const shortLivedToken = tokenData.access_token;
+
+    // 2. Exchange short-lived token for long-lived (60-day) User Access Token
+    const longLivedUrl = `https://graph.facebook.com/v20.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${appId}&client_secret=${appSecret}&fb_exchange_token=${shortLivedToken}`;
+    const longLivedResponse = await fetch(longLivedUrl);
+    const longLivedData = await longLivedResponse.json();
+
+    if (!longLivedResponse.ok || !longLivedData.access_token) {
+      throw new Error(longLivedData.error?.message || 'Failed to generate 60-day access token.');
+    }
+
+    const userToken = longLivedData.access_token;
+
+    // 3. Fetch user's pages
+    const pagesUrl = `https://graph.facebook.com/v20.0/me/accounts?fields=name,id,access_token&limit=100&access_token=${userToken}`;
+    const pagesResponse = await fetch(pagesUrl);
+    const pagesData = await pagesResponse.json();
+
+    if (!pagesResponse.ok) {
+      throw new Error(pagesData.error?.message || 'Failed to fetch user pages.');
+    }
+
+    const pages = pagesData.data || [];
+
+    // 4. Fetch user's ad accounts
+    const adAccountsUrl = `https://graph.facebook.com/v20.0/me/adaccounts?fields=name,account_id&limit=100&access_token=${userToken}`;
+    const adAccountsResponse = await fetch(adAccountsUrl);
+    const adAccountsData = await adAccountsResponse.json();
+
+    if (!adAccountsResponse.ok) {
+      throw new Error(adAccountsData.error?.message || 'Failed to fetch user ad accounts.');
+    }
+
+    const adAccounts = adAccountsData.data || [];
+
+    // Map page IDs to their corresponding page tokens for saving later
+    const pageTokensMap = {};
+    pages.forEach(p => {
+      pageTokensMap[p.id] = p.access_token;
+    });
+
+    // Build select dropdown options
+    const pagesOptions = pages.map(p => {
+      const valStr = JSON.stringify({ id: p.id, name: p.name });
+      return `<option value='${valStr.replace(/'/g, "&apos;")}'>${p.name} (ID: ${p.id})</option>`;
+    }).join('\n');
+
+    const adAccountsOptions = adAccounts.map(a => {
+      const valStr = JSON.stringify({ id: a.account_id, name: a.name });
+      return `<option value='${valStr.replace(/'/g, "&apos;")}'>${a.name} (ID: act_${a.account_id})</option>`;
+    }).join('\n');
+
+    // Render selection dashboard HTML page
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <title>Link Meta Assets - AstraAds</title>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+        <style>
+          :root {
+            --bg: #0b0f19;
+            --card-bg: #111827;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --text: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: #374151;
+          }
+          body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+          }
+          .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 480px;
+            box-sizing: border-box;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+          }
+          h2 {
+            margin-top: 0;
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            background: linear-gradient(135deg, #60a5fa, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          }
+          p {
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 24px;
+            line-height: 1.5;
+          }
+          .form-group {
+            margin-bottom: 20px;
+          }
+          label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+          }
+          select {
+            width: 100%;
+            padding: 12px;
+            background: #1f2937;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 15px;
+            box-sizing: border-box;
+            outline: none;
+          }
+          select:focus {
+            border-color: var(--accent);
+          }
+          button {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+          }
+          button:hover {
+            background: var(--accent-hover);
+          }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h2>Link Meta Assets</h2>
+          <p>Configure campaign and lead tracking for client: <strong>${clientName}</strong></p>
+          <form action="/api/auth/facebook/save" method="POST">
+            <input type="hidden" name="client_name" value="${clientName}">
+            <input type="hidden" name="user_access_token" value="${userToken}">
+            <input type="hidden" name="page_tokens" value='${JSON.stringify(pageTokensMap)}'>
+
+            <div class="form-group">
+              <label for="page_id_json">Select Facebook Page (for Webhook Leads):</label>
+              <select name="page_id_json" id="page_id_json" required>
+                ${pagesOptions || '<option value="" disabled>No pages found</option>'}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="ad_account_id_json">Select Facebook Ad Account (for Ads API):</label>
+              <select name="ad_account_id_json" id="ad_account_id_json" required>
+                ${adAccountsOptions || '<option value="" disabled>No ad accounts found</option>'}
+              </select>
+            </div>
+
+            <button type="submit">Link Account Details</button>
+          </form>
+        </div>
+      </body>
+      </html>
+    `);
+
+  } catch (error) {
+    console.error('Meta OAuth callback failed:', error);
+    res.status(500).send(`Failed to complete Meta authentication: ${error.message}`);
+  }
+});
+
+// POST: Save user asset linkage selections
+app.post('/api/auth/facebook/save', express.urlencoded({ extended: true }), async (req, res) => {
+  const { client_name, user_access_token, page_id_json, ad_account_id_json, page_tokens } = req.body;
+
+  try {
+    const pageData = JSON.parse(page_id_json);
+    const adAccountData = JSON.parse(ad_account_id_json);
+    const pageTokensMap = JSON.parse(page_tokens);
+
+    const pageId = pageData.id;
+    const pageName = pageData.name;
+    const adAccountId = `act_${adAccountData.id}`;
+    const pageAccessToken = pageTokensMap[pageId];
+
+    if (!pageAccessToken) {
+      throw new Error("Missing Page Access Token for selected Page.");
+    }
+
+    const db = await getDatabase();
+
+    await db.run(`
+      INSERT INTO page_configs (page_id, access_token, client_name, ad_account_id, user_access_token, page_name)
+      VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(page_id) DO UPDATE SET
+        access_token = excluded.access_token,
+        client_name = excluded.client_name,
+        ad_account_id = excluded.ad_account_id,
+        user_access_token = excluded.user_access_token,
+        page_name = excluded.page_name
+    `, [pageId, pageAccessToken, client_name, adAccountId, user_access_token, pageName]);
+
+    // Render a clean success page that closes itself and notifies parent dashboard
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Connection Successful</title>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+        <style>
+          body {
+            font-family: 'Outfit', sans-serif;
+            background: #0b0f19;
+            color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+          }
+          .container {
+            padding: 32px;
+          }
+          h2 { color: #10b981; margin-bottom: 12px; }
+          p { color: #9ca3af; margin-bottom: 24px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h2>Connection Successful!</h2>
+          <p>Meta accounts for <strong>${client_name}</strong> have been linked successfully.</p>
+          <p>This window will close automatically...</p>
+        </div>
+        <script>
+          if (window.opener) {
+            window.opener.postMessage({ type: 'META_AUTH_SUCCESS', client: '${client_name}' }, '*');
+          }
+          setTimeout(() => {
+            window.close();
+          }, 2000);
+        </script>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error('Error saving Meta assets:', error);
+    res.status(500).send(`Failed to save linked assets: ${error.message}`);
   }
 });
 
