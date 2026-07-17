@@ -1349,7 +1349,7 @@ app.get('/api/auth/facebook', (req, res) => {
   }
 
   const scopes = 'ads_management,pages_read_engagement,pages_show_list,leads_retrieval';
-  const oauthUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=${scopes}&state=${encodeURIComponent(client)}&auth_type=rerequest`;
+  const oauthUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=${scopes}&state=${encodeURIComponent(client)}`;
   
   res.redirect(oauthUrl);
 });
