@@ -588,7 +588,10 @@ app.post('/api/campaigns/launch', async (req, res) => {
       const targetingSpec = {
         geo_locations: { countries: ['IN', 'US'] },
         age_min: 21,
-        age_max: 55
+        age_max: 55,
+        targeting_automation: {
+          advantage_audience: 0
+        }
       };
       if (mappedInterests.length > 0) {
         targetingSpec.interests = mappedInterests;
