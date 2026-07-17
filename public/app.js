@@ -224,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Attach active connected account IDs to the launch payload
     const launchPayload = {
       ...currentCampaignPayload,
+      client_name: lastSubmittedParams?.businessName,
       linked_accounts: {
         google: connections['Google Search'],
         meta: connections['Facebook / Instagram'],

@@ -506,10 +506,11 @@ app.post('/api/campaigns/launch', async (req, res) => {
       let metaAdAccountId = null;
       let targetPageId = null;
 
-      if (client_name) {
+      const resolvedClientName = client_name || req.body.businessName || req.body.campaign_name;
+      if (resolvedClientName) {
         const clientConfig = await db.get(
           'SELECT access_token, user_access_token, ad_account_id, page_id FROM page_configs WHERE lower(client_name) = lower(?) LIMIT 1',
-          [client_name.trim()]
+          [resolvedClientName.trim()]
         );
         if (clientConfig) {
           // Use user_access_token if present (OAuth), fallback to page access token
