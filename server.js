@@ -1348,8 +1348,15 @@ app.get('/api/auth/facebook', (req, res) => {
     return res.status(500).send('META_APP_ID is not configured in environment variables.');
   }
 
-  const scopes = 'ads_management,pages_read_engagement,pages_show_list,leads_retrieval';
-  const oauthUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=${scopes}&state=${encodeURIComponent(client)}`;
+  const configId = process.env.META_CONFIG_ID?.trim();
+  let oauthUrl;
+
+  if (configId) {
+    oauthUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&config_id=${configId}&state=${encodeURIComponent(client)}`;
+  } else {
+    const scopes = 'ads_management,pages_read_engagement,pages_show_list,leads_retrieval';
+    oauthUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=${scopes}&state=${encodeURIComponent(client)}`;
+  }
   
   res.redirect(oauthUrl);
 });
