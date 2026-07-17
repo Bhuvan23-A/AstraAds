@@ -464,7 +464,7 @@ app.post('/api/campaigns/launch', async (req, res) => {
       return targets;
     };
 
-    const buildImageUploadPayload = async () => {
+    const buildImageUploadPayload = async (accessToken) => {
       let imageBytes;
       let mimeType = 'image/jpeg';
       let filename = `${sanitizeFileName(campaign_name)}.jpg`;
@@ -496,7 +496,7 @@ app.post('/api/campaigns/launch', async (req, res) => {
       }
 
       const imageForm = new FormData();
-      imageForm.append('access_token', metaAccessToken);
+      imageForm.append('access_token', accessToken);
       imageForm.append('filename', new Blob([imageBytes], { type: mimeType }), filename);
       return imageForm;
     };
@@ -623,7 +623,7 @@ app.post('/api/campaigns/launch', async (req, res) => {
       });
 
       // 3) Ad Image
-      const imagePayload = await buildImageUploadPayload();
+      const imagePayload = await buildImageUploadPayload(metaAccessToken);
       const imageResult = await metaGraphPost(`${metaAdAccountId}/adimages`, imagePayload, 'meta_ad_image_upload');
       metaEntities.image_hash = resolveImageHash(imageResult);
       if (!metaEntities.image_hash) {
