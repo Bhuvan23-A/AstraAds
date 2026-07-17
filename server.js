@@ -281,7 +281,7 @@ app.post('/api/campaigns/launch', async (req, res) => {
 
   const mapOptimizationGoal = (goalText) => {
     const normalized = (goalText || '').toLowerCase();
-    return normalized.includes('lead') ? 'LEADS' : 'LINK_CLICKS';
+    return normalized.includes('lead') ? 'LEAD_GENERATION' : 'LINK_CLICKS';
   };
 
   const mapCallToActionType = (ctaText) => {
@@ -607,7 +607,7 @@ app.post('/api/campaigns/launch', async (req, res) => {
         status: 'PAUSED',
         access_token: metaAccessToken
       });
-      if (optimizationGoal === 'LEADS') {
+      if (optimizationGoal === 'LEAD_GENERATION') {
         adSetPayload.append('promoted_object', JSON.stringify({ page_id: metaEntities.page_id }));
       }
       const adSetResult = await metaGraphPost(`${metaAdAccountId}/adsets`, adSetPayload, 'meta_ad_set_create');
