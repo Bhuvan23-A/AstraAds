@@ -89,11 +89,12 @@ app.post('/api/campaigns/generate', async (req, res) => {
   }
 });
 
-/**
+/*
+/*
  * Route: POST /api/campaigns/launch
  * Mock route acting as user approval/deployment receipt.
  * Evaluates active connected ad account IDs linked from the connection manager.
- */
+ *
 app.post('/api/campaigns/launch', async (req, res) => {
   try {
     const { campaign_name, budget_allocation, targeting, ad_creative, linked_accounts, primaryGoal } = req.body;
@@ -217,6 +218,675 @@ app.post('/api/campaigns/launch', async (req, res) => {
     res.status(500).json({ 
       error: 'Failed to deploy campaign.',
       details: error.message 
+    });
+  }
+});
+*/
+
+/**
+ * Route: POST /api/campaigns/launch
+ * Full Meta Ads publishing pipeline:
+ * Campaign -> Ad Set -> Ad Image -> Ad Creative -> Ad Object
+ */
+app.post('/api/campaigns/launch', async (req, res) => {
+  const deploymentLog = [];
+  const metaEntities = {
+    campaign_id: null,
+    ad_set_id: null,
+    image_hash: null,
+    creative_id: null,
+    ad_id: null,
+    page_id: null
+  };
+  const googleEntities = {
+    access_token: null,
+    customer_id: null,
+    campaign_budget_resource_name: null,
+    campaign_resource_name: null,
+    ad_group_resource_name: null,
+    ad_group_ad_resource_name: null,
+    keyword_resource_names: []
+  };
+
+  const logStep = (step, status, message, details = null) => {
+    deploymentLog.push({
+      timestamp: new Date().toISOString(),
+      step,
+      status,
+      message,
+      details
+    });
+  };
+
+  const buildReceipt = (payload = {}) => ({
+    campaign_id: metaEntities.campaign_id || `ad_${Math.random().toString(36).substring(2, 9)}`,
+    campaign_name: payload.campaign_name,
+    timestamp: new Date().toISOString(),
+    network_destinations: payload.network_destinations || [],
+    environment: metaEntities.campaign_id ? 'live-meta-staged' : 'meta-pipeline-failed',
+    budget_summary: payload.budget_allocation,
+    targeting_summary: payload.targeting,
+    creative_summary: payload.ad_creative,
+    meta_entities: metaEntities,
+    google_entities: googleEntities
+  });
+
+  const mapObjective = (goalText) => {
+    const normalized = (goalText || '').toLowerCase();
+    if (normalized.includes('lead')) return 'OUTCOME_LEADS';
+    if (normalized.includes('awareness') || normalized.includes('reach')) return 'OUTCOME_AWARENESS';
+    if (normalized.includes('sales') || normalized.includes('purchase')) return 'OUTCOME_SALES';
+    return 'OUTCOME_TRAFFIC';
+  };
+
+  const mapOptimizationGoal = (goalText) => {
+    const normalized = (goalText || '').toLowerCase();
+    return normalized.includes('lead') ? 'LEADS' : 'LINK_CLICKS';
+  };
+
+  const mapCallToActionType = (ctaText) => {
+    const normalized = (ctaText || '').toLowerCase();
+    if (normalized.includes('shop')) return 'SHOP_NOW';
+    if (normalized.includes('book')) return 'BOOK_NOW';
+    if (normalized.includes('sign')) return 'SIGN_UP';
+    if (normalized.includes('call')) return 'CALL_NOW';
+    if (normalized.includes('apply')) return 'APPLY_NOW';
+    if (normalized.includes('quote')) return 'GET_QUOTE';
+    return 'LEARN_MORE';
+  };
+
+  const sanitizeFileName = (name) => {
+    const cleaned = String(name || 'ad-creative')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    return cleaned || 'ad-creative';
+  };
+
+  const normalizeAdAccountId = (raw) => {
+    if (!raw) return null;
+    return raw.startsWith('act_') ? raw : `act_${raw}`;
+  };
+
+  const parseMetaError = (metaError) => {
+    if (!metaError) return 'Unknown Meta API error';
+    const parts = [metaError.message];
+    if (metaError.code) parts.push(`Code: ${metaError.code}`);
+    if (metaError.error_subcode) parts.push(`Subcode: ${metaError.error_subcode}`);
+    if (metaError.fbtrace_id) parts.push(`Trace: ${metaError.fbtrace_id}`);
+    return parts.filter(Boolean).join(' | ');
+  };
+
+  const parseGoogleError = (googleError) => {
+    if (!googleError) return 'Unknown Google Ads API error';
+    const parts = [];
+    if (googleError.message) parts.push(googleError.message);
+    if (googleError.error?.message) parts.push(googleError.error.message);
+    if (googleError.error?.status) parts.push(`Status: ${googleError.error.status}`);
+    if (googleError.error?.code) parts.push(`Code: ${googleError.error.code}`);
+    return parts.filter(Boolean).join(' | ');
+  };
+
+  const resolveImageHash = (imageResult) => {
+    if (imageResult?.hash) return imageResult.hash;
+    if (imageResult?.images && typeof imageResult.images === 'object') {
+      const imageEntries = Object.values(imageResult.images);
+      if (imageEntries.length > 0 && imageEntries[0]?.hash) {
+        return imageEntries[0].hash;
+      }
+    }
+    return null;
+  };
+
+  try {
+    const {
+      campaign_name,
+      budget_allocation,
+      targeting,
+      ad_creative,
+      linked_accounts,
+      primaryGoal,
+      client_name,
+      page_id
+    } = req.body;
+
+    if (!campaign_name) {
+      return res.status(400).json({
+        error: 'Invalid campaign payload. Launch requires a complete campaign dataset.'
+      });
+    }
+
+    const dailyBudget = Number(budget_allocation?.daily_budget);
+    if (!Number.isFinite(dailyBudget) || dailyBudget <= 0) {
+      return res.status(400).json({
+        error: 'Invalid campaign payload. budget_allocation.daily_budget must be a positive number.'
+      });
+    }
+
+    const activeDestinations = [];
+    const shouldLaunchMeta = Boolean(linked_accounts?.meta);
+    const shouldLaunchGoogle = Boolean(linked_accounts?.google);
+
+    if (!shouldLaunchMeta && !shouldLaunchGoogle && !linked_accounts?.linkedin) {
+      return res.status(400).json({
+        success: false,
+        status: 'Launch Failed',
+        error: 'No linked destination selected. Connect at least one ad channel before launch.',
+        deployment_log: deploymentLog,
+        receipt: buildReceipt(req.body)
+      });
+    }
+
+    const destinationLink = ad_creative?.destination_url || process.env.DEFAULT_LANDING_PAGE_URL || 'https://example.com';
+    const optimizationGoal = mapOptimizationGoal(primaryGoal);
+    const objective = mapObjective(primaryGoal || budget_allocation?.strategy);
+
+    const ensureGoogleKeywords = (keywordsInput) => {
+      const normalized = Array.isArray(keywordsInput)
+        ? keywordsInput.map(k => String(k).trim()).filter(Boolean)
+        : [];
+      const fallbackPool = [
+        campaign_name,
+        `${campaign_name} services`,
+        `${campaign_name} near me`,
+        'best services',
+        'get a free quote',
+        'trusted provider'
+      ];
+      const merged = [...normalized];
+      for (const fallbackKeyword of fallbackPool) {
+        if (merged.length >= 5) break;
+        merged.push(fallbackKeyword);
+      }
+      return Array.from(new Set(merged)).slice(0, 15);
+    };
+
+    const getPageIdForCreative = async () => {
+      if (page_id) return String(page_id);
+      if (process.env.META_PAGE_ID?.trim()) return process.env.META_PAGE_ID.trim();
+
+      const db = await getDatabase();
+      if (client_name) {
+        const byClient = await db.get(
+          'SELECT page_id FROM page_configs WHERE lower(client_name) = lower(?) LIMIT 1',
+          [client_name]
+        );
+        if (byClient?.page_id) return byClient.page_id;
+      }
+
+      const fallback = await db.get('SELECT page_id FROM page_configs ORDER BY rowid ASC LIMIT 1');
+      return fallback?.page_id || null;
+    };
+
+    const metaGraphPost = async (endpoint, payload, stepName) => {
+      const response = await fetch(`https://graph.facebook.com/v20.0/${endpoint}`, {
+        method: 'POST',
+        body: payload
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.error) {
+        throw new Error(`[${stepName}] ${parseMetaError(result.error)}`);
+      }
+      return result;
+    };
+
+    const resolveMetaInterestTargets = async (audienceInterests) => {
+      const cleanInterests = Array.isArray(audienceInterests)
+        ? audienceInterests.map(value => String(value).trim()).filter(Boolean).slice(0, 5)
+        : [];
+
+      const targets = [];
+      for (const interest of cleanInterests) {
+        try {
+          const params = new URLSearchParams({
+            type: 'adinterest',
+            q: interest,
+            limit: '1',
+            access_token: metaAccessToken
+          });
+          const searchResponse = await fetch(`https://graph.facebook.com/v20.0/search?${params.toString()}`);
+          const searchResult = await searchResponse.json().catch(() => ({}));
+          const matched = Array.isArray(searchResult.data) ? searchResult.data[0] : null;
+          if (matched?.id && matched?.name) {
+            targets.push({ id: matched.id, name: matched.name });
+          }
+        } catch (interestError) {
+          logStep(
+            'ad_set_targeting',
+            'warning',
+            `Interest lookup failed for "${interest}". Falling back to broad targeting for this interest.`,
+            interestError.message
+          );
+        }
+      }
+      return targets;
+    };
+
+    const buildImageUploadPayload = async () => {
+      let imageBytes;
+      let mimeType = 'image/jpeg';
+      let filename = `${sanitizeFileName(campaign_name)}.jpg`;
+
+      if (ad_creative?.manual_banner_base64) {
+        const rawValue = String(ad_creative.manual_banner_base64).trim();
+        const dataUri = rawValue.match(/^data:(.*?);base64,(.*)$/);
+        const base64Content = dataUri ? dataUri[2] : rawValue;
+        mimeType = dataUri?.[1] || mimeType;
+        imageBytes = Buffer.from(base64Content, 'base64');
+        if (!imageBytes || imageBytes.length === 0) {
+          throw new Error('manual_banner_base64 did not contain valid image bytes.');
+        }
+        logStep('ad_image_prepare', 'success', 'Prepared image bytes from ad_creative.manual_banner_base64.');
+      } else if (ad_creative?.generated_image_url) {
+        const imageResponse = await fetch(ad_creative.generated_image_url);
+        if (!imageResponse.ok) {
+          throw new Error(`Failed to download generated image URL. HTTP ${imageResponse.status}`);
+        }
+        imageBytes = Buffer.from(await imageResponse.arrayBuffer());
+        mimeType = imageResponse.headers.get('content-type') || mimeType;
+        filename = `${sanitizeFileName(campaign_name)}-generated.jpg`;
+        if (!imageBytes || imageBytes.length === 0) {
+          throw new Error('Generated image URL response did not contain bytes.');
+        }
+        logStep('ad_image_prepare', 'success', 'Downloaded image bytes from ad_creative.generated_image_url.');
+      } else {
+        throw new Error('No image source provided. Supply ad_creative.manual_banner_base64 or ad_creative.generated_image_url.');
+      }
+
+      const imageForm = new FormData();
+      imageForm.append('access_token', metaAccessToken);
+      imageForm.append('filename', new Blob([imageBytes], { type: mimeType }), filename);
+      return imageForm;
+    };
+
+    if (shouldLaunchMeta) {
+      const metaAccessToken = process.env.META_ACCESS_TOKEN?.trim();
+      const metaAdAccountId = normalizeAdAccountId(process.env.META_AD_ACCOUNT_ID?.trim());
+      if (!metaAccessToken || !metaAdAccountId) {
+        logStep(
+          'meta_preflight',
+          'error',
+          'Meta Ads credentials are missing.',
+          'Set META_ACCESS_TOKEN and META_AD_ACCOUNT_ID in .env to run the Meta publishing pipeline.'
+        );
+        return res.status(400).json({
+          success: false,
+          status: 'Launch Failed',
+          error: 'Meta Ads credentials are missing.',
+          deployment_log: deploymentLog,
+          receipt: buildReceipt(req.body)
+        });
+      }
+
+      logStep('meta_preflight', 'success', 'Meta launch preflight checks passed.', {
+        ad_account_id: metaAdAccountId,
+        objective,
+        optimization_goal: optimizationGoal
+      });
+
+      metaEntities.page_id = await getPageIdForCreative();
+      if (!metaEntities.page_id) {
+        logStep(
+          'meta_page_resolution',
+          'error',
+          'Unable to resolve a Meta Page ID for ad creative creation.',
+          'Provide page_id in payload, META_PAGE_ID in environment, or configure page_configs in DB.'
+        );
+        return res.status(400).json({
+          success: false,
+          status: 'Launch Failed',
+          error: 'Meta Page ID is required to create ad creatives.',
+          deployment_log: deploymentLog,
+          receipt: buildReceipt(req.body)
+        });
+      }
+      logStep('meta_page_resolution', 'success', `Using Meta Page ID ${metaEntities.page_id} for ad creative.`);
+
+      // 1) Campaign
+      const campaignPayload = new URLSearchParams({
+        name: campaign_name,
+        objective,
+        status: 'PAUSED',
+        special_ad_categories: '["NONE"]',
+        access_token: metaAccessToken
+      });
+      const campaignResult = await metaGraphPost(`${metaAdAccountId}/campaigns`, campaignPayload, 'meta_campaign_create');
+      metaEntities.campaign_id = campaignResult.id;
+      logStep('meta_campaign_create', 'success', 'Campaign created in PAUSED state.', { campaign_id: metaEntities.campaign_id });
+
+      // 2) Ad Set
+      const mappedInterests = await resolveMetaInterestTargets(targeting?.audience_interests);
+      const targetingSpec = {
+        geo_locations: { countries: ['IN', 'US'] },
+        age_min: 21,
+        age_max: 55
+      };
+      if (mappedInterests.length > 0) {
+        targetingSpec.interests = mappedInterests;
+        logStep('meta_ad_set_targeting', 'success', `Mapped ${mappedInterests.length} audience interests to Meta targeting.`, mappedInterests);
+      } else {
+        logStep('meta_ad_set_targeting', 'warning', 'No audience interests were mapped. Using broad geo targeting fallback (IN/US).');
+      }
+
+      const dailyBudgetMinorUnits = Math.max(100, Math.round(dailyBudget * 100));
+      const adSetPayload = new URLSearchParams({
+        name: `${campaign_name} - Ad Set`,
+        campaign_id: metaEntities.campaign_id,
+        daily_budget: String(dailyBudgetMinorUnits),
+        billing_event: 'IMPRESSIONS',
+        bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
+        optimization_goal: optimizationGoal,
+        targeting: JSON.stringify(targetingSpec),
+        status: 'PAUSED',
+        access_token: metaAccessToken
+      });
+      if (optimizationGoal === 'LEADS') {
+        adSetPayload.append('promoted_object', JSON.stringify({ page_id: metaEntities.page_id }));
+      }
+      const adSetResult = await metaGraphPost(`${metaAdAccountId}/adsets`, adSetPayload, 'meta_ad_set_create');
+      metaEntities.ad_set_id = adSetResult.id;
+      logStep('meta_ad_set_create', 'success', 'Ad Set created in PAUSED state.', {
+        ad_set_id: metaEntities.ad_set_id,
+        daily_budget_minor_units: dailyBudgetMinorUnits
+      });
+
+      // 3) Ad Image
+      const imagePayload = await buildImageUploadPayload();
+      const imageResult = await metaGraphPost(`${metaAdAccountId}/adimages`, imagePayload, 'meta_ad_image_upload');
+      metaEntities.image_hash = resolveImageHash(imageResult);
+      if (!metaEntities.image_hash) {
+        throw new Error('[meta_ad_image_upload] Meta did not return an image hash.');
+      }
+      logStep('meta_ad_image_upload', 'success', 'Ad image uploaded successfully.', { image_hash: metaEntities.image_hash });
+
+      // 4) Ad Creative
+      const headline = ad_creative?.headlines?.[0] || `${campaign_name} Offer`;
+      const primaryText = ad_creative?.primary_text || 'Discover more about this offer.';
+      const ctaType = mapCallToActionType(ad_creative?.call_to_action);
+      const objectStorySpec = {
+        page_id: metaEntities.page_id,
+        link_data: {
+          link: destinationLink,
+          message: primaryText,
+          name: headline,
+          image_hash: metaEntities.image_hash,
+          call_to_action: {
+            type: ctaType,
+            value: { link: destinationLink }
+          }
+        }
+      };
+      const creativePayload = new URLSearchParams({
+        name: `${campaign_name} - Creative`,
+        object_story_spec: JSON.stringify(objectStorySpec),
+        access_token: metaAccessToken
+      });
+      const creativeResult = await metaGraphPost(`${metaAdAccountId}/adcreatives`, creativePayload, 'meta_ad_creative_create');
+      metaEntities.creative_id = creativeResult.id;
+      logStep('meta_ad_creative_create', 'success', 'Ad Creative created.', { creative_id: metaEntities.creative_id });
+
+      // 5) Ad Object
+      const adPayload = new URLSearchParams({
+        name: `${campaign_name} - Ad`,
+        adset_id: metaEntities.ad_set_id,
+        creative: JSON.stringify({ creative_id: metaEntities.creative_id }),
+        status: 'PAUSED',
+        access_token: metaAccessToken
+      });
+      const adResult = await metaGraphPost(`${metaAdAccountId}/ads`, adPayload, 'meta_ad_create');
+      metaEntities.ad_id = adResult.id;
+      logStep('meta_ad_create', 'success', 'Ad object created in PAUSED state.', { ad_id: metaEntities.ad_id });
+
+      activeDestinations.push(`Meta Social Ads (Campaign: ${metaEntities.campaign_id}, Ad Set: ${metaEntities.ad_set_id}, Ad: ${metaEntities.ad_id})`);
+    }
+
+    if (shouldLaunchGoogle) {
+      const googleDeveloperToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN?.trim();
+      const googleClientId = process.env.GOOGLE_ADS_CLIENT_ID?.trim();
+      const googleClientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET?.trim();
+      const googleRefreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN?.trim();
+      const googleCustomerIdRaw = process.env.GOOGLE_ADS_CUSTOMER_ID?.trim();
+      const googleLoginCustomerIdRaw = process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID?.trim();
+      const googleCustomerId = googleCustomerIdRaw ? googleCustomerIdRaw.replace(/-/g, '') : '';
+      const googleLoginCustomerId = googleLoginCustomerIdRaw ? googleLoginCustomerIdRaw.replace(/-/g, '') : '';
+      googleEntities.customer_id = googleCustomerId || null;
+
+      if (!googleDeveloperToken || !googleClientId || !googleClientSecret || !googleRefreshToken || !googleCustomerId) {
+        logStep(
+          'google_preflight',
+          'error',
+          'Google Ads credentials are missing.',
+          'Set GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET, GOOGLE_ADS_REFRESH_TOKEN, and GOOGLE_ADS_CUSTOMER_ID.'
+        );
+        return res.status(400).json({
+          success: false,
+          status: 'Launch Failed',
+          error: 'Google Ads credentials are missing.',
+          deployment_log: deploymentLog,
+          receipt: buildReceipt(req.body)
+        });
+      }
+
+      const googleApiBase = `https://googleads.googleapis.com/v17/customers/${googleCustomerId}`;
+      const googleHeadersBase = {
+        'developer-token': googleDeveloperToken,
+        'Content-Type': 'application/json'
+      };
+      if (googleLoginCustomerId) {
+        googleHeadersBase['login-customer-id'] = googleLoginCustomerId;
+      }
+
+      logStep('google_preflight', 'success', 'Google Ads launch preflight checks passed.', {
+        customer_id: googleCustomerId
+      });
+
+      const tokenPayload = new URLSearchParams({
+        client_id: googleClientId,
+        client_secret: googleClientSecret,
+        refresh_token: googleRefreshToken,
+        grant_type: 'refresh_token'
+      });
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: tokenPayload.toString()
+      });
+      const tokenResult = await tokenResponse.json().catch(() => ({}));
+      if (!tokenResponse.ok || !tokenResult.access_token) {
+        throw new Error(`[google_oauth_token] ${parseGoogleError(tokenResult)}`);
+      }
+      googleEntities.access_token = 'obtained';
+      logStep('google_oauth_token', 'success', 'Obtained temporary Google OAuth access token.');
+
+      const googleMutate = async (pathSuffix, operations, stepName) => {
+        const response = await fetch(`${googleApiBase}/${pathSuffix}`, {
+          method: 'POST',
+          headers: {
+            ...googleHeadersBase,
+            Authorization: `Bearer ${tokenResult.access_token}`
+          },
+          body: JSON.stringify({ operations })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result.error) {
+          throw new Error(`[${stepName}] ${parseGoogleError(result)}`);
+        }
+        return result;
+      };
+
+      const googleBudgetMicros = Math.max(500000, Math.round(dailyBudget * 1000000));
+      const budgetMutate = await googleMutate(
+        'campaignBudgets:mutate',
+        [{
+          create: {
+            name: `${campaign_name} Budget`,
+            amountMicros: String(googleBudgetMicros),
+            deliveryMethod: 'STANDARD'
+          }
+        }],
+        'google_campaign_budget_create'
+      );
+      googleEntities.campaign_budget_resource_name = budgetMutate.results?.[0]?.resourceName || null;
+      if (!googleEntities.campaign_budget_resource_name) {
+        throw new Error('[google_campaign_budget_create] Missing campaign budget resource name in response.');
+      }
+      logStep('google_campaign_budget_create', 'success', 'Created Google campaign budget.', {
+        budget_resource_name: googleEntities.campaign_budget_resource_name,
+        amount_micros: googleBudgetMicros
+      });
+
+      const campaignMutate = await googleMutate(
+        'campaigns:mutate',
+        [{
+          create: {
+            name: `${campaign_name} Search Campaign`,
+            status: 'PAUSED',
+            advertisingChannelType: 'SEARCH',
+            campaignBudget: googleEntities.campaign_budget_resource_name,
+            networkSettings: {
+              targetGoogleSearch: true,
+              targetSearchNetwork: false,
+              targetContentNetwork: false,
+              targetPartnerSearchNetwork: false
+            },
+            manualCpc: {
+              enhancedCpcEnabled: false
+            }
+          }
+        }],
+        'google_campaign_create'
+      );
+      googleEntities.campaign_resource_name = campaignMutate.results?.[0]?.resourceName || null;
+      if (!googleEntities.campaign_resource_name) {
+        throw new Error('[google_campaign_create] Missing campaign resource name in response.');
+      }
+      logStep('google_campaign_create', 'success', 'Created Google search campaign in PAUSED state.', {
+        campaign_resource_name: googleEntities.campaign_resource_name
+      });
+
+      const adGroupMutate = await googleMutate(
+        'adGroups:mutate',
+        [{
+          create: {
+            name: `${campaign_name} Ad Group`,
+            campaign: googleEntities.campaign_resource_name,
+            status: 'PAUSED',
+            type: 'SEARCH_STANDARD',
+            cpcBidMicros: '1000000'
+          }
+        }],
+        'google_ad_group_create'
+      );
+      googleEntities.ad_group_resource_name = adGroupMutate.results?.[0]?.resourceName || null;
+      if (!googleEntities.ad_group_resource_name) {
+        throw new Error('[google_ad_group_create] Missing ad group resource name in response.');
+      }
+      logStep('google_ad_group_create', 'success', 'Created Google ad group in PAUSED state.', {
+        ad_group_resource_name: googleEntities.ad_group_resource_name
+      });
+
+      const headlines = Array.isArray(ad_creative?.headlines)
+        ? ad_creative.headlines.map(h => String(h).trim()).filter(Boolean).slice(0, 3)
+        : [];
+      while (headlines.length < 3) {
+        headlines.push(`${campaign_name} Offer ${headlines.length + 1}`);
+      }
+      const descriptions = Array.isArray(ad_creative?.descriptions)
+        ? ad_creative.descriptions.map(d => String(d).trim()).filter(Boolean).slice(0, 2)
+        : [];
+      while (descriptions.length < 2) {
+        descriptions.push('Learn more about our services and offers.');
+      }
+
+      const adGroupAdMutate = await googleMutate(
+        'adGroupAds:mutate',
+        [{
+          create: {
+            adGroup: googleEntities.ad_group_resource_name,
+            status: 'PAUSED',
+            ad: {
+              finalUrls: [destinationLink],
+              responsiveSearchAd: {
+                headlines: headlines.map(text => ({ text })),
+                descriptions: descriptions.map(text => ({ text }))
+              }
+            }
+          }
+        }],
+        'google_ad_group_ad_create'
+      );
+      googleEntities.ad_group_ad_resource_name = adGroupAdMutate.results?.[0]?.resourceName || null;
+      if (!googleEntities.ad_group_ad_resource_name) {
+        throw new Error('[google_ad_group_ad_create] Missing ad group ad resource name in response.');
+      }
+      logStep('google_ad_group_ad_create', 'success', 'Created Google responsive search ad in PAUSED state.', {
+        ad_group_ad_resource_name: googleEntities.ad_group_ad_resource_name,
+        final_url: destinationLink
+      });
+
+      const keywordPhrases = ensureGoogleKeywords(targeting?.keywords);
+      const keywordOperations = keywordPhrases.map(text => ({
+        create: {
+          adGroup: googleEntities.ad_group_resource_name,
+          status: 'PAUSED',
+          keyword: {
+            text,
+            matchType: 'BROAD'
+          }
+        }
+      }));
+      const keywordsMutate = await googleMutate(
+        'adGroupCriteria:mutate',
+        keywordOperations,
+        'google_keywords_create'
+      );
+      googleEntities.keyword_resource_names = Array.isArray(keywordsMutate.results)
+        ? keywordsMutate.results.map(result => result.resourceName).filter(Boolean)
+        : [];
+      logStep('google_keywords_create', 'success', 'Created Google broad-match keywords.', {
+        total_keywords: googleEntities.keyword_resource_names.length,
+        keywords: keywordPhrases
+      });
+
+      activeDestinations.push(`Google Ads (Campaign: ${googleEntities.campaign_resource_name}, Ad Group: ${googleEntities.ad_group_resource_name})`);
+    }
+
+    if (linked_accounts?.linkedin) {
+      activeDestinations.push(`LinkedIn Ads (Account: ${linked_accounts.linkedin})`);
+      logStep('external_channel_linkedin', 'info', `LinkedIn linked account detected: ${linked_accounts.linkedin}.`);
+    }
+
+    logStep('finalize', 'success', 'Ads publishing pipeline completed successfully.', {
+      campaign_id: metaEntities.campaign_id,
+      ad_set_id: metaEntities.ad_set_id,
+      google_campaign_resource_name: googleEntities.campaign_resource_name,
+      google_ad_group_resource_name: googleEntities.ad_group_resource_name,
+      creative_id: metaEntities.creative_id,
+      ad_id: metaEntities.ad_id
+    });
+
+    res.json({
+      success: true,
+      status: 'Active & Live',
+      deployment_log: deploymentLog,
+      receipt: buildReceipt({
+        campaign_name,
+        budget_allocation,
+        targeting,
+        ad_creative,
+        network_destinations: activeDestinations
+      })
+    });
+  } catch (error) {
+    logStep('pipeline_error', 'error', 'Meta Ads publishing pipeline failed.', error.message);
+    console.error('Error launching campaign:', error.message);
+    res.status(502).json({
+      success: false,
+      status: 'Launch Failed',
+      error: 'Failed to deploy campaign.',
+      details: error.message,
+      deployment_log: deploymentLog,
+      receipt: buildReceipt(req.body)
     });
   }
 });
