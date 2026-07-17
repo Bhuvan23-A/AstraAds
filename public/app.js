@@ -328,8 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const dailyBudget = campaign.budget_allocation?.daily_budget;
     dailyBudgetEl.textContent = typeof dailyBudget === 'number' 
-      ? `$${dailyBudget.toFixed(2)}` 
-      : `$${dailyBudget}`;
+      ? `₹${dailyBudget.toFixed(2)}` 
+      : `₹${dailyBudget}`;
     budgetStrategyEl.textContent = campaign.budget_allocation?.strategy || 'N/A';
 
     keywordsContainer.innerHTML = '';

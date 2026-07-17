@@ -122,10 +122,10 @@
 
           <div class="form-group-row">
             <div class="form-group">
-              <label for="monthlyBudget">Monthly Budget ($)</label>
+              <label for="monthlyBudget">Monthly Budget (₹)</label>
               <div class="input-wrapper">
-                <i class="fa-solid fa-dollar-sign input-icon"></i>
-                <input type="number" id="monthlyBudget" name="monthlyBudget" min="10" placeholder="e.g. 900" required>
+                <span class="input-prefix">₹</span>
+                <input type="number" id="monthlyBudget" name="monthlyBudget" placeholder="e.g. 5000" required>
               </div>
             </div>
 
@@ -136,18 +136,17 @@
                 <select id="primaryGoal" name="primaryGoal" required>
                   <option value="" disabled selected>Select Goal</option>
                   <option value="Lead Generation">Lead Generation</option>
-                  <option value="Online Sales / Conversions">Online Sales</option>
-                  <option value="Store Visits / Local Traffic">Store Visits</option>
+                  <option value="Sales / Conversion">Sales & Conversions</option>
                   <option value="Brand Awareness">Brand Awareness</option>
+                  <option value="Website Traffic">Website Traffic</option>
                 </select>
               </div>
             </div>
           </div>
 
-          <button type="submit" id="submit-btn" class="btn btn-primary btn-glowing">
+          <button type="submit" class="btn-generate" id="generate-btn">
             <span>Generate Campaign</span>
-            <i class="fa-solid fa-circle-notch fa-spin btn-loading-icon"></i>
-            <i class="fa-solid fa-arrow-right btn-arrow-icon"></i>
+            <i class="fa-solid fa-arrow-right"></i>
           </button>
         </form>
       </section>
@@ -191,7 +190,7 @@
               </div>
               <div class="card-body">
                 <div class="budget-stat">
-                  <div class="budget-value" id="daily-budget">$0.00</div>
+                  <div class="budget-value" id="daily-budget">₹0.00</div>
                   <div class="budget-label">Recommended Daily Budget</div>
                 </div>
                 <div class="strategy-box">
