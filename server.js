@@ -574,6 +574,7 @@ app.post('/api/campaigns/launch', async (req, res) => {
         objective,
         status: 'PAUSED',
         special_ad_categories: '["NONE"]',
+        is_adset_budget_sharing_enabled: 'false',
         access_token: metaAccessToken
       });
       const campaignResult = await metaGraphPost(`${metaAdAccountId}/campaigns`, campaignPayload, 'meta_campaign_create');
