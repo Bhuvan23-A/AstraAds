@@ -236,7 +236,8 @@ app.post('/api/campaigns/launch', async (req, res) => {
     image_hash: null,
     creative_id: null,
     ad_id: null,
-    page_id: null
+    page_id: null,
+    leadgen_form_id: null
   };
   const googleEntities = {
     access_token: null,
@@ -350,7 +351,8 @@ app.post('/api/campaigns/launch', async (req, res) => {
       primaryGoal,
       client_name,
       page_id,
-      launch_status
+      launch_status,
+      leadFields
     } = req.body;
 
     const metaStatus = (launch_status === 'ACTIVE') ? 'ACTIVE' : 'PAUSED';
@@ -467,6 +469,32 @@ app.post('/api/campaigns/launch', async (req, res) => {
       return targets;
     };
 
+    const createLeadgenForm = async (pageId, pageAccessToken, campaignName, destUrl, fields) => {
+      const formPayload = new URLSearchParams({
+        name: `${campaignName} Lead Form`,
+        access_token: pageAccessToken,
+        questions: JSON.stringify(fields.map(f => ({ type: f }))),
+        privacy_policy: JSON.stringify({
+          url: destUrl + '/privacy' || 'https://example.com/privacy',
+          link_text: 'Privacy Policy'
+        }),
+        follow_up_action_url: destUrl || 'https://example.com',
+        context_card: JSON.stringify({
+          title: 'Get a Free Quote',
+          style: 'LIST_STYLE',
+          content: ['Quick response', 'No commitment required'],
+          button_text: 'Continue'
+        })
+      });
+      const res = await fetch(`https://graph.facebook.com/v20.0/${pageId}/leadgen_forms`, {
+        method: 'POST',
+        body: formPayload
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) throw new Error(`[leadgen_form_create] ${parseMetaError(data.error)}`);
+      return data.id;
+    };
+
     const buildImageUploadPayload = async (accessToken) => {
       let imageBytes;
 
@@ -570,6 +598,22 @@ app.post('/api/campaigns/launch', async (req, res) => {
       }
       logStep('meta_page_resolution', 'success', `Using Meta Page ID ${metaEntities.page_id} for ad creative.`);
 
+      if (optimizationGoal === 'LEAD_GENERATION') {
+        try {
+          const fieldsToCollect = Array.isArray(leadFields) && leadFields.length > 0 ? leadFields : ['FULL_NAME', 'EMAIL', 'PHONE'];
+          metaEntities.leadgen_form_id = await createLeadgenForm(
+            metaEntities.page_id,
+            metaAccessToken,
+            campaign_name,
+            destinationLink,
+            fieldsToCollect
+          );
+          logStep('leadgen_form_create', 'success', `Created Instant Form.`, { form_id: metaEntities.leadgen_form_id });
+        } catch (err) {
+          logStep('leadgen_form_create', 'warning', `Failed to create Instant Form, falling back to link ad. ${err.message}`);
+        }
+      }
+
       // 1) Campaign
       const campaignPayload = new URLSearchParams({
         name: campaign_name,
@@ -613,7 +657,10 @@ app.post('/api/campaigns/launch', async (req, res) => {
         access_token: metaAccessToken
       });
       if (optimizationGoal === 'LEAD_GENERATION') {
-        adSetPayload.append('promoted_object', JSON.stringify({ page_id: metaEntities.page_id }));
+        adSetPayload.append('promoted_object', JSON.stringify({
+          page_id: metaEntities.page_id,
+          ...(metaEntities.leadgen_form_id && { leadgen_form_id: metaEntities.leadgen_form_id })
+        }));
       }
       const adSetResult = await metaGraphPost(`${metaAdAccountId}/adsets`, adSetPayload, 'meta_ad_set_create');
       metaEntities.ad_set_id = adSetResult.id;
@@ -635,18 +682,31 @@ app.post('/api/campaigns/launch', async (req, res) => {
       const headline = ad_creative?.headlines?.[0] || `${campaign_name} Offer`;
       const primaryText = ad_creative?.primary_text || 'Discover more about this offer.';
       const ctaType = mapCallToActionType(ad_creative?.call_to_action);
+      
+      const isLeadGen = optimizationGoal === 'LEAD_GENERATION' && metaEntities.leadgen_form_id;
+
       const objectStorySpec = {
         page_id: metaEntities.page_id,
-        link_data: {
-          link: destinationLink,
-          message: primaryText,
-          name: headline,
-          image_hash: metaEntities.image_hash,
-          call_to_action: {
-            type: ctaType,
-            value: { link: destinationLink }
+        ...(isLeadGen ? {
+          lead_gen_data: {
+            lead_gen_form_id: metaEntities.leadgen_form_id,
+            call_to_action: { type: 'LEARN_MORE' },
+            message: primaryText,
+            name: headline,
+            image_hash: metaEntities.image_hash
           }
-        }
+        } : {
+          link_data: {
+            link: destinationLink,
+            message: primaryText,
+            name: headline,
+            image_hash: metaEntities.image_hash,
+            call_to_action: {
+              type: ctaType,
+              value: { link: destinationLink }
+            }
+          }
+        })
       };
       const creativePayload = new URLSearchParams({
         name: `${campaign_name} - Creative`,

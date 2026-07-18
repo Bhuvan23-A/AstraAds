@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Onboarding Form Elements
   const onboardingForm = document.getElementById('onboarding-form');
   const submitBtn = document.getElementById('submit-btn');
+  const primaryGoalSelect = document.getElementById('primaryGoal');
+  const leadFormConfig = document.getElementById('lead-form-config');
 
   // Dashboard Structure Elements
   const reviewSection = document.getElementById('review-section');
@@ -109,6 +111,15 @@ document.addEventListener('DOMContentLoaded', () => {
     searchAdMock.classList.add('hidden');
   });
 
+  // Toggle Lead Form Config visibility
+  primaryGoalSelect.addEventListener('change', (e) => {
+    if (e.target.value === 'Lead Generation') {
+      leadFormConfig.classList.remove('hidden');
+    } else {
+      leadFormConfig.classList.add('hidden');
+    }
+  });
+
   // Setup OAuth Connection listeners
   connectBtnGoogle.addEventListener('click', () => handleConnectClick('Google Search', 'Google Ads', statusGoogle, connectBtnGoogle));
   connectBtnMeta.addEventListener('click', () => handleConnectClick('Facebook / Instagram', 'Meta Ads', statusMeta, connectBtnMeta));
@@ -140,6 +151,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const leadFields = Array.from(onboardingForm.querySelectorAll('input[name="leadFields"]:checked')).map(el => el.value);
+
     const params = {
       businessName: formData.get('businessName'),
       products: formData.get('products'),
@@ -147,7 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
       monthlyBudget: Number(formData.get('monthlyBudget')),
       primaryGoal: formData.get('primaryGoal'),
       websiteUrl: formData.get('websiteUrl') || '',
-      platforms: platforms
+      platforms: platforms,
+      leadFields: leadFields
     };
 
     lastSubmittedParams = params;
