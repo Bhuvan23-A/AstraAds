@@ -221,17 +221,18 @@ document.addEventListener('DOMContentLoaded', () => {
     approveBtn.disabled = true;
     approveBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Staging...</span>`;
 
-    // Attach active connected account IDs to the launch payload
-    const launchPayload = {
-      ...currentCampaignPayload,
-      client_name: lastSubmittedParams?.businessName,
-      primaryGoal: lastSubmittedParams?.primaryGoal,
-      linked_accounts: {
-        google: connections['Google Search'],
-        meta: connections['Facebook / Instagram'],
-        linkedin: connections['LinkedIn']
-      }
-    };
+     // Attach active connected account IDs to the launch payload
+     const launchPayload = {
+       ...currentCampaignPayload,
+       client_name: lastSubmittedParams?.businessName,
+       primaryGoal: lastSubmittedParams?.primaryGoal,
+       launch_status: document.getElementById('launch-status')?.value || 'PAUSED',
+       linked_accounts: {
+         google: connections['Google Search'],
+         meta: connections['Facebook / Instagram'],
+         linkedin: connections['LinkedIn']
+       }
+     };
 
     try {
       const response = await fetch('/api/campaigns/launch', {

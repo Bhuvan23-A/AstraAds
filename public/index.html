@@ -347,6 +347,13 @@
               <i class="fa-solid fa-rotate"></i>
               <span>Regenerate Creative</span>
             </button>
+            <div class="launch-mode-selector" style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 0.85rem; color: #a0aec0;"><i class="fa-solid fa-circle-play" style="color: #4299e1; margin-right: 4px;"></i> Status:</span>
+              <select id="launch-status" class="leads-select" style="padding: 8px 12px; font-size: 0.9rem; background: #2d3748; color: #fff; border: 1px solid #4a5568; border-radius: 6px; cursor: pointer;">
+                <option value="PAUSED" selected>Paused (Draft)</option>
+                <option value="ACTIVE">Active (Live / Real Money)</option>
+              </select>
+            </div>
             <button id="approve-btn" class="btn btn-success btn-glowing">
               <i class="fa-solid fa-paper-plane"></i>
               <span>Approve & Launch Live</span>

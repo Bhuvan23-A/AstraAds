@@ -349,8 +349,11 @@ app.post('/api/campaigns/launch', async (req, res) => {
       linked_accounts,
       primaryGoal,
       client_name,
-      page_id
+      page_id,
+      launch_status
     } = req.body;
+
+    const metaStatus = (launch_status === 'ACTIVE') ? 'ACTIVE' : 'PAUSED';
 
     if (!campaign_name) {
       return res.status(400).json({
@@ -571,14 +574,14 @@ app.post('/api/campaigns/launch', async (req, res) => {
       const campaignPayload = new URLSearchParams({
         name: campaign_name,
         objective,
-        status: 'PAUSED',
+        status: metaStatus,
         special_ad_categories: '["NONE"]',
         is_adset_budget_sharing_enabled: 'false',
         access_token: metaAccessToken
       });
       const campaignResult = await metaGraphPost(`${metaAdAccountId}/campaigns`, campaignPayload, 'meta_campaign_create');
       metaEntities.campaign_id = campaignResult.id;
-      logStep('meta_campaign_create', 'success', 'Campaign created in PAUSED state.', { campaign_id: metaEntities.campaign_id });
+      logStep('meta_campaign_create', 'success', `Campaign created in ${metaStatus} state.`, { campaign_id: metaEntities.campaign_id });
 
       // 2) Ad Set
       const mappedInterests = await resolveMetaInterestTargets(targeting?.audience_interests, metaAccessToken);
@@ -606,7 +609,7 @@ app.post('/api/campaigns/launch', async (req, res) => {
         bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
         optimization_goal: optimizationGoal,
         targeting: JSON.stringify(targetingSpec),
-        status: 'PAUSED',
+        status: metaStatus,
         access_token: metaAccessToken
       });
       if (optimizationGoal === 'LEAD_GENERATION') {
@@ -614,7 +617,7 @@ app.post('/api/campaigns/launch', async (req, res) => {
       }
       const adSetResult = await metaGraphPost(`${metaAdAccountId}/adsets`, adSetPayload, 'meta_ad_set_create');
       metaEntities.ad_set_id = adSetResult.id;
-      logStep('meta_ad_set_create', 'success', 'Ad Set created in PAUSED state.', {
+      logStep('meta_ad_set_create', 'success', `Ad Set created in ${metaStatus} state.`, {
         ad_set_id: metaEntities.ad_set_id,
         daily_budget_minor_units: dailyBudgetMinorUnits
       });
@@ -659,12 +662,12 @@ app.post('/api/campaigns/launch', async (req, res) => {
         name: `${campaign_name} - Ad`,
         adset_id: metaEntities.ad_set_id,
         creative: JSON.stringify({ creative_id: metaEntities.creative_id }),
-        status: 'PAUSED',
+        status: metaStatus,
         access_token: metaAccessToken
       });
       const adResult = await metaGraphPost(`${metaAdAccountId}/ads`, adPayload, 'meta_ad_create');
       metaEntities.ad_id = adResult.id;
-      logStep('meta_ad_create', 'success', 'Ad object created in PAUSED state.', { ad_id: metaEntities.ad_id });
+      logStep('meta_ad_create', 'success', `Ad object created in ${metaStatus} state.`, { ad_id: metaEntities.ad_id });
 
       activeDestinations.push(`Meta Social Ads (Campaign: ${metaEntities.campaign_id}, Ad Set: ${metaEntities.ad_set_id}, Ad: ${metaEntities.ad_id})`);
     }
