@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AstraAds - Client Login</title>
+  <!-- Google Fonts: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .login-container {
+      background: rgba(30, 41, 59, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      width: 100%;
+      max-width: 440px;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      animation: fadeIn 0.6s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .login-header {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+    .login-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 2rem;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 10px;
+    }
+    .login-logo i {
+      color: #06b6d4;
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .login-subtitle {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      letter-spacing: 0.02em;
+    }
+    .login-form .form-group {
+      margin-bottom: 24px;
+    }
+    .login-form label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .login-form .input-wrapper {
+      position: relative;
+    }
+    .login-form .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #64748b;
+      font-size: 1rem;
+      transition: color 0.2s ease;
+    }
+    .login-form input {
+      width: 100%;
+      padding: 14px 16px 14px 42px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: white;
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: all 0.25s ease;
+    }
+    .login-form input:focus {
+      outline: none;
+      border-color: #06b6d4;
+      background: rgba(15, 23, 42, 0.85);
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+    }
+    .login-form input:focus + .input-icon {
+      color: #06b6d4;
+    }
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.25);
+      margin-top: 10px;
+    }
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+      filter: brightness(1.1);
+    }
+    .btn-login:active {
+      transform: translateY(0);
+    }
+    .error-msg {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      color: #f87171;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 20px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="login-header">
+      <div class="login-logo">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span>Astra<span style="color: #06b6d4;">Ads</span></span>
+      </div>
+      <div class="login-subtitle">Autonomous Ad Operations Login</div>
+    </div>
+
+    <div class="error-msg" id="error-box">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span id="error-text">Invalid username or password.</span>
+    </div>
+
+    <form class="login-form" id="login-form">
+      <div class="form-group">
+        <label for="username">Client Username</label>
+        <div class="input-wrapper">
+          <input type="text" id="username" placeholder="e.g. theastraai" required>
+          <i class="fa-solid fa-user input-icon"></i>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-wrapper">
+          <input type="password" id="password" placeholder="••••••••••••" required>
+          <i class="fa-solid fa-lock input-icon"></i>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-login" id="login-btn">
+        <span>Sign In</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('login-form');
+    const errorBox = document.getElementById('error-box');
+    const errorText = document.getElementById('error-text');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBox.style.display = 'none';
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          window.location.href = '/dashboard';
+        } else {
+          errorText.textContent = data.error || 'Invalid credentials. Please try again.';
+          errorBox.style.display = 'flex';
+        }
+      } catch (err) {
+        errorText.textContent = 'Connection failed. Please check if the server is running.';
+        errorBox.style.display = 'flex';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -2,7 +2,46 @@
  * AstraAds - Client-Side Controller (ES Module)
  */
 
+// Global fetch interceptor for handling 401 Unauthorized redirects
+const originalFetch = window.fetch;
+window.fetch = async function(...args) {
+  const response = await originalFetch(...args);
+  if (response.status === 401) {
+    window.location.href = '/login.html';
+  }
+  return response;
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+  // Session check on load
+  async function checkSession() {
+    try {
+      const response = await fetch('/api/auth/session');
+      const data = await response.json();
+      if (!data.loggedIn) {
+        window.location.href = '/login.html';
+      }
+    } catch (e) {
+      window.location.href = '/login.html';
+    }
+  }
+  checkSession();
+
+  // Logout button handler
+  const btnLogout = document.getElementById('btn-logout');
+  if (btnLogout) {
+    btnLogout.addEventListener('click', async () => {
+      try {
+        const response = await fetch('/api/auth/logout', { method: 'POST' });
+        const data = await response.json();
+        if (data.success) {
+          window.location.href = '/login.html';
+        }
+      } catch (e) {
+        window.location.href = '/login.html';
+      }
+    });
+  }
   // Onboarding Form Elements
   const onboardingForm = document.getElementById('onboarding-form');
   const submitBtn = document.getElementById('submit-btn');

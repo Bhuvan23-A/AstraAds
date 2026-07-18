@@ -51,6 +51,24 @@ export async function initializeDatabase() {
     )
   `);
 
+  // Create users table for session authentication
+  await database.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      username TEXT PRIMARY KEY,
+      password TEXT NOT NULL
+    )
+  `);
+
+  // Seed default admin user if empty
+  const userCount = await database.get('SELECT COUNT(*) as count FROM users');
+  if (userCount.count === 0) {
+    await database.run(
+      'INSERT INTO users (username, password) VALUES (?, ?)',
+      ['theastraai', 'vzo-[S&ELe&ahU.D']
+    );
+    console.log('Database initialized: Seeded default user accounts.');
+  }
+
   // Migration: Add columns to page_configs if they don't exist
   const pcColumns = await database.all("PRAGMA table_info(page_configs)");
   const hasAdAccount = pcColumns.some(c => c.name === 'ad_account_id');

@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import session from 'express-session';
 import { generateAdCampaign } from './aiService.js';
 import { getDatabase, initializeDatabase } from './database.js';
 
@@ -53,6 +54,83 @@ const __dirname = path.dirname(__filename);
 
 // Middleware
 app.use(express.json());
+
+// Session setup
+app.use(session({
+  secret: 'astraads-secure-session-key-19482',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: false, 
+    maxAge: 24 * 60 * 60 * 1000 
+  }
+}));
+
+// Auth check middleware
+function requireAuth(req, res, next) {
+  if (req.session && req.session.user) {
+    return next();
+  }
+  if (req.headers.accept && req.headers.accept.includes('text/html')) {
+    return res.redirect('/login.html');
+  }
+  res.status(401).json({ error: 'Unauthorized. Please login.' });
+}
+
+// Authentication API endpoints
+app.post('/api/auth/login', async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required.' });
+  }
+
+  try {
+    const db = await getDatabase();
+    const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
+    if (user && user.password === password) {
+      req.session.user = { username: user.username };
+      return res.json({ success: true, username: user.username });
+    }
+    return res.status(401).json({ error: 'Invalid username or password.' });
+  } catch (error) {
+    console.error('Login error:', error);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to logout.' });
+    }
+    res.clearCookie('connect.sid');
+    return res.json({ success: true });
+  });
+});
+
+app.get('/api/auth/session', (req, res) => {
+  if (req.session && req.session.user) {
+    return res.json({ loggedIn: true, user: req.session.user });
+  }
+  return res.json({ loggedIn: false });
+});
+
+// Protected routes for HTML pages
+app.get('/dashboard.html', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+app.get('/dashboard', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+// Protect user-facing APIs
+app.use('/api/campaigns', requireAuth);
+app.use('/api/leads', requireAuth);
+app.use('/api/stats', requireAuth);
+app.use('/api/clients', requireAuth);
+
+// Serve other static files
 app.use(express.static(path.join(__dirname, 'public')));
 
 /**
@@ -1672,7 +1750,7 @@ app.get('/api/auth/facebook/callback', async (req, res) => {
 });
 
 // POST: Save user asset linkage selections
-app.post('/api/auth/facebook/save', express.urlencoded({ extended: true }), async (req, res) => {
+app.post('/api/auth/facebook/save', requireAuth, express.urlencoded({ extended: true }), async (req, res) => {
   const { client_name, user_access_token, page_id_json, ad_account_id_json, page_tokens } = req.body;
 
   try {

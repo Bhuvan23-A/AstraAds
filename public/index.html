@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AstraAds - Automated Digital Ad Campaign Manager</title>
-  <meta name="description" content="Generate, validate, and launch high-performance digital ad campaigns using advanced AI and human-in-the-loop review.">
+  <title>AstraAds - Autonomous AI Ad Operations for Small Businesses</title>
+  <meta name="description" content="Generate, validate, and deploy optimized Meta and Google ad campaigns with active lead capture in 60 seconds.">
   <!-- Google Fonts: Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,744 +12,601 @@
   <!-- FontAwesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
-  <!-- Chart.js for leads analytics -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Cropper.js for image resizing and cropping -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+  <style>
+    /* Premium B2B SaaS Marketing Styles */
+    body {
+      background: #020617;
+      color: #f1f5f9;
+      font-family: 'Outfit', sans-serif;
+      margin: 0;
+      padding: 0;
+      line-height: 1.5;
+    }
+    .landing-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 8%;
+      background: rgba(2, 6, 23, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: white;
+      text-decoration: none;
+    }
+    .logo i {
+      color: #06b6d4;
+    }
+    .logo-accent {
+      color: #06b6d4;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+    }
+    .nav-link {
+      color: #94a3b8;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s ease;
+    }
+    .nav-link:hover {
+      color: white;
+    }
+    .btn-nav-cta {
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: #06b6d4;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.25s ease;
+    }
+    .btn-nav-cta:hover {
+      background: #06b6d4;
+      color: #020617;
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+    }
+
+    /* Hero Section */
+    .hero-section {
+      padding: 100px 8% 80px 8%;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.08) 0%, transparent 70%);
+      top: -150px;
+      z-index: -1;
+    }
+    .hero-badge {
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+      color: #22d3ee;
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      letter-spacing: 0.05em;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hero-title {
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1.15;
+      max-width: 900px;
+      margin: 0 auto 20px auto;
+      letter-spacing: -0.02em;
+    }
+    .hero-title span {
+      background: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: #94a3b8;
+      max-width: 650px;
+      margin: 0 auto 40px auto;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+    .hero-ctas {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 60px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+      color: white;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.25);
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 22px rgba(6, 182, 212, 0.4);
+      filter: brightness(1.1);
+    }
+    .btn-secondary {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.25s ease;
+    }
+    .btn-secondary:hover {
+      background: rgba(30, 41, 59, 0.85);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    /* Product Preview Mockup */
+    .product-preview {
+      width: 100%;
+      max-width: 1000px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(15, 23, 42, 0.6);
+      padding: 6px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+    .product-preview img {
+      width: 100%;
+      border-radius: 12px;
+      display: block;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    /* Section Styles */
+    .section-container {
+      padding: 100px 8%;
+      border-top: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+    .section-label {
+      color: #06b6d4;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .section-title {
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: white;
+      margin: 0;
+    }
+
+    /* The Problem Section */
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+    }
+    .problem-card {
+      background: rgba(15, 23, 42, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 30px;
+      border-radius: 12px;
+      position: relative;
+    }
+    .problem-card i {
+      color: #ef4444;
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+    }
+    .problem-card h3 {
+      font-size: 1.25rem;
+      margin: 0 0 10px 0;
+      color: #f1f5f9;
+    }
+    .problem-card p {
+      margin: 0;
+      color: #94a3b8;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* Process/How it works Section */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 40px;
+      position: relative;
+    }
+    .step-card {
+      text-align: center;
+      position: relative;
+    }
+    .step-number {
+      width: 45px;
+      height: 45px;
+      background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+      color: #020617;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin: 0 auto 20px auto;
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+    }
+    .step-card h3 {
+      font-size: 1.25rem;
+      margin: 0 0 10px 0;
+      color: white;
+    }
+    .step-card p {
+      margin: 0;
+      color: #94a3b8;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* Key Features Section */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+    }
+    .feature-card {
+      background: rgba(30, 41, 59, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 35px;
+      border-radius: 16px;
+      transition: all 0.3s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(6, 182, 212, 0.3);
+      box-shadow: 0 10px 30px rgba(6, 182, 212, 0.05);
+    }
+    .feature-icon-wrapper {
+      width: 50px;
+      height: 50px;
+      background: rgba(6, 182, 212, 0.1);
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .feature-card i {
+      color: #06b6d4;
+      font-size: 1.35rem;
+    }
+    .feature-card h3 {
+      font-size: 1.3rem;
+      margin: 0 0 12px 0;
+      color: white;
+    }
+    .feature-card p {
+      margin: 0;
+      color: #94a3b8;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* Social Proof Section */
+    .testimonial-box {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.2) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 50px;
+      border-radius: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    }
+    .testimonial-text {
+      font-size: 1.25rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+      font-style: italic;
+      margin: 0 0 24px 0;
+    }
+    .testimonial-author {
+      font-weight: 700;
+      color: white;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+    .testimonial-title {
+      font-size: 0.85rem;
+      color: #06b6d4;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    /* Final Call To Action */
+    .cta-section {
+      text-align: center;
+      padding: 100px 8%;
+      background: radial-gradient(circle at top center, rgba(6, 182, 212, 0.1) 0%, transparent 60%);
+    }
+    .cta-title {
+      font-size: 2.75rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+    .cta-desc {
+      font-size: 1.15rem;
+      color: #94a3b8;
+      max-width: 550px;
+      margin: 0 auto 35px auto;
+    }
+
+    /* Landing Footer */
+    .landing-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 40px 8%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #020617;
+    }
+    .footer-copy {
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+    
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 2.5rem;
+      }
+      .landing-header {
+        padding: 20px 5%;
+      }
+      .nav-links {
+        display: none; /* simple mobile bypass to keep layout clean */
+      }
+      .section-container {
+        padding: 60px 5%;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="app-container">
-    <!-- Header -->
-    <header class="app-header">
-      <div class="logo">
-        <i class="fa-solid fa-wand-magic-sparkles logo-icon"></i>
-        <span>Astra<span class="logo-accent">Ads</span></span>
-      </div>
-      <div class="header-tagline">Autonomous Ad Ops for Small Businesses</div>
-      <!-- Tab Navigation Switcher -->
-      <nav class="tab-navigation">
-        <button class="nav-tab active" data-tab="campaign-builder">
-          <i class="fa-solid fa-rocket"></i> Campaign Builder
-        </button>
-        <button class="nav-tab" data-tab="leads-manager">
-          <i class="fa-solid fa-users"></i> Leads Manager
-        </button>
-      </nav>
-    </header>
 
-    <!-- Main Workspace -->
-    <main class="app-workspace">
-      <!-- 1. CAMPAIGN BUILDER TAB -->
-      <div id="tab-campaign-builder" class="tab-panel active">
-        <!-- Left Panel: Onboarding Form -->
-        <section class="panel onboarding-panel" id="onboarding-section">
-        <div class="panel-header">
-          <h2><i class="fa-solid fa-sliders header-icon"></i> Campaign Parameters</h2>
-          <p class="panel-subtitle">Define your business profile and objectives to build a tailor-made ad campaign.</p>
+  <!-- Landing Header -->
+  <header class="landing-header">
+    <a href="#" class="logo">
+      <i class="fa-solid fa-wand-magic-sparkles"></i>
+      <span>Astra<span class="logo-accent">Ads</span></span>
+    </a>
+    <nav class="nav-links">
+      <a href="#problem" class="nav-link">The Friction</a>
+      <a href="#how-it-works" class="nav-link">How It Works</a>
+      <a href="#features" class="nav-link">Features</a>
+      <a href="/login.html" class="btn-nav-cta">Client Sign In</a>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-badge">
+      <i class="fa-solid fa-bolt"></i>
+      <span>Now fully connected to Meta and Google Ads APIs</span>
+    </div>
+    <h1 class="hero-title">
+      Autonomous Ad Operations for Small Businesses. <br><span>Launch Optimized Campaigns in 60 Seconds.</span>
+    </h1>
+    <p class="hero-subtitle">
+      Stop wasting hours fighting complex ad managers. AstraAds uses generative AI to instantly draft search & social ads, target custom audiences, and sync incoming leads directly to your system.
+    </p>
+    <div class="hero-ctas">
+      <a href="/login.html" class="btn-primary">
+        <span>Go to Dashboard</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </a>
+      <a href="#how-it-works" class="btn-secondary">Learn How It Works</a>
+    </div>
+
+    <!-- Product Mockup Preview -->
+    <div class="product-preview">
+      <!-- Embedded custom mockup image built directly from current CSS styling -->
+      <div style="background: #0b1329; border-radius: 12px; border: 1px solid #1e293b; padding: 25px; min-height: 350px; text-align: left; position: relative;">
+        <!-- Top bar mockup -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 15px; margin-bottom: 20px;">
+          <div style="display: flex; gap: 8px;">
+            <div style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444;"></div>
+            <div style="width: 10px; height: 10px; border-radius: 50%; background: #fbbf24;"></div>
+            <div style="width: 10px; height: 10px; border-radius: 50%; background: #10b981;"></div>
+          </div>
+          <div style="font-size: 0.75rem; color: #64748b; font-family: monospace;">ASTRAADS // CAMPAIGN_BUILDER</div>
         </div>
-
-        <form id="onboarding-form" class="onboarding-form">
-          <div class="form-group">
-            <label for="businessName">Business Name</label>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-briefcase input-icon"></i>
-              <input type="text" id="businessName" name="businessName" placeholder="e.g. Apex Bakery, FitLife Studio" required>
+        <!-- Split View Mockup -->
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+          <div style="flex: 1.2; background: #0f172a; padding: 20px; border-radius: 10px; border: 1px solid #334155;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: #38bdf8; margin-bottom: 10px; text-transform: uppercase;">1. AI Parameters Input</div>
+            <div style="height: 12px; width: 60%; background: #1e293b; border-radius: 4px; margin-bottom: 8px;"></div>
+            <div style="height: 35px; width: 100%; background: #1e293b; border-radius: 6px; margin-bottom: 15px; border: 1px solid #475569;"></div>
+            <div style="height: 12px; width: 80%; background: #1e293b; border-radius: 4px; margin-bottom: 8px;"></div>
+            <div style="height: 35px; width: 100%; background: #1e293b; border-radius: 6px; margin-bottom: 15px; border: 1px solid #475569;"></div>
+            <div style="display: flex; gap: 10px;">
+              <div style="height: 30px; width: 45%; background: #2563eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: white;">Meta Social</div>
+              <div style="height: 30px; width: 45%; background: #1e293b; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: #94a3b8; border: 1px solid #334155;">Google Search</div>
             </div>
           </div>
-
-          <div class="form-group">
-            <label for="products">Products & Services</label>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-box-open input-icon"></i>
-              <textarea id="products" name="products" rows="3" placeholder="e.g. Artisan sourdough breads, custom cakes, and morning pastries." required></textarea>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="targetAudience">Target Audience</label>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-users input-icon"></i>
-              <input type="text" id="targetAudience" name="targetAudience" placeholder="e.g. Local foodies, organic-only shoppers, wedding planners" required>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Target Ad Channels</label>
-            <div class="checkbox-group-row">
-              <label class="checkbox-container">
-                <input type="checkbox" name="platforms" value="Google Search" checked>
-                <span class="checkbox-custom"></span>
-                <span class="checkbox-label"><i class="fa-brands fa-google"></i> Google</span>
-              </label>
-              <label class="checkbox-container">
-                <input type="checkbox" name="platforms" value="Facebook / Instagram" checked>
-                <span class="checkbox-custom"></span>
-                <span class="checkbox-label"><i class="fa-brands fa-facebook"></i> Meta Social</span>
-              </label>
-              <label class="checkbox-container">
-                <input type="checkbox" name="platforms" value="LinkedIn">
-                <span class="checkbox-custom"></span>
-                <span class="checkbox-label"><i class="fa-brands fa-linkedin"></i> LinkedIn</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Connected Ad Accounts Section -->
-          <div class="form-group">
-            <label>🔌 Connected Ad Accounts</label>
-            <div class="connection-items">
-              <div class="connection-item" data-platform="Google Search">
-                <span class="platform-name"><i class="fa-brands fa-google"></i> Google Ads</span>
-                <div class="connection-status-row">
-                  <span class="status-badge status-disconnected" id="status-text-google">Disconnected</span>
-                  <button type="button" class="btn-connect" id="connect-google">Connect</button>
-                </div>
-              </div>
-              <div class="connection-item" data-platform="Facebook / Instagram">
-                <span class="platform-name"><i class="fa-brands fa-facebook"></i> Meta Ads</span>
-                <div class="connection-status-row">
-                  <span class="status-badge status-disconnected" id="status-text-meta">Disconnected</span>
-                  <button type="button" class="btn-connect" id="connect-meta">Connect</button>
-                </div>
-              </div>
-              <div class="connection-item" data-platform="LinkedIn">
-                <span class="platform-name"><i class="fa-brands fa-linkedin"></i> LinkedIn Ads</span>
-                <div class="connection-status-row">
-                  <span class="status-badge status-disconnected" id="status-text-linkedin">Disconnected</span>
-                  <button type="button" class="btn-connect" id="connect-linkedin">Connect</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group-row">
-            <div class="form-group">
-              <label for="monthlyBudget">Monthly Budget (₹)</label>
-              <div class="input-wrapper">
-                <span class="input-prefix">₹</span>
-                <input type="number" id="monthlyBudget" name="monthlyBudget" placeholder="e.g. 5000" required>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="primaryGoal">Primary Goal</label>
-              <div class="input-wrapper">
-                <i class="fa-solid fa-bullseye input-icon"></i>
-                <select id="primaryGoal" name="primaryGoal" required>
-                  <option value="" disabled selected>Select Goal</option>
-                  <option value="Lead Generation">Lead Generation</option>
-                  <option value="Sales / Conversion">Sales & Conversions</option>
-                  <option value="Brand Awareness">Brand Awareness</option>
-                  <option value="Website Traffic">Website Traffic</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div id="lead-form-config" class="hidden form-group" style="margin-top: 15px;">
-              <label>Lead Form Configuration</label>
-              <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">
-                Configure the form questions that open inside Facebook/Instagram when users click your ad.
-              </div>
-              <button type="button" id="btn-configure-lead-form" class="btn-connect" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: #2563eb; color: white; border-color: #2563eb; padding: 10px 14px; font-weight: 600; border-radius: 6px; cursor: pointer;">
-                <i class="fa-solid fa-gear"></i> Configure Lead Form
-              </button>
-              <div id="lead-form-summary" style="font-size: 0.8rem; color: #10b981; margin-top: 8px; display: none; align-items: center; gap: 6px; font-weight: 500;">
-                <i class="fa-solid fa-circle-check"></i> Form configured successfully!
-              </div>
-            </div>
-
-          <div class="form-group">
-            <label for="websiteUrl">Client Website URL (used as Ad Destination)</label>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-globe input-icon"></i>
-              <input type="url" id="websiteUrl" name="websiteUrl" placeholder="https://yourwebsite.com">
-            </div>
-          </div>
-
-          <button type="submit" class="btn-generate" id="submit-btn">
-            <span>Generate Campaign</span>
-            <i class="fa-solid fa-arrow-right"></i>
-          </button>
-        </form>
-      </section>
-
-      <!-- Right Panel: Campaign Review Dashboard (Initially Hidden / Overlay Placeholder) -->
-      <section class="panel review-panel" id="review-section">
-        <!-- Placeholder State when no campaign generated -->
-        <div class="dashboard-placeholder" id="dashboard-placeholder">
-          <div class="placeholder-content">
-            <div class="floating-icons">
-              <i class="fa-solid fa-chart-line placeholder-floating-icon p-icon-1"></i>
-              <i class="fa-solid fa-bullhorn placeholder-floating-icon p-icon-2"></i>
-              <i class="fa-solid fa-robot placeholder-floating-icon p-icon-3"></i>
-            </div>
-            <h3>Waiting for Inputs</h3>
-            <p>Fill out the Campaign Parameters form and submit to generate your custom AI campaign.</p>
-          </div>
-        </div>
-
-        <!-- Campaign Review Dashboard (Content Wrapper) -->
-        <div class="dashboard-content hidden" id="dashboard-content">
-          <div class="dashboard-header">
+          <div style="flex: 2; background: #0f172a; padding: 20px; border-radius: 10px; border: 1px solid #334155; display: flex; flex-direction: column; justify-content: space-between;">
             <div>
-              <h1 id="campaign-title">Spring Promotion Campaign</h1>
-              <div class="campaign-meta-row">
-                <span class="meta-label">Status:</span>
-                <div class="status-pill status-draft" id="campaign-status">
-                  <span class="status-indicator"></span>
-                  <span class="status-text">Draft Review</span>
-                </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div style="font-size: 0.8rem; font-weight: 700; color: #10b981; text-transform: uppercase;">2. Generated Campaign Dashboard</div>
+                <div style="font-size: 0.7rem; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 3px 8px; border-radius: 12px; font-weight: 600;">Draft Ready</div>
+              </div>
+              <!-- Structured Output Block -->
+              <div style="background: #192239; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid #3b82f6;">
+                <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">AI HEADLINE:</div>
+                <div style="font-size: 0.85rem; color: white; font-weight: 700; margin-top: 2px;">Fresh Sourdough Breads & Morning Pastries in Jaipur</div>
+              </div>
+              <div style="background: #192239; padding: 12px; border-radius: 8px; border-left: 3px solid #3b82f6;">
+                <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">AI TARGETING STRATEGY:</div>
+                <div style="font-size: 0.85rem; color: white; font-weight: 700; margin-top: 2px;">Geotargeting: Jaipur (15km radius) // Interests: Organic Food, Bakery, Cafes</div>
               </div>
             </div>
-          </div>
-
-          <div class="dashboard-grid">
-            <!-- Card 1: Budget Strategy -->
-            <div class="card card-budget">
-              <div class="card-header">
-                <i class="fa-solid fa-piggy-bank card-icon"></i>
-                <h3>Budget & Strategy</h3>
-              </div>
-              <div class="card-body">
-                <div class="budget-stat">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 1.8rem; font-weight: bold; color: #fff;">₹</span>
-                    <input type="number" id="daily-budget-input" value="100" step="1" style="width: 120px; font-size: 1.8rem; font-weight: bold; background: transparent; border: none; border-bottom: 2px dashed #4a5568; color: #fff; padding: 0 4px; outline: none; margin-bottom: 4px;">
-                  </div>
-                  <div class="budget-label">Daily Budget (Editable)</div>
-                </div>
-                <div class="strategy-box">
-                  <strong>Staging Strategy</strong>
-                  <p id="budget-strategy">Optimized for local reach and search impressions during weekend spikes.</p>
-                </div>
-              </div>
+            <!-- Launch Button -->
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+              <div style="background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color: white; font-size: 0.8rem; font-weight: 700; padding: 10px 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);">Deploy Live Ad</div>
             </div>
-
-            <!-- Card 2: Targeting tags -->
-            <div class="card card-targeting">
-              <div class="card-header">
-                <i class="fa-solid fa-crosshairs card-icon"></i>
-                <h3>Audience Targeting</h3>
-              </div>
-              <div class="card-body">
-                <div class="tag-group">
-                  <h4>Target Keywords</h4>
-                  <div class="tag-container" id="keywords-container">
-                    <!-- Dynamic tags -->
-                  </div>
-                  <div class="add-tag-row" style="margin-top: 8px; display: flex; gap: 8px;">
-                    <input type="text" id="add-keyword-input" placeholder="Add keyword..." style="flex: 1; padding: 6px 10px; font-size: 0.85rem; background: #2d3748; border: 1px solid #4a5568; border-radius: 4px; color: #fff; outline: none;">
-                    <button type="button" id="btn-add-keyword" style="padding: 6px 12px; font-size: 0.85rem; background: #3182ce; border: none; border-radius: 4px; color: #fff; cursor: pointer; transition: background 0.2s;"><i class="fa-solid fa-plus"></i></button>
-                  </div>
-                </div>
-                <div class="tag-group">
-                  <h4>Audience Interests</h4>
-                  <div class="tag-container" id="interests-container">
-                    <!-- Dynamic tags -->
-                  </div>
-                  <div class="add-tag-row" style="margin-top: 8px; display: flex; gap: 8px;">
-                    <input type="text" id="add-interest-input" placeholder="Add interest..." style="flex: 1; padding: 6px 10px; font-size: 0.85rem; background: #2d3748; border: 1px solid #4a5568; border-radius: 4px; color: #fff; outline: none;">
-                    <button type="button" id="btn-add-interest" style="padding: 6px 12px; font-size: 0.85rem; background: #3182ce; border: none; border-radius: 4px; color: #fff; cursor: pointer; transition: background 0.2s;"><i class="fa-solid fa-plus"></i></button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Card 3: Ad Creative Preview with Length Calculator -->
-            <div class="card card-creative span-two-cols">
-              <div class="card-header">
-                <i class="fa-solid fa-ad card-icon"></i>
-                <h3>Ad Creative Previews</h3>
-              </div>
-              <div class="card-body creative-layout">
-                <!-- Live Mock Ad Panel -->
-                <div class="ad-mockup-container">
-                  <div class="mockup-header-tabs">
-                    <button type="button" class="mockup-tab-btn active" id="tab-btn-search">
-                      <i class="fa-brands fa-google"></i> Google Search
-                    </button>
-                    <button type="button" class="mockup-tab-btn" id="tab-btn-social">
-                      <i class="fa-brands fa-facebook"></i> Social Media Feed
-                    </button>
-                  </div>
-                  
-                  <!-- Google Search Mock -->
-                  <div class="google-ad-mock" id="search-ad-mock">
-                    <div class="ad-url">
-                      https://www.example.com/<span id="mock-path">bakery</span>
-                      <i class="fa-solid fa-ellipsis-vertical ad-menu-icon"></i>
-                    </div>
-                    <a href="#" class="ad-title-link" id="mock-ad-title">
-                      Best Sourdough Bakery | Golden Crust Bread
-                    </a>
-                    <p class="ad-description-text" id="mock-ad-desc">
-                      Freshly baked artisan sourdough, pastries & custom cakes. Order online for local store pickup!
-                    </p>
-                    <div class="ad-extension-row">
-                      <span class="ad-extension-item" id="mock-ad-cta">Shop Now</span>
-                    </div>
-                  </div>
-
-                  <!-- Social Media Mockup (Facebook layout) -->
-                  <div class="social-ad-mock hidden" id="social-ad-mock">
-                    <div class="social-profile-header">
-                      <div class="social-profile-avatar">
-                        <i class="fa-solid fa-store"></i>
-                      </div>
-                      <div class="social-profile-meta">
-                        <div class="social-page-name" id="mock-social-page-name">Sweet Treats Bakery</div>
-                        <div class="social-sponsored-tag">Sponsored · <i class="fa-solid fa-earth-americas"></i></div>
-                      </div>
-                      <i class="fa-solid fa-ellipsis social-menu-icon"></i>
-                    </div>
-                    
-                    <p class="social-caption-text" id="mock-social-caption">
-                      Delicious fresh treats at Sweet Treats Bakery! Grab your custom cakes, cookies & cupcakes today.
-                    </p>
-                    
-                    <div class="social-image-block" id="social-image-block">
-                      <img src="ad-banner.png" alt="Ad Campaign Banner" id="mock-social-image">
-                      <div class="image-upload-overlay" id="upload-overlay">
-                        <div class="overlay-content">
-                          <i class="fa-solid fa-cloud-arrow-up"></i>
-                          <span>Upload Custom Banner</span>
-                        </div>
-                      </div>
-                      <button type="button" class="reset-banner-btn hidden" id="reset-banner-btn" title="Reset to AI Banner">
-                        <i class="fa-solid fa-rotate-left"></i> Reset
-                      </button>
-                    </div>
-                    <input type="file" id="manual-banner-input" accept="image/*" style="display: none;">
-                    
-                    <div class="social-details-block">
-                      <div class="social-details-text">
-                        <div class="social-display-url" id="mock-social-display-url">sweettreatsbakery.com</div>
-                        <div class="social-headline" id="mock-social-headline">Premium Bakery Cakes & Cupcakes</div>
-                      </div>
-                      <div class="social-cta-wrapper">
-                        <a class="social-cta-btn" id="mock-social-cta" id="mock-cta-link" href="#" target="_blank" style="text-decoration: none; color: inherit;">Shop Now</a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Structured Editor/Validator -->
-                <div class="creative-validator">
-                  <div class="validation-group">
-                    <h4>Headlines (Max 30 Chars)</h4>
-                    <div class="creative-list" id="headlines-list">
-                      <!-- Dynamic headlines -->
-                    </div>
-                  </div>
-
-                  <div class="validation-group">
-                    <h4>Descriptions (Max 90 Chars)</h4>
-                    <div class="creative-list" id="descriptions-list">
-                      <!-- Dynamic descriptions -->
-                    </div>
-                  </div>
-
-                  <div class="validation-group">
-                    <h4>Social Post Caption (Max 125 Chars)</h4>
-                    <div class="creative-list" id="social-caption-list">
-                      <!-- Dynamic post caption validation -->
-                    </div>
-                  </div>
-
-                  <div class="validation-group" style="border-top: 1px solid #2d3748; padding-top: 15px; margin-top: 15px;">
-                    <h4>Ad Creative Banner</h4>
-                    <div style="display: flex; gap: 12px; align-items: center; margin-top: 8px;">
-                      <button type="button" id="btn-upload-image-creative" class="btn btn-secondary btn-sm" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 6px; cursor: pointer;">
-                        <i class="fa-solid fa-image" style="color: #4299e1;"></i> Upload Custom Image
-                      </button>
-                      <span id="ad-image-status" style="font-size: 0.85rem; color: #a0aec0;">Using AI Generated Image</span>
-                    </div>
-                    <div style="margin-top: 12px;">
-                      <label style="font-size: 0.8rem; color: #a0aec0; display: block; margin-bottom: 5px;">
-                        <i class="fa-solid fa-globe" style="color: #4299e1; margin-right: 4px;"></i>
-                        Ad Destination URL (Where "Get Free Quote" takes users)
-                      </label>
-                      <input type="url" id="destination-url-input" placeholder="https://yourwebsite.com"
-                        style="width: 100%; padding: 8px 12px; font-size: 0.85rem; background: #1a202c; color: #e2e8f0; border: 1px solid #4a5568; border-radius: 6px; outline: none; box-sizing: border-box;"
-                        oninput="if(window.updateDestinationUrl) window.updateDestinationUrl(this.value)">
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Card 4: AI Strategic Rationale -->
-            <div class="card card-rationale span-two-cols">
-              <div class="card-header">
-                <i class="fa-solid fa-brain card-icon"></i>
-                <h3>AI Strategic Rationale</h3>
-              </div>
-              <div class="card-body">
-                <p id="strategic-rationale-text">
-                  This campaign focuses on capture local foodies searching specifically for artisan baked products. 
-                  By aligning budget to local Google Search, the campaigns drive higher-intent clicks with lower waste.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="action-footer">
-            <button id="regenerate-btn" class="btn btn-secondary">
-              <i class="fa-solid fa-rotate"></i>
-              <span>Regenerate Creative</span>
-            </button>
-            <div class="launch-mode-selector" style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 0.85rem; color: #a0aec0;"><i class="fa-solid fa-circle-play" style="color: #4299e1; margin-right: 4px;"></i> Status:</span>
-              <select id="launch-status" class="leads-select" style="padding: 8px 12px; font-size: 0.9rem; background: #2d3748; color: #fff; border: 1px solid #4a5568; border-radius: 6px; cursor: pointer;">
-                <option value="PAUSED" selected>Paused (Draft)</option>
-                <option value="ACTIVE">Active (Live / Real Money)</option>
-              </select>
-            </div>
-            <button id="approve-btn" class="btn btn-success btn-glowing">
-              <i class="fa-solid fa-paper-plane"></i>
-              <span>Approve & Launch Live</span>
-            </button>
-          </div>
-        </div>
-      </section>
-      </div>
-
-      <!-- 2. LEADS MANAGER TAB -->
-      <div id="tab-leads-manager" class="tab-panel hidden">
-        <div class="leads-layout-wrapper">
-          <div class="leads-header-row">
-            <div class="leads-title">
-              <h2><i class="fa-solid fa-users header-icon"></i> Leads Pipeline</h2>
-              <p class="panel-subtitle">Manage, monitor, and qualify leads captured directly from Meta campaigns.</p>
-            </div>
-            <div class="leads-actions">
-              <select id="client-selector" class="leads-select">
-                <option value="All">All Clients</option>
-              </select>
-              <button class="btn btn-secondary btn-sm" id="btn-refresh-leads">
-                <i class="fa-solid fa-rotate"></i> Sync Database
-              </button>
-            </div>
-          </div>
-
-          <div class="metrics-grid">
-            <div class="metric-card">
-              <div class="metric-header">
-                <span>Total Leads</span>
-                <i class="fa-solid fa-users-viewfinder"></i>
-              </div>
-              <div class="metric-value" id="metric-total">0</div>
-              <div class="metric-trend trend-up"><i class="fa-solid fa-chart-line"></i> Ingested Live</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-header">
-                <span>New Leads</span>
-                <i class="fa-solid fa-user-plus"></i>
-              </div>
-              <div class="metric-value" id="metric-new">0</div>
-              <div class="metric-trend trend-neutral">Needs follow-up</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-header">
-                <span>Qualified Leads</span>
-                <i class="fa-solid fa-circle-check"></i>
-              </div>
-              <div class="metric-value" id="metric-qualified">0</div>
-              <div class="metric-trend trend-up">Converted</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-header">
-                <span>Conversion Rate</span>
-                <i class="fa-solid fa-percent"></i>
-              </div>
-              <div class="metric-value" id="metric-conversion">0%</div>
-              <div class="metric-trend trend-neutral">Lead to Sale ratio</div>
-            </div>
-          </div>
-
-          <div class="leads-charts-row">
-            <div class="card chart-card">
-              <div class="card-header">
-                <i class="fa-solid fa-chart-column card-icon"></i>
-                <h3>Campaign Performance</h3>
-              </div>
-              <div class="card-body chart-container">
-                <canvas id="campaignChart"></canvas>
-              </div>
-            </div>
-            <div class="card chart-card">
-              <div class="card-header">
-                <i class="fa-solid fa-chart-pie card-icon"></i>
-                <h3>Leads by Pipeline Status</h3>
-              </div>
-              <div class="card-body chart-container">
-                <canvas id="statusChart"></canvas>
-              </div>
-            </div>
-          </div>
-
-          <div class="leads-details-layout">
-            <!-- Leads List Card -->
-            <div class="card leads-list-card">
-              <div class="card-header leads-list-header">
-                <div class="header-with-search">
-                  <i class="fa-solid fa-address-book card-icon"></i>
-                  <h3>Prospects List</h3>
-                </div>
-                <div class="leads-filter-controls">
-                  <input type="text" id="search-input" class="leads-input" placeholder="Search by name, email...">
-                  <select id="status-filter" class="leads-select">
-                    <option value="All">All Statuses</option>
-                    <option value="New">New</option>
-                    <option value="Contacted">Contacted</option>
-                    <option value="Qualified">Qualified</option>
-                    <option value="Lost">Lost</option>
-                  </select>
-                </div>
-              </div>
-              <div class="card-body table-responsive">
-                <table class="leads-table">
-                  <thead>
-                    <tr>
-                      <th>Prospect Info</th>
-                      <th>Campaign</th>
-                      <th>Source</th>
-                      <th>Date Ingested</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody id="leads-table-body">
-                    <!-- Dynamic lead rows -->
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Webhook Integration Card -->
-            <div class="card webhook-card">
-              <div class="card-header">
-                <i class="fa-solid fa-circle-nodes card-icon"></i>
-                <h3>Meta Webhook Bridge</h3>
-              </div>
-              <div class="card-body">
-                <p class="webhook-desc">Meta lead generation webhooks only send IDs. Use Make.com to resolve the form entries and forward them to AstraAds.</p>
-                <div class="webhook-display-box">
-                  <span class="webhook-label">Target Webhook Endpoint URL</span>
-                  <div class="webhook-url-row">
-                    <code id="webhook-url-display">http://localhost:3000/api/webhooks/leads</code>
-                    <button class="btn btn-secondary btn-sm" id="btn-copy-webhook">Copy</button>
-                  </div>
-                </div>
-                
-                <div class="webhook-test-box">
-                  <h4>Test Local Webhook</h4>
-                  <p>Trigger a sandbox POST request with sample lead data mapped to one of your active campaigns.</p>
-                  <button class="btn btn-primary" id="btn-trigger-test-webhook">Send Live Test Lead</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-
-  <!-- Lead Detail Modal Overlay -->
-  <div class="modal-overlay hidden" id="lead-detail-modal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <i class="fa-solid fa-user-tie modal-shield-icon"></i>
-        <h3>Lead Prospect Details</h3>
-        <button class="modal-close-btn" id="btn-close-lead-modal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="info-row">
-          <span class="info-label">Lead ID</span>
-          <span class="info-val" id="modal-lead-id">-</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Full Name</span>
-          <span class="info-val" id="modal-lead-name">-</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Email Address</span>
-          <span class="info-val" id="modal-lead-email">-</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Phone Number</span>
-          <span class="info-val" id="modal-lead-phone">-</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Campaign Name</span>
-          <span class="info-val" id="modal-lead-campaign">-</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Channel Source</span>
-          <span class="info-val" id="modal-lead-platform">-</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Client Account</span>
-          <span class="info-val" id="modal-lead-client">-</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Date Submitted</span>
-          <span class="info-val" id="modal-lead-date">-</span>
-        </div>
-
-        <div class="status-select-container">
-          <label>Update Action Plan Status</label>
-          <div class="status-select-wrapper">
-            <button class="status-pill-btn new" data-status="New">New</button>
-            <button class="status-pill-btn contacted" data-status="Contacted">Contacted</button>
-            <button class="status-pill-btn qualified" data-status="Qualified">Qualified</button>
-            <button class="status-pill-btn lost" data-status="Lost">Lost</button>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Lead Form Builder Modal Overlay -->
-  <div class="modal-overlay hidden" id="lead-form-builder-modal" style="z-index: 10000;">
-    <div class="modal-card" style="max-width: 650px; width: 90%; background: #0f172a; border: 1px solid #334155;">
-      <div class="modal-header" style="border-bottom: 1px solid #334155; padding-bottom: 15px;">
-        <i class="fa-solid fa-wpforms modal-shield-icon" style="color: #3b82f6;"></i>
-        <h3 style="color: white; margin: 0; font-size: 1.25rem;">Instant Lead Form Setup</h3>
-        <button type="button" class="modal-close-btn" id="btn-close-lead-form-modal" style="color: #94a3b8; background: transparent; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+  <!-- The Pain Section -->
+  <section class="section-container" id="problem" style="background: #070d1e;">
+    <div class="section-header">
+      <span class="section-label">The Friction</span>
+      <h2 class="section-title">Why Traditional Advertising Tools Fail Small Businesses</h2>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <i class="fa-solid fa-circle-xmark"></i>
+        <h3>Too Complex to Manage</h3>
+        <p>Meta Ads Manager and Google Ads layouts are built for professional marketing agencies. One wrong button click can waste your entire budget in hours.</p>
       </div>
-      <div class="modal-body" style="padding-top: 20px;">
-        
-        <!-- Standard Pre-fill Fields -->
-        <div style="margin-bottom: 25px;">
-          <label style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 12px; display: block;">Standard Pre-filled Fields (Auto-filled by Meta)</label>
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;">
-            <label class="checkbox-container">
-              <input type="checkbox" name="modalLeadFields" value="FULL_NAME" checked>
-              <span class="checkbox-custom"></span>
-              <span class="checkbox-label">Full Name</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" name="modalLeadFields" value="EMAIL" checked>
-              <span class="checkbox-custom"></span>
-              <span class="checkbox-label">Email</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" name="modalLeadFields" value="PHONE" checked>
-              <span class="checkbox-custom"></span>
-              <span class="checkbox-label">Phone</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" name="modalLeadFields" value="COMPANY_NAME">
-              <span class="checkbox-custom"></span>
-              <span class="checkbox-label">Company</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" name="modalLeadFields" value="JOB_TITLE">
-              <span class="checkbox-custom"></span>
-              <span class="checkbox-label">Job Title</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" name="modalLeadFields" value="CITY">
-              <span class="checkbox-custom"></span>
-              <span class="checkbox-label">City</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Custom Questions Section -->
-        <div style="border-top: 1px solid #334155; padding-top: 20px; margin-bottom: 25px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <label style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin: 0;">Custom Questions (Add text or dropdown options)</label>
-            <button type="button" id="modal-btn-add-question" class="btn-connect" style="padding: 6px 12px; font-size: 0.75rem; display: flex; align-items: center; gap: 6px; background: #2563eb; border-color: #2563eb; color: white;">
-              <i class="fa-solid fa-plus"></i> Add Question
-            </button>
-          </div>
-          <div id="modal-custom-questions-list" style="display: flex; flex-direction: column; gap: 12px; max-height: 250px; overflow-y: auto; padding-right: 5px;">
-            <!-- Dynamic rows will be added here -->
-          </div>
-        </div>
-
-        <!-- Modal Footer Actions -->
-        <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #334155; padding-top: 15px; margin-top: 15px;">
-          <button type="button" class="btn-connect" id="btn-cancel-lead-form-modal" style="background: #475569; border-color: #475569; color: white; padding: 8px 16px; font-weight: 600; cursor: pointer;">Cancel</button>
-          <button type="button" class="btn-connect" id="btn-save-lead-form-modal" style="background: #2563eb; border-color: #2563eb; color: white; padding: 8px 16px; font-weight: 600; cursor: pointer;">Save Settings</button>
-        </div>
-
+      <div class="problem-card">
+        <i class="fa-solid fa-clock"></i>
+        <h3>Wasted Setup Time</h3>
+        <p>Manually creating creatives, copywriting multiple formats, setting up targeting, and configuring instant lead forms takes hours of manual work.</p>
+      </div>
+      <div class="problem-card">
+        <i class="fa-solid fa-link-slash"></i>
+        <h3>Disconnected Lead Flow</h3>
+        <p>Leads captured on Meta stay stuck inside the Facebook system. Exporting them manually to CSV results in lost opportunities and slow client follow-ups.</p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Ad Image Cropping Modal Overlay -->
-  <div class="modal-overlay hidden" id="image-crop-modal" style="z-index: 10000;">
-    <div class="modal-card" style="max-width: 700px; width: 90%;">
-      <div class="modal-header">
-        <i class="fa-solid fa-crop-simple modal-shield-icon" style="color: #4299e1;"></i>
-        <h3>Crop & Resize Ad Image</h3>
-        <button type="button" class="modal-close-btn" id="btn-close-crop-modal">&times;</button>
+  <!-- How It Works Section -->
+  <section class="section-container" id="how-it-works">
+    <div class="section-header">
+      <span class="section-label">The Solution</span>
+      <h2 class="section-title">Automating Campaign Launch in Three Steps</h2>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h3>Describe Your Product</h3>
+        <p>Type in your business name, target audience, and product offerings. The AI parses this to formulate client-specific messaging.</p>
       </div>
-      <div class="modal-body" style="padding: 20px;">
-        <p style="margin-bottom: 15px; font-size: 0.85rem; color: #a0aec0;">
-          Select crop aspect ratio and adjust image. Landscape (16:9) is recommended for Meta feeds.
-        </p>
-        
-        <!-- Aspect Ratio Selector Buttons -->
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-          <button type="button" class="btn btn-secondary btn-sm" id="ratio-landscape" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; cursor: pointer; background: #3182ce; color: #fff;">
-            Landscape (16:9)
-          </button>
-          <button type="button" class="btn btn-secondary btn-sm" id="ratio-square" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; cursor: pointer;">
-            Square (1:1)
-          </button>
-          <button type="button" class="btn btn-secondary btn-sm" id="ratio-free" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; cursor: pointer;">
-            Free Crop
-          </button>
-        </div>
-
-        <!-- Crop container -->
-        <div class="crop-container" style="max-height: 400px; min-height: 250px; background: #1a202c; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid #2d3748;">
-          <img id="image-to-crop" style="max-width: 100%; display: block;">
-        </div>
-
-        <!-- Action Footer -->
-        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
-          <button type="button" class="btn btn-secondary" id="btn-cancel-crop" style="padding: 8px 16px; font-size: 0.9rem; border-radius: 6px;">
-            Cancel
-          </button>
-          <button type="button" class="btn btn-primary" id="btn-save-crop" style="padding: 8px 24px; font-size: 0.9rem; border-radius: 6px; background: linear-gradient(135deg, #3182ce, #319795);">
-            Apply Crop
-          </button>
-        </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h3>AI Generates Campaign</h3>
+        <p>AstraAds automatically generates optimized keywords, social captions, headlines, budget allocation, and builds native lead collection forms.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h3>Launch Directly to Ads API</h3>
+        <p>Connect your ad accounts via OAuth and click "Launch". The system creates the campaign, publishes it live, and sets up active webhooks to capture leads.</p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Toast Notification Center -->
-  <div class="toast-container" id="toast-container"></div>
-  </div>
-
-  <!-- Mock OAuth Modal Overlay -->
-  <div class="modal-overlay hidden" id="oauth-modal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <i class="fa-solid fa-shield-halved modal-shield-icon"></i>
-        <h3>Secure OAuth Authorization</h3>
+  <!-- Key Features Section -->
+  <section class="section-container" id="features" style="background: #070d1e;">
+    <div class="section-header">
+      <span class="section-label">Key Features</span>
+      <h2 class="section-title">Enterprise Ad Infrastructure, Built for Simplicity</h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <h3>Intelligent Copywriter</h3>
+        <p>Creates high-converting captions, headlines, and descriptions designed specifically for Google Search and Meta Social Feeds.</p>
       </div>
-      <div class="modal-body">
-        <div class="loading-oauth" id="oauth-loading-block">
-          <i class="fa-solid fa-circle-notch fa-spin oauth-spinner"></i>
-          <p id="oauth-loading-text">Connecting to Ad Account Service...</p>
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">
+          <i class="fa-solid fa-square-poll-horizontal"></i>
         </div>
-        <div class="oauth-success hidden" id="oauth-success-block">
-          <i class="fa-solid fa-circle-check oauth-success-icon"></i>
-          <h4>Authorization Successful</h4>
-          <p id="oauth-success-text">Meta Ads sandbox account act_meta_9247 has been connected successfully.</p>
+        <h3>Instant Lead Forms</h3>
+        <p>Builds native Instant Forms directly inside the ad networks. Leads autofill page details on-platform, maximizing conversion rates.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">
+          <i class="fa-solid fa-link"></i>
         </div>
+        <h3>Real-time Webhook Sync</h3>
+        <p>Integrates with Google Webhook and Meta Graph APIs to stream lead captures to the Leads Manager instantly as they occur.</p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <script type="module" src="app.js"></script>
+  <!-- Social Proof Section -->
+  <section class="section-container" id="proof">
+    <div class="testimonial-box">
+      <p class="testimonial-text">
+        "AstraAds completely streamlined how we execute client acquisition for our partners. We connected Poojaris Nirantara and Ashirwada Leads, and within minutes, we were capturing and tracking leads directly on the dashboard."
+      </p>
+      <div class="testimonial-author">Aditya Kumar</div>
+      <div class="testimonial-title">Founder, Sanna Innovations</div>
+    </div>
+  </section>
+
+  <!-- Final Call to Action -->
+  <section class="cta-section">
+    <h2 class="cta-title">Ready to Automate Your Ad Operations?</h2>
+    <p class="cta-desc">Launch, secure, and monitor your lead generation campaigns in a simplified B2B SaaS dashboard.</p>
+    <a href="/login.html" class="btn-primary" style="padding: 16px 36px; font-size: 1.05rem;">
+      <span>Enter Dashboard Portal</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+  </section>
+
+  <!-- Landing Footer -->
+  <footer class="landing-footer">
+    <div class="footer-copy">&copy; 2026 AstraAds. All rights reserved. Registered domain: astraads.theastraai.com</div>
+    <div style="display: flex; gap: 20px;">
+      <a href="/privacy.html" class="nav-link" style="font-size: 0.85rem;">Privacy Policy</a>
+      <a href="/login.html" class="nav-link" style="font-size: 0.85rem;">Client Login</a>
+    </div>
+  </footer>
+
 </body>
 </html>
