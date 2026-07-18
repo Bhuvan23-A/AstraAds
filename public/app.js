@@ -146,6 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
       targetAudience: formData.get('targetAudience'),
       monthlyBudget: Number(formData.get('monthlyBudget')),
       primaryGoal: formData.get('primaryGoal'),
+      websiteUrl: formData.get('websiteUrl') || '',
       platforms: platforms
     };
 
@@ -485,9 +486,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     mockSocialPageName.textContent = businessName;
     mockSocialCaption.textContent = primaryText;
-    mockSocialDisplayUrl.textContent = businessName.toLowerCase().replace(/[^a-z0-9]+/g, '') + '.com';
+    
+    // Use the website URL if provided, otherwise generate from business name
+    const websiteUrl = lastSubmittedParams?.websiteUrl || '';
+    const displayUrl = websiteUrl
+      ? websiteUrl.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]
+      : businessName.toLowerCase().replace(/[^a-z0-9]+/g, '') + '.com';
+    mockSocialDisplayUrl.textContent = displayUrl;
+    mockSocialDisplayUrl.contentEditable = 'true';
+    mockSocialDisplayUrl.style.cursor = 'text';
+    mockSocialDisplayUrl.title = 'Click to edit URL';
+
     mockSocialHeadline.textContent = headlines[0] || 'Exclusive Campaign Offer';
     mockSocialCta.textContent = campaign.ad_creative?.call_to_action || 'Learn More';
+
+    // Pre-fill the destination URL input with the website URL
+    const destUrlInput = document.getElementById('destination-url-input');
+    if (destUrlInput) {
+      destUrlInput.value = websiteUrl;
+      // Update the CTA link href
+      const ctaLink = document.getElementById('mock-social-cta');
+      if (ctaLink && websiteUrl) ctaLink.href = websiteUrl;
+      // Update the payload
+      if (campaign.ad_creative) {
+        campaign.ad_creative.destination_url = websiteUrl || 'https://example.com';
+      }
+    }
 
     // Clear manual banner elements upon new campaign generation
     if (resetBannerBtn) resetBannerBtn.classList.add('hidden');
@@ -1405,6 +1429,23 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // Global function: called when user edits the destination URL input in real time
+  window.updateDestinationUrl = (newUrl) => {
+    const ctaLink = document.getElementById('mock-social-cta');
+    if (ctaLink) ctaLink.href = newUrl || '#';
+    
+    // Derive a clean display URL from what the user typed
+    const cleanUrl = newUrl.replace(/^https?:\/\/(www\.)?/, '').split('/')[0];
+    if (mockSocialDisplayUrl && cleanUrl) {
+      mockSocialDisplayUrl.textContent = cleanUrl;
+    }
+
+    // Update payload so it sends the right URL when launching
+    if (currentCampaignPayload && currentCampaignPayload.ad_creative) {
+      currentCampaignPayload.ad_creative.destination_url = newUrl;
+    }
+  };
 
   setupTabNavigation();
   setupLeadsEventListeners();

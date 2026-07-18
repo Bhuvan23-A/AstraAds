@@ -147,6 +147,14 @@
             </div>
           </div>
 
+          <div class="form-group">
+            <label for="websiteUrl">Client Website URL (used as Ad Destination)</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-globe input-icon"></i>
+              <input type="url" id="websiteUrl" name="websiteUrl" placeholder="https://yourwebsite.com">
+            </div>
+          </div>
+
           <button type="submit" class="btn-generate" id="submit-btn">
             <span>Generate Campaign</span>
             <i class="fa-solid fa-arrow-right"></i>
@@ -308,7 +316,7 @@
                         <div class="social-headline" id="mock-social-headline">Premium Bakery Cakes & Cupcakes</div>
                       </div>
                       <div class="social-cta-wrapper">
-                        <span class="social-cta-btn" id="mock-social-cta">Shop Now</span>
+                        <a class="social-cta-btn" id="mock-social-cta" id="mock-cta-link" href="#" target="_blank" style="text-decoration: none; color: inherit;">Shop Now</a>
                       </div>
                     </div>
                   </div>
@@ -344,6 +352,15 @@
                         <i class="fa-solid fa-image" style="color: #4299e1;"></i> Upload Custom Image
                       </button>
                       <span id="ad-image-status" style="font-size: 0.85rem; color: #a0aec0;">Using AI Generated Image</span>
+                    </div>
+                    <div style="margin-top: 12px;">
+                      <label style="font-size: 0.8rem; color: #a0aec0; display: block; margin-bottom: 5px;">
+                        <i class="fa-solid fa-globe" style="color: #4299e1; margin-right: 4px;"></i>
+                        Ad Destination URL (Where "Get Free Quote" takes users)
+                      </label>
+                      <input type="url" id="destination-url-input" placeholder="https://yourwebsite.com"
+                        style="width: 100%; padding: 8px 12px; font-size: 0.85rem; background: #1a202c; color: #e2e8f0; border: 1px solid #4a5568; border-radius: 6px; outline: none; box-sizing: border-box;"
+                        oninput="if(window.updateDestinationUrl) window.updateDestinationUrl(this.value)">
                     </div>
                   </div>
                 </div>
