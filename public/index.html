@@ -145,29 +145,50 @@
                 </select>
               </div>
             </div>
-            </div>
-
-            <div id="lead-form-config" class="hidden form-group" style="margin-top: 15px;">
-              <label>Lead Form Fields (Instant Form)</label>
-              <div style="font-size: 0.85rem; color: #9ca3af; margin-bottom: 8px;">
-                <i class="fa-solid fa-bolt" style="color: #fbbf24;"></i> An in-app Instant Form will be attached to this ad.
+            <div id="lead-form-config" class="hidden form-group" style="margin-top: 15px; background: #1e293b; padding: 16px; border-radius: 8px; border: 1px solid #334155;">
+              <label style="font-weight: 700; color: #3b82f6; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-wpforms"></i> Instant Lead Form Setup
+              </label>
+              <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px; margin-top: 4px;">
+                Configure the form questions that open inside Facebook/Instagram when users click your ad.
               </div>
-              <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px;">
-                <label class="checkbox-container" style="padding: 4px 8px;">
-                  <input type="checkbox" name="leadFields" value="FULL_NAME" checked> <span>Full Name</span>
-                </label>
-                <label class="checkbox-container" style="padding: 4px 8px;">
-                  <input type="checkbox" name="leadFields" value="EMAIL" checked> <span>Email</span>
-                </label>
-                <label class="checkbox-container" style="padding: 4px 8px;">
-                  <input type="checkbox" name="leadFields" value="PHONE" checked> <span>Phone</span>
-                </label>
-                <label class="checkbox-container" style="padding: 4px 8px;">
-                  <input type="checkbox" name="leadFields" value="COMPANY_NAME"> <span>Company</span>
-                </label>
-                <label class="checkbox-container" style="padding: 4px 8px;">
-                  <input type="checkbox" name="leadFields" value="JOB_TITLE"> <span>Job Title</span>
-                </label>
+              
+              <!-- Standard Pre-fill Fields Section -->
+              <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 6px; display: block;">Standard Pre-filled Fields</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                  <label class="checkbox-container" style="background: #0f172a; padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" name="leadFields" value="FULL_NAME" checked> <span>Full Name</span>
+                  </label>
+                  <label class="checkbox-container" style="background: #0f172a; padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" name="leadFields" value="EMAIL" checked> <span>Email</span>
+                  </label>
+                  <label class="checkbox-container" style="background: #0f172a; padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" name="leadFields" value="PHONE" checked> <span>Phone</span>
+                  </label>
+                  <label class="checkbox-container" style="background: #0f172a; padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" name="leadFields" value="COMPANY_NAME"> <span>Company</span>
+                  </label>
+                  <label class="checkbox-container" style="background: #0f172a; padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" name="leadFields" value="JOB_TITLE"> <span>Job Title</span>
+                  </label>
+                  <label class="checkbox-container" style="background: #0f172a; padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" name="leadFields" value="CITY"> <span>City</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Custom Questions Section -->
+              <div style="border-top: 1px solid #334155; padding-top: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin: 0;">Custom Questions</label>
+                  <button type="button" id="btn-add-custom-question" class="btn-connect" style="padding: 4px 8px; font-size: 0.75rem; display: flex; align-items: center; gap: 4px;">
+                    <i class="fa-solid fa-plus"></i> Add Question
+                  </button>
+                </div>
+                <div id="custom-questions-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto;">
+                  <!-- Dynamic rows will be added here -->
+                </div>
               </div>
             </div>
 

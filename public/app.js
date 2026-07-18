@@ -120,6 +120,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Handle adding custom questions
+  const btnAddCustomQuestion = document.getElementById('btn-add-custom-question');
+  const customQuestionsList = document.getElementById('custom-questions-list');
+
+  btnAddCustomQuestion.addEventListener('click', () => {
+    const row = document.createElement('div');
+    row.className = 'custom-question-row';
+    row.style = 'display: flex; gap: 8px; align-items: center; background: #0f172a; padding: 10px; border-radius: 6px; border: 1px solid #334155; margin-top: 6px;';
+    row.innerHTML = `
+      <input type="text" placeholder="Question text (e.g. When can we call?)" class="custom-q-label" style="flex: 2; padding: 6px 10px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 4px; font-size: 0.8rem;" required>
+      <select class="custom-q-type" style="flex: 1; padding: 6px 10px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 4px; font-size: 0.8rem; min-width: 110px;">
+        <option value="TEXT">Short Answer</option>
+        <option value="MULTIPLE_CHOICE">Multiple Choice</option>
+      </select>
+      <input type="text" placeholder="Options (comma-separated)" class="custom-q-options hidden" style="flex: 2; padding: 6px 10px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 4px; font-size: 0.8rem;">
+      <button type="button" class="btn-delete-q btn-connect" style="background: #ef4444; border-color: #ef4444; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; flex-shrink: 0;">
+        <i class="fa-solid fa-trash"></i>
+      </button>
+    `;
+
+    // Toggle options field when Multiple Choice is selected
+    const select = row.querySelector('.custom-q-type');
+    const optionsField = row.querySelector('.custom-q-options');
+    select.addEventListener('change', (e) => {
+      if (e.target.value === 'MULTIPLE_CHOICE') {
+        optionsField.classList.remove('hidden');
+      } else {
+        optionsField.classList.add('hidden');
+      }
+    });
+
+    // Delete question row
+    const deleteBtn = row.querySelector('.btn-delete-q');
+    deleteBtn.addEventListener('click', () => {
+      row.remove();
+    });
+
+    customQuestionsList.appendChild(row);
+  });
+
   // Setup OAuth Connection listeners
   connectBtnGoogle.addEventListener('click', () => handleConnectClick('Google Search', 'Google Ads', statusGoogle, connectBtnGoogle));
   connectBtnMeta.addEventListener('click', () => handleConnectClick('Facebook / Instagram', 'Meta Ads', statusMeta, connectBtnMeta));
@@ -151,7 +191,39 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const leadFields = Array.from(onboardingForm.querySelectorAll('input[name="leadFields"]:checked')).map(el => el.value);
+    // 1. Gather Standard Fields
+    const standardFields = Array.from(onboardingForm.querySelectorAll('input[name="leadFields"]:checked')).map(el => el.value);
+    const leadQuestions = standardFields.map(field => {
+      let key = field.toLowerCase();
+      if (field === 'PHONE') key = 'phone_number';
+      return { type: field, key: key };
+    });
+
+    // 2. Gather Custom Questions
+    const customRows = onboardingForm.querySelectorAll('.custom-question-row');
+    customRows.forEach((row, index) => {
+      const label = row.querySelector('.custom-q-label')?.value?.trim();
+      const type = row.querySelector('.custom-q-type')?.value;
+      if (!label) return;
+
+      const qObj = {
+        type: 'CUSTOM',
+        key: `custom_q_${index + 1}`,
+        label: label
+      };
+
+      if (type === 'MULTIPLE_CHOICE') {
+        const optionsRaw = row.querySelector('.custom-q-options')?.value;
+        const optionsList = optionsRaw ? optionsRaw.split(',').map(o => o.trim()).filter(Boolean) : [];
+        if (optionsList.length > 0) {
+          qObj.options = optionsList.map((opt, optIndex) => ({
+            key: `opt_${optIndex + 1}`,
+            value: opt
+          }));
+        }
+      }
+      leadQuestions.push(qObj);
+    });
 
     const params = {
       businessName: formData.get('businessName'),
@@ -161,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
       primaryGoal: formData.get('primaryGoal'),
       websiteUrl: formData.get('websiteUrl') || '',
       platforms: platforms,
-      leadFields: leadFields
+      leadQuestions: leadQuestions
     };
 
     lastSubmittedParams = params;

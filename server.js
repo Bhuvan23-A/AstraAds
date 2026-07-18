@@ -352,7 +352,7 @@ app.post('/api/campaigns/launch', async (req, res) => {
       client_name,
       page_id,
       launch_status,
-      leadFields
+      leadQuestions
     } = req.body;
 
     const metaStatus = (launch_status === 'ACTIVE') ? 'ACTIVE' : 'PAUSED';
@@ -469,11 +469,11 @@ app.post('/api/campaigns/launch', async (req, res) => {
       return targets;
     };
 
-    const createLeadgenForm = async (pageId, pageAccessToken, campaignName, destUrl, fields) => {
+    const createLeadgenForm = async (pageId, pageAccessToken, campaignName, destUrl, questions) => {
       const formPayload = new URLSearchParams({
         name: `${campaignName} Lead Form`,
         access_token: pageAccessToken,
-        questions: JSON.stringify(fields.map(f => ({ type: f }))),
+        questions: JSON.stringify(questions),
         privacy_policy: JSON.stringify({
           url: destUrl + '/privacy' || 'https://example.com/privacy',
           link_text: 'Privacy Policy'
@@ -600,13 +600,17 @@ app.post('/api/campaigns/launch', async (req, res) => {
 
       if (optimizationGoal === 'LEAD_GENERATION') {
         try {
-          const fieldsToCollect = Array.isArray(leadFields) && leadFields.length > 0 ? leadFields : ['FULL_NAME', 'EMAIL', 'PHONE'];
+          const questions = Array.isArray(leadQuestions) && leadQuestions.length > 0 ? leadQuestions : [
+            { type: 'FULL_NAME', key: 'full_name' },
+            { type: 'EMAIL', key: 'email' },
+            { type: 'PHONE', key: 'phone_number' }
+          ];
           metaEntities.leadgen_form_id = await createLeadgenForm(
             metaEntities.page_id,
             metaAccessToken,
             campaign_name,
             destinationLink,
-            fieldsToCollect
+            questions
           );
           logStep('leadgen_form_create', 'success', `Created Instant Form.`, { form_id: metaEntities.leadgen_form_id });
         } catch (err) {
