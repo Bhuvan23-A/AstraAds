@@ -120,45 +120,166 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Handle adding custom questions
-  const btnAddCustomQuestion = document.getElementById('btn-add-custom-question');
-  const customQuestionsList = document.getElementById('custom-questions-list');
+  // Lead Form Builder Modal Configuration State
+  let leadQuestionsConfig = [
+    { type: 'FULL_NAME', key: 'full_name' },
+    { type: 'EMAIL', key: 'email' },
+    { type: 'PHONE', key: 'phone_number' }
+  ];
 
-  btnAddCustomQuestion.addEventListener('click', () => {
+  const btnConfigureLeadForm = document.getElementById('btn-configure-lead-form');
+  const leadFormSummary = document.getElementById('lead-form-summary');
+  const leadFormBuilderModal = document.getElementById('lead-form-builder-modal');
+  const btnCloseLeadFormModal = document.getElementById('btn-close-lead-form-modal');
+  const btnCancelLeadFormModal = document.getElementById('btn-cancel-lead-form-modal');
+  const btnSaveLeadFormModal = document.getElementById('btn-save-lead-form-modal');
+  const modalBtnAddQuestion = document.getElementById('modal-btn-add-question');
+  const modalCustomQuestionsList = document.getElementById('modal-custom-questions-list');
+
+  // Open Modal
+  btnConfigureLeadForm.addEventListener('click', () => {
+    // 1. Populate checkboxes
+    const checkboxes = leadFormBuilderModal.querySelectorAll('input[name="modalLeadFields"]');
+    checkboxes.forEach(cb => {
+      cb.checked = leadQuestionsConfig.some(q => q.type === cb.value);
+    });
+
+    // 2. Populate custom questions
+    modalCustomQuestionsList.innerHTML = '';
+    const customQs = leadQuestionsConfig.filter(q => q.type === 'CUSTOM');
+    customQs.forEach((q, index) => {
+      addCustomQuestionRow(q.label, q.options ? 'MULTIPLE_CHOICE' : 'TEXT', q.options);
+    });
+
+    leadFormBuilderModal.classList.remove('hidden');
+  });
+
+  // Close Modal (Cancel / Close)
+  const closeLeadFormModal = () => {
+    leadFormBuilderModal.classList.add('hidden');
+  };
+  btnCloseLeadFormModal.addEventListener('click', closeLeadFormModal);
+  btnCancelLeadFormModal.addEventListener('click', closeLeadFormModal);
+
+  // Helper to add a custom question row inside the modal
+  function addCustomQuestionRow(label = '', type = 'TEXT', options = null) {
     const row = document.createElement('div');
     row.className = 'custom-question-row';
-    row.style = 'display: flex; gap: 8px; align-items: center; background: #0f172a; padding: 10px; border-radius: 6px; border: 1px solid #334155; margin-top: 6px;';
+    row.style = 'display: flex; flex-direction: column; gap: 8px; background: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #334155; margin-top: 10px;';
+    
+    const optionsCsv = options ? options.map(o => o.value).join(', ') : '';
+    const isMc = type === 'MULTIPLE_CHOICE';
+
     row.innerHTML = `
-      <input type="text" placeholder="Question text (e.g. When can we call?)" class="custom-q-label" style="flex: 2; padding: 6px 10px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 4px; font-size: 0.8rem;" required>
-      <select class="custom-q-type" style="flex: 1; padding: 6px 10px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 4px; font-size: 0.8rem; min-width: 110px;">
-        <option value="TEXT">Short Answer</option>
-        <option value="MULTIPLE_CHOICE">Multiple Choice</option>
-      </select>
-      <input type="text" placeholder="Options (comma-separated)" class="custom-q-options hidden" style="flex: 2; padding: 6px 10px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 4px; font-size: 0.8rem;">
-      <button type="button" class="btn-delete-q btn-connect" style="background: #ef4444; border-color: #ef4444; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; flex-shrink: 0;">
-        <i class="fa-solid fa-trash"></i>
-      </button>
+      <div style="display: flex; gap: 10px; align-items: center; width: 100%;">
+        <input type="text" placeholder="Question text (e.g. When can we call?)" class="custom-q-label" style="flex: 3; padding: 8px 12px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px; font-size: 0.85rem;" value="${escapeHtml(label)}" required>
+        <select class="custom-q-type" style="flex: 1.5; padding: 8px 12px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px; font-size: 0.85rem; min-width: 140px; color-scheme: dark;">
+          <option value="TEXT" ${!isMc ? 'selected' : ''}>Short Answer</option>
+          <option value="MULTIPLE_CHOICE" ${isMc ? 'selected' : ''}>Multiple Choice</option>
+        </select>
+        <button type="button" class="btn-delete-q" style="background: #ef4444; border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 38px; flex-shrink: 0;">
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      </div>
+      <div class="options-container ${!isMc ? 'hidden' : ''}" style="display: flex; flex-direction: column; gap: 6px; padding-left: 10px; border-left: 2px solid #3b82f6; margin-top: 5px;">
+        <div style="font-size: 0.75rem; color: #94a3b8;">Enter dropdown options (comma-separated):</div>
+        <input type="text" placeholder="e.g. Morning, Afternoon, Evening" class="custom-q-options" style="padding: 8px 12px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px; font-size: 0.85rem; width: 100%;" value="${escapeHtml(optionsCsv)}">
+      </div>
     `;
 
-    // Toggle options field when Multiple Choice is selected
+    // Toggle options field
     const select = row.querySelector('.custom-q-type');
-    const optionsField = row.querySelector('.custom-q-options');
+    const optionsContainer = row.querySelector('.options-container');
     select.addEventListener('change', (e) => {
       if (e.target.value === 'MULTIPLE_CHOICE') {
-        optionsField.classList.remove('hidden');
+        optionsContainer.classList.remove('hidden');
       } else {
-        optionsField.classList.add('hidden');
+        optionsContainer.classList.add('hidden');
       }
     });
 
-    // Delete question row
+    // Delete row
     const deleteBtn = row.querySelector('.btn-delete-q');
     deleteBtn.addEventListener('click', () => {
       row.remove();
     });
 
-    customQuestionsList.appendChild(row);
+    modalCustomQuestionsList.appendChild(row);
+  }
+
+  // Add Question Button Click
+  modalBtnAddQuestion.addEventListener('click', () => {
+    addCustomQuestionRow();
   });
+
+  // Save Settings
+  btnSaveLeadFormModal.addEventListener('click', () => {
+    // 1. Gather Standard Fields
+    const standardFields = Array.from(leadFormBuilderModal.querySelectorAll('input[name="modalLeadFields"]:checked')).map(el => el.value);
+    const newConfig = standardFields.map(field => {
+      let key = field.toLowerCase();
+      if (field === 'PHONE') key = 'phone_number';
+      return { type: field, key: key };
+    });
+
+    // 2. Gather Custom Questions
+    const customRows = modalCustomQuestionsList.querySelectorAll('.custom-question-row');
+    let hasEmptyLabel = false;
+
+    customRows.forEach((row, index) => {
+      const label = row.querySelector('.custom-q-label')?.value?.trim();
+      const type = row.querySelector('.custom-q-type')?.value;
+      if (!label) {
+        hasEmptyLabel = true;
+        return;
+      }
+
+      const qObj = {
+        type: 'CUSTOM',
+        key: `custom_q_${index + 1}`,
+        label: label
+      };
+
+      if (type === 'MULTIPLE_CHOICE') {
+        const optionsRaw = row.querySelector('.custom-q-options')?.value;
+        const optionsList = optionsRaw ? optionsRaw.split(',').map(o => o.trim()).filter(Boolean) : [];
+        if (optionsList.length > 0) {
+          qObj.options = optionsList.map((opt, optIndex) => ({
+            key: `opt_${optIndex + 1}`,
+            value: opt
+          }));
+        } else {
+          // If multiple choice options are empty, fallback to Short Answer
+          qObj.type = 'CUSTOM';
+        }
+      }
+      newConfig.push(qObj);
+    });
+
+    if (hasEmptyLabel) {
+      alert('Please fill out the question text for all custom questions.');
+      return;
+    }
+
+    if (newConfig.length === 0) {
+      alert('Please select or add at least one question for your form.');
+      return;
+    }
+
+    leadQuestionsConfig = newConfig;
+    leadFormSummary.style.display = 'flex';
+    closeLeadFormModal();
+  });
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
 
   // Setup OAuth Connection listeners
   connectBtnGoogle.addEventListener('click', () => handleConnectClick('Google Search', 'Google Ads', statusGoogle, connectBtnGoogle));
@@ -191,40 +312,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // 1. Gather Standard Fields
-    const standardFields = Array.from(onboardingForm.querySelectorAll('input[name="leadFields"]:checked')).map(el => el.value);
-    const leadQuestions = standardFields.map(field => {
-      let key = field.toLowerCase();
-      if (field === 'PHONE') key = 'phone_number';
-      return { type: field, key: key };
-    });
-
-    // 2. Gather Custom Questions
-    const customRows = onboardingForm.querySelectorAll('.custom-question-row');
-    customRows.forEach((row, index) => {
-      const label = row.querySelector('.custom-q-label')?.value?.trim();
-      const type = row.querySelector('.custom-q-type')?.value;
-      if (!label) return;
-
-      const qObj = {
-        type: 'CUSTOM',
-        key: `custom_q_${index + 1}`,
-        label: label
-      };
-
-      if (type === 'MULTIPLE_CHOICE') {
-        const optionsRaw = row.querySelector('.custom-q-options')?.value;
-        const optionsList = optionsRaw ? optionsRaw.split(',').map(o => o.trim()).filter(Boolean) : [];
-        if (optionsList.length > 0) {
-          qObj.options = optionsList.map((opt, optIndex) => ({
-            key: `opt_${optIndex + 1}`,
-            value: opt
-          }));
-        }
-      }
-      leadQuestions.push(qObj);
-    });
-
     const params = {
       businessName: formData.get('businessName'),
       products: formData.get('products'),
@@ -233,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
       primaryGoal: formData.get('primaryGoal'),
       websiteUrl: formData.get('websiteUrl') || '',
       platforms: platforms,
-      leadQuestions: leadQuestions
+      leadQuestions: leadQuestionsConfig
     };
 
     lastSubmittedParams = params;

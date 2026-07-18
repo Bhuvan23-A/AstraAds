@@ -145,50 +145,16 @@
                 </select>
               </div>
             </div>
-            <div id="lead-form-config" class="hidden form-group" style="margin-top: 15px; background: #1e293b; padding: 16px; border-radius: 8px; border: 1px solid #334155;">
-              <label style="font-weight: 700; color: #3b82f6; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-wpforms"></i> Instant Lead Form Setup
-              </label>
-              <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px; margin-top: 4px;">
+            <div id="lead-form-config" class="hidden form-group" style="margin-top: 15px;">
+              <label>Lead Form Configuration</label>
+              <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">
                 Configure the form questions that open inside Facebook/Instagram when users click your ad.
               </div>
-              
-              <!-- Standard Pre-fill Fields Section -->
-              <div style="margin-bottom: 15px;">
-                <label style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 6px; display: block;">Standard Pre-filled Fields</label>
-                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                  <label class="checkbox-container" style="background: #0f172a; padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
-                    <input type="checkbox" name="leadFields" value="FULL_NAME" checked> <span>Full Name</span>
-                  </label>
-                  <label class="checkbox-container" style="background: #0f172a; padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
-                    <input type="checkbox" name="leadFields" value="EMAIL" checked> <span>Email</span>
-                  </label>
-                  <label class="checkbox-container" style="background: #0f172a; padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
-                    <input type="checkbox" name="leadFields" value="PHONE" checked> <span>Phone</span>
-                  </label>
-                  <label class="checkbox-container" style="background: #0f172a; padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
-                    <input type="checkbox" name="leadFields" value="COMPANY_NAME"> <span>Company</span>
-                  </label>
-                  <label class="checkbox-container" style="background: #0f172a; padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
-                    <input type="checkbox" name="leadFields" value="JOB_TITLE"> <span>Job Title</span>
-                  </label>
-                  <label class="checkbox-container" style="background: #0f172a; padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
-                    <input type="checkbox" name="leadFields" value="CITY"> <span>City</span>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Custom Questions Section -->
-              <div style="border-top: 1px solid #334155; padding-top: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <label style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin: 0;">Custom Questions</label>
-                  <button type="button" id="btn-add-custom-question" class="btn-connect" style="padding: 4px 8px; font-size: 0.75rem; display: flex; align-items: center; gap: 4px;">
-                    <i class="fa-solid fa-plus"></i> Add Question
-                  </button>
-                </div>
-                <div id="custom-questions-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto;">
-                  <!-- Dynamic rows will be added here -->
-                </div>
+              <button type="button" id="btn-configure-lead-form" class="btn-connect" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: #2563eb; color: white; border-color: #2563eb; padding: 10px 14px; font-weight: 600; border-radius: 6px; cursor: pointer;">
+                <i class="fa-solid fa-gear"></i> Configure Lead Form
+              </button>
+              <div id="lead-form-summary" style="font-size: 0.8rem; color: #10b981; margin-top: 8px; display: none; align-items: center; gap: 6px; font-weight: 500;">
+                <i class="fa-solid fa-circle-check"></i> Form configured successfully!
               </div>
             </div>
 
@@ -639,6 +605,64 @@
             <button class="status-pill-btn lost" data-status="Lost">Lost</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lead Form Builder Modal Overlay -->
+  <div class="modal-overlay hidden" id="lead-form-builder-modal" style="z-index: 10000;">
+    <div class="modal-card" style="max-width: 650px; width: 90%; background: #0f172a; border: 1px solid #334155;">
+      <div class="modal-header" style="border-bottom: 1px solid #334155; padding-bottom: 15px;">
+        <i class="fa-solid fa-wpforms modal-shield-icon" style="color: #3b82f6;"></i>
+        <h3 style="color: white; margin: 0; font-size: 1.25rem;">Instant Lead Form Setup</h3>
+        <button type="button" class="modal-close-btn" id="btn-close-lead-form-modal" style="color: #94a3b8; background: transparent; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+      <div class="modal-body" style="padding-top: 20px;">
+        
+        <!-- Standard Pre-fill Fields -->
+        <div style="margin-bottom: 25px;">
+          <label style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 12px; display: block;">Standard Pre-filled Fields (Auto-filled by Meta)</label>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;">
+            <label class="checkbox-container" style="background: #1e293b; padding: 10px 14px; border-radius: 8px; border: 1px solid #334155; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; color: white;">
+              <input type="checkbox" name="modalLeadFields" value="FULL_NAME" checked> <span>Full Name</span>
+            </label>
+            <label class="checkbox-container" style="background: #1e293b; padding: 10px 14px; border-radius: 8px; border: 1px solid #334155; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; color: white;">
+              <input type="checkbox" name="modalLeadFields" value="EMAIL" checked> <span>Email</span>
+            </label>
+            <label class="checkbox-container" style="background: #1e293b; padding: 10px 14px; border-radius: 8px; border: 1px solid #334155; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; color: white;">
+              <input type="checkbox" name="modalLeadFields" value="PHONE" checked> <span>Phone</span>
+            </label>
+            <label class="checkbox-container" style="background: #1e293b; padding: 10px 14px; border-radius: 8px; border: 1px solid #334155; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; color: white;">
+              <input type="checkbox" name="modalLeadFields" value="COMPANY_NAME"> <span>Company</span>
+            </label>
+            <label class="checkbox-container" style="background: #1e293b; padding: 10px 14px; border-radius: 8px; border: 1px solid #334155; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; color: white;">
+              <input type="checkbox" name="modalLeadFields" value="JOB_TITLE"> <span>Job Title</span>
+            </label>
+            <label class="checkbox-container" style="background: #1e293b; padding: 10px 14px; border-radius: 8px; border: 1px solid #334155; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; color: white;">
+              <input type="checkbox" name="modalLeadFields" value="CITY"> <span>City</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Custom Questions Section -->
+        <div style="border-top: 1px solid #334155; padding-top: 20px; margin-bottom: 25px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <label style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin: 0;">Custom Questions (Add text or dropdown options)</label>
+            <button type="button" id="modal-btn-add-question" class="btn-connect" style="padding: 6px 12px; font-size: 0.75rem; display: flex; align-items: center; gap: 6px; background: #2563eb; border-color: #2563eb; color: white;">
+              <i class="fa-solid fa-plus"></i> Add Question
+            </button>
+          </div>
+          <div id="modal-custom-questions-list" style="display: flex; flex-direction: column; gap: 12px; max-height: 250px; overflow-y: auto; padding-right: 5px;">
+            <!-- Dynamic rows will be added here -->
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #334155; padding-top: 15px; margin-top: 15px;">
+          <button type="button" class="btn-connect" id="btn-cancel-lead-form-modal" style="background: #475569; border-color: #475569; color: white; padding: 8px 16px; font-weight: 600; cursor: pointer;">Cancel</button>
+          <button type="button" class="btn-connect" id="btn-save-lead-form-modal" style="background: #2563eb; border-color: #2563eb; color: white; padding: 8px 16px; font-weight: 600; cursor: pointer;">Save Settings</button>
+        </div>
+
       </div>
     </div>
   </div>
