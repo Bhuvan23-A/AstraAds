@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const campaignStatus = document.getElementById('campaign-status');
   
   // Dashboard Cards Elements
-  const dailyBudgetEl = document.getElementById('daily-budget');
+  const dailyBudgetInput = document.getElementById('daily-budget-input');
   const budgetStrategyEl = document.getElementById('budget-strategy');
   const keywordsContainer = document.getElementById('keywords-container');
   const interestsContainer = document.getElementById('interests-container');
@@ -158,6 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
           currentCampaignPayload.ad_creative.manual_banner_base64 = base64Data;
         }
         resetBannerBtn.classList.remove('hidden');
+        const adImageStatus = document.getElementById('ad-image-status');
+        if (adImageStatus) adImageStatus.textContent = 'Custom Image Uploaded';
       };
       reader.readAsDataURL(file);
     }
@@ -186,6 +188,8 @@ document.addEventListener('DOMContentLoaded', () => {
       mockSocialImage.src = 'ad-banner.png';
     }
     resetBannerBtn.classList.add('hidden');
+    const adImageStatus = document.getElementById('ad-image-status');
+    if (adImageStatus) adImageStatus.textContent = 'Using AI Generated Image';
   });
 
   // Regenerate Campaign listener
@@ -337,26 +341,26 @@ document.addEventListener('DOMContentLoaded', () => {
     campaignTitle.textContent = campaign.campaign_name || 'AI Generated Campaign';
 
     const dailyBudget = campaign.budget_allocation?.daily_budget;
-    dailyBudgetEl.textContent = typeof dailyBudget === 'number' 
-      ? `₹${dailyBudget.toFixed(2)}` 
-      : `₹${dailyBudget}`;
+    if (dailyBudgetInput) {
+      dailyBudgetInput.value = typeof dailyBudget === 'number' ? Math.round(dailyBudget) : parseFloat(dailyBudget) || 100;
+    }
     budgetStrategyEl.textContent = campaign.budget_allocation?.strategy || 'N/A';
 
     keywordsContainer.innerHTML = '';
     const keywords = campaign.targeting?.keywords || [];
-    keywords.forEach(keyword => {
+    keywords.forEach((keyword, idx) => {
       const keywordBadge = document.createElement('span');
       keywordBadge.className = 'tag';
-      keywordBadge.innerHTML = `<i class="fa-solid fa-tag"></i> ${keyword}`;
+      keywordBadge.innerHTML = `<i class="fa-solid fa-tag"></i> ${escapeHtml(keyword)} <span class="delete-tag" data-type="keyword" data-index="${idx}" style="margin-left: 6px; cursor: pointer; color: #a0aec0; font-weight: bold;">&times;</span>`;
       keywordsContainer.appendChild(keywordBadge);
     });
 
     interestsContainer.innerHTML = '';
     const interests = campaign.targeting?.audience_interests || [];
-    interests.forEach(interest => {
+    interests.forEach((interest, idx) => {
       const interestBadge = document.createElement('span');
       interestBadge.className = 'tag tag-interest';
-      interestBadge.innerHTML = `<i class="fa-solid fa-user-tag"></i> ${interest}`;
+      interestBadge.innerHTML = `<i class="fa-solid fa-user-tag"></i> ${escapeHtml(interest)} <span class="delete-tag" data-type="interest" data-index="${idx}" style="margin-left: 6px; cursor: pointer; color: #a0aec0; font-weight: bold;">&times;</span>`;
       interestsContainer.appendChild(interestBadge);
     });
 
@@ -368,14 +372,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const itemDiv = document.createElement('div');
       itemDiv.className = 'validation-item';
+      itemDiv.style.flexDirection = 'column';
+      itemDiv.style.alignItems = 'stretch';
+      itemDiv.style.gap = '8px';
+      
       itemDiv.innerHTML = `
-        <span class="validation-text"><strong>H${index + 1}:</strong> ${escapeHtml(headline)}</span>
-        <div class="validation-meta">
-          <span class="char-counter ${isValid ? 'counter-valid' : 'counter-invalid'}">
-            ${charCount}/30
-          </span>
-          <i class="fa-solid ${isValid ? 'fa-circle-check text-success' : 'fa-circle-exclamation text-danger'}" style="color: ${isValid ? '#10b981' : '#ef4444'}"></i>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <strong>Headline H${index + 1}:</strong>
+          <div class="validation-meta">
+            <span class="char-counter char-counter-h${index} ${isValid ? 'counter-valid' : 'counter-invalid'}">
+              ${charCount}/30
+            </span>
+            <i class="fa-solid status-icon-h${index} ${isValid ? 'fa-circle-check text-success' : 'fa-circle-exclamation text-danger'}" style="color: ${isValid ? '#10b981' : '#ef4444'}"></i>
+          </div>
         </div>
+        <input type="text" class="creative-input headline-edit-input" data-index="${index}" value="${escapeHtml(headline)}" style="width: 100%; padding: 8px 12px; background: #2d3748; border: 1px solid #4a5568; border-radius: 6px; color: #fff; font-size: 0.9rem; outline: none; border-bottom: 2px solid #3182ce;">
       `;
       headlinesList.appendChild(itemDiv);
     });
@@ -388,14 +399,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const itemDiv = document.createElement('div');
       itemDiv.className = 'validation-item';
+      itemDiv.style.flexDirection = 'column';
+      itemDiv.style.alignItems = 'stretch';
+      itemDiv.style.gap = '8px';
+
       itemDiv.innerHTML = `
-        <span class="validation-text"><strong>D${index + 1}:</strong> ${escapeHtml(desc)}</span>
-        <div class="validation-meta">
-          <span class="char-counter ${isValid ? 'counter-valid' : 'counter-invalid'}">
-            ${charCount}/90
-          </span>
-          <i class="fa-solid ${isValid ? 'fa-circle-check text-success' : 'fa-circle-exclamation text-danger'}" style="color: ${isValid ? '#10b981' : '#ef4444'}"></i>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <strong>Description D${index + 1}:</strong>
+          <div class="validation-meta">
+            <span class="char-counter char-counter-d${index} ${isValid ? 'counter-valid' : 'counter-invalid'}">
+              ${charCount}/90
+            </span>
+            <i class="fa-solid status-icon-d${index} ${isValid ? 'fa-circle-check text-success' : 'fa-circle-exclamation text-danger'}" style="color: ${isValid ? '#10b981' : '#ef4444'}"></i>
+          </div>
         </div>
+        <textarea class="creative-input desc-edit-input" data-index="${index}" style="width: 100%; min-height: 50px; padding: 8px 12px; background: #2d3748; border: 1px solid #4a5568; border-radius: 6px; color: #fff; font-size: 0.9rem; outline: none; border-bottom: 2px solid #3182ce; resize: vertical;">${escapeHtml(desc)}</textarea>
       `;
       descriptionsList.appendChild(itemDiv);
     });
@@ -407,14 +425,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const captionDiv = document.createElement('div');
     captionDiv.className = 'validation-item';
+    captionDiv.style.flexDirection = 'column';
+    captionDiv.style.alignItems = 'stretch';
+    captionDiv.style.gap = '8px';
+
     captionDiv.innerHTML = `
-      <span class="validation-text">${escapeHtml(primaryText || 'N/A')}</span>
-      <div class="validation-meta">
-        <span class="char-counter ${isTextValid ? 'counter-valid' : 'counter-invalid'}">
-          ${textLength}/125
-        </span>
-        <i class="fa-solid ${isTextValid ? 'fa-circle-check text-success' : 'fa-circle-exclamation text-danger'}" style="color: ${isTextValid ? '#10b981' : '#ef4444'}"></i>
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <strong>Facebook Post Caption:</strong>
+        <div class="validation-meta">
+          <span class="char-counter char-counter-social ${isTextValid ? 'counter-valid' : 'counter-invalid'}">
+            ${textLength}/125
+          </span>
+          <i class="fa-solid status-icon-social ${isTextValid ? 'fa-circle-check text-success' : 'fa-circle-exclamation text-danger'}" style="color: ${isTextValid ? '#10b981' : '#ef4444'}"></i>
+        </div>
       </div>
+      <textarea id="social-caption-edit-input" style="width: 100%; min-height: 70px; padding: 8px 12px; background: #2d3748; border: 1px solid #4a5568; border-radius: 6px; color: #fff; font-size: 0.9rem; outline: none; border-bottom: 2px solid #3182ce; resize: vertical;">${escapeHtml(primaryText)}</textarea>
     `;
     socialCaptionList.appendChild(captionDiv);
 
@@ -436,6 +461,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clear manual banner elements upon new campaign generation
     if (resetBannerBtn) resetBannerBtn.classList.add('hidden');
     if (manualBannerInput) manualBannerInput.value = '';
+    const adImageStatus = document.getElementById('ad-image-status');
+    if (adImageStatus) adImageStatus.textContent = 'Using AI Generated Image';
     if (campaign.ad_creative) {
       delete campaign.ad_creative.manual_banner_base64;
     }
@@ -1091,6 +1118,171 @@ document.addEventListener('DOMContentLoaded', () => {
   const origin = window.location.origin;
   leadsElements.webhookUrlDisplay.textContent = `${origin}/api/webhooks/leads`;
   
+  // --- INLINE EDITING EVENT LISTENERS ---
+  
+  // Real-time character length checks, mockup syncing, and budget edits
+  document.addEventListener('input', (e) => {
+    if (!currentCampaignPayload) return;
+    
+    // Headline edits
+    if (e.target.classList.contains('headline-edit-input')) {
+      const idx = parseInt(e.target.dataset.index);
+      const newVal = e.target.value;
+      if (currentCampaignPayload.ad_creative && currentCampaignPayload.ad_creative.headlines) {
+        currentCampaignPayload.ad_creative.headlines[idx] = newVal;
+        
+        // Update character counter
+        const len = newVal.length;
+        const isValid = len <= 30;
+        const counterEl = document.querySelector(`.char-counter-h${idx}`);
+        if (counterEl) {
+          counterEl.textContent = `${len}/30`;
+          counterEl.className = `char-counter char-counter-h${idx} ${isValid ? 'counter-valid' : 'counter-invalid'}`;
+        }
+        const iconEl = document.querySelector(`.status-icon-h${idx}`);
+        if (iconEl) {
+          iconEl.className = `fa-solid status-icon-h${idx} ${isValid ? 'fa-circle-check text-success' : 'fa-circle-exclamation text-danger'}`;
+          iconEl.style.color = isValid ? '#10b981' : '#ef4444';
+        }
+        
+        // Update mockup titles
+        const firstHeadline = currentCampaignPayload.ad_creative.headlines[0] || '';
+        const secondHeadline = currentCampaignPayload.ad_creative.headlines[1] ? ` | ${currentCampaignPayload.ad_creative.headlines[1]}` : '';
+        const headlineString = `${firstHeadline}${secondHeadline}`;
+        if (mockTitleEl) {
+          mockTitleEl.textContent = headlineString.length > 60 ? headlineString.substring(0, 57) + '...' : headlineString;
+        }
+        if (mockSocialHeadline && idx === 0) {
+          mockSocialHeadline.textContent = newVal || 'Exclusive Campaign Offer';
+        }
+      }
+    }
+
+    // Description edits
+    if (e.target.classList.contains('desc-edit-input')) {
+      const idx = parseInt(e.target.dataset.index);
+      const newVal = e.target.value;
+      if (currentCampaignPayload.ad_creative && currentCampaignPayload.ad_creative.descriptions) {
+        currentCampaignPayload.ad_creative.descriptions[idx] = newVal;
+        
+        // Update character counter
+        const len = newVal.length;
+        const isValid = len <= 90;
+        const counterEl = document.querySelector(`.char-counter-d${idx}`);
+        if (counterEl) {
+          counterEl.textContent = `${len}/90`;
+          counterEl.className = `char-counter char-counter-d${idx} ${isValid ? 'counter-valid' : 'counter-invalid'}`;
+        }
+        const iconEl = document.querySelector(`.status-icon-d${idx}`);
+        if (iconEl) {
+          iconEl.className = `fa-solid status-icon-d${idx} ${isValid ? 'fa-circle-check text-success' : 'fa-circle-exclamation text-danger'}`;
+          iconEl.style.color = isValid ? '#10b981' : '#ef4444';
+        }
+        
+        // Update mockup description
+        if (mockDescEl && idx === 0) {
+          mockDescEl.textContent = newVal || 'Your generated ad description text will render dynamically here.';
+        }
+      }
+    }
+
+    // Social post caption edits
+    if (e.target.id === 'social-caption-edit-input') {
+      const newVal = e.target.value;
+      if (currentCampaignPayload.ad_creative) {
+        currentCampaignPayload.ad_creative.primary_text = newVal;
+        
+        // Update character counter
+        const len = newVal.length;
+        const isValid = len <= 125;
+        const counterEl = document.querySelector(`.char-counter-social`);
+        if (counterEl) {
+          counterEl.textContent = `${len}/125`;
+          counterEl.className = `char-counter char-counter-social ${isValid ? 'counter-valid' : 'counter-invalid'}`;
+        }
+        const iconEl = document.querySelector(`.status-icon-social`);
+        if (iconEl) {
+          iconEl.className = `fa-solid status-icon-social ${isValid ? 'fa-circle-check text-success' : 'fa-circle-exclamation text-danger'}`;
+          iconEl.style.color = isValid ? '#10b981' : '#ef4444';
+        }
+        
+        // Update mockup caption
+        if (mockSocialCaption) {
+          mockSocialCaption.textContent = newVal;
+        }
+      }
+    }
+
+    // Daily budget edits
+    if (e.target.id === 'daily-budget-input') {
+      if (currentCampaignPayload.budget_allocation) {
+        currentCampaignPayload.budget_allocation.daily_budget = parseFloat(e.target.value) || 0;
+      }
+    }
+  });
+
+  // Handle adding/deleting tags and triggering upload from validator
+  document.addEventListener('click', (e) => {
+    if (!currentCampaignPayload) return;
+
+    // Delete tag button
+    if (e.target.classList.contains('delete-tag')) {
+      const type = e.target.dataset.type;
+      const index = parseInt(e.target.dataset.index);
+      if (type === 'keyword') {
+        currentCampaignPayload.targeting.keywords.splice(index, 1);
+      } else if (type === 'interest') {
+        currentCampaignPayload.targeting.audience_interests.splice(index, 1);
+      }
+      // Re-render
+      renderCampaignToDashboard(currentCampaignPayload, lastSubmittedParams?.businessName || 'Your Business');
+    }
+
+    // Add keyword button
+    if (e.target.id === 'btn-add-keyword') {
+      const input = document.getElementById('add-keyword-input');
+      const val = input?.value?.trim();
+      if (val) {
+        if (!currentCampaignPayload.targeting) currentCampaignPayload.targeting = {};
+        if (!currentCampaignPayload.targeting.keywords) currentCampaignPayload.targeting.keywords = [];
+        currentCampaignPayload.targeting.keywords.push(val);
+        input.value = '';
+        renderCampaignToDashboard(currentCampaignPayload, lastSubmittedParams?.businessName || 'Your Business');
+      }
+    }
+
+    // Add interest button
+    if (e.target.id === 'btn-add-interest') {
+      const input = document.getElementById('add-interest-input');
+      const val = input?.value?.trim();
+      if (val) {
+        if (!currentCampaignPayload.targeting) currentCampaignPayload.targeting = {};
+        if (!currentCampaignPayload.targeting.audience_interests) currentCampaignPayload.targeting.audience_interests = [];
+        currentCampaignPayload.targeting.audience_interests.push(val);
+        input.value = '';
+        renderCampaignToDashboard(currentCampaignPayload, lastSubmittedParams?.businessName || 'Your Business');
+      }
+    }
+
+    // Trigger file chooser from the creative validator upload button
+    if (e.target.id === 'btn-upload-image-creative' || e.target.closest('#btn-upload-image-creative')) {
+      manualBannerInput?.click();
+    }
+  });
+
+  // Support pressing 'Enter' key inside tag inputs to add tag
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      if (e.target.id === 'add-keyword-input') {
+        e.preventDefault();
+        document.getElementById('btn-add-keyword')?.click();
+      } else if (e.target.id === 'add-interest-input') {
+        e.preventDefault();
+        document.getElementById('btn-add-interest')?.click();
+      }
+    }
+  });
+
   setupTabNavigation();
   setupLeadsEventListeners();
 });
