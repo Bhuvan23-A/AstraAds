@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const mockSocialDisplayUrl = document.getElementById('mock-social-display-url');
   const mockSocialHeadline = document.getElementById('mock-social-headline');
   const mockSocialCta = document.getElementById('mock-social-cta');
+  const mockSocialImage = document.getElementById('mock-social-image');
 
   // Connection Manager Elements
   const connectBtnGoogle = document.getElementById('connect-google');
