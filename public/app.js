@@ -69,6 +69,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const manualBannerInput = document.getElementById('manual-banner-input');
   const resetBannerBtn = document.getElementById('reset-banner-btn');
 
+  // Cropper elements
+  const imageCropModal = document.getElementById('image-crop-modal');
+  const imageToCrop = document.getElementById('image-to-crop');
+  const btnCloseCropModal = document.getElementById('btn-close-crop-modal');
+  const btnCancelCrop = document.getElementById('btn-cancel-crop');
+  const btnSaveCrop = document.getElementById('btn-save-crop');
+  const ratioLandscape = document.getElementById('ratio-landscape');
+  const ratioSquare = document.getElementById('ratio-square');
+  const ratioFree = document.getElementById('ratio-free');
+  let cropper = null;
+
   // Internal connection states (synced with localStorage)
   let connections = {
     'Google Search': null, // holds mock account ID when connected, e.g. 'act_google_1283'
@@ -152,15 +163,34 @@ document.addEventListener('DOMContentLoaded', () => {
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
-        const base64Data = event.target.result;
-        mockSocialImage.src = base64Data;
+        const url = event.target.result;
         
-        if (currentCampaignPayload && currentCampaignPayload.ad_creative) {
-          currentCampaignPayload.ad_creative.manual_banner_base64 = base64Data;
+        // Show crop modal
+        imageToCrop.src = url;
+        imageCropModal.classList.remove('hidden');
+        
+        // Initialize cropper
+        if (cropper) {
+          cropper.destroy();
         }
-        resetBannerBtn.classList.remove('hidden');
-        const adImageStatus = document.getElementById('ad-image-status');
-        if (adImageStatus) adImageStatus.textContent = 'Custom Image Uploaded';
+        
+        // Reset active style on ratio buttons
+        ratioLandscape.style.background = '#3182ce';
+        ratioLandscape.style.color = '#fff';
+        ratioSquare.style.background = 'transparent';
+        ratioSquare.style.color = 'inherit';
+        ratioFree.style.background = 'transparent';
+        ratioFree.style.color = 'inherit';
+        
+        // Initialize Cropper with Landscape (16:9) aspect ratio by default
+        cropper = new Cropper(imageToCrop, {
+          aspectRatio: 16 / 9,
+          viewMode: 2,
+          autoCropArea: 1,
+          responsive: true,
+          restore: false,
+          checkCrossOrigin: false
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -1283,6 +1313,98 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  // --- CROPPER MODAL CONTROLLER HANDLERS ---
+  
+  // Close cropping modal helper
+  const closeCropModal = () => {
+    imageCropModal.classList.add('hidden');
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+    manualBannerInput.value = ''; // clear file input so it can be re-triggered
+  };
+
+  if (btnCloseCropModal) btnCloseCropModal.addEventListener('click', closeCropModal);
+  if (btnCancelCrop) btnCancelCrop.addEventListener('click', closeCropModal);
+
+  // Aspect ratio selector buttons
+  if (ratioLandscape) {
+    ratioLandscape.addEventListener('click', () => {
+      if (cropper) {
+        cropper.setAspectRatio(16 / 9);
+        ratioLandscape.style.background = '#3182ce';
+        ratioLandscape.style.color = '#fff';
+        ratioSquare.style.background = 'transparent';
+        ratioSquare.style.color = 'inherit';
+        ratioFree.style.background = 'transparent';
+        ratioFree.style.color = 'inherit';
+      }
+    });
+  }
+
+  if (ratioSquare) {
+    ratioSquare.addEventListener('click', () => {
+      if (cropper) {
+        cropper.setAspectRatio(1 / 1);
+        ratioSquare.style.background = '#3182ce';
+        ratioSquare.style.color = '#fff';
+        ratioLandscape.style.background = 'transparent';
+        ratioLandscape.style.color = 'inherit';
+        ratioFree.style.background = 'transparent';
+        ratioFree.style.color = 'inherit';
+      }
+    });
+  }
+
+  if (ratioFree) {
+    ratioFree.addEventListener('click', () => {
+      if (cropper) {
+        cropper.setAspectRatio(NaN); // NaN sets free aspect ratio
+        ratioFree.style.background = '#3182ce';
+        ratioFree.style.color = '#fff';
+        ratioLandscape.style.background = 'transparent';
+        ratioLandscape.style.color = 'inherit';
+        ratioSquare.style.background = 'transparent';
+        ratioSquare.style.color = 'inherit';
+      }
+    });
+  }
+
+  // Save/Apply cropped image handler
+  if (btnSaveCrop) {
+    btnSaveCrop.addEventListener('click', () => {
+      if (cropper) {
+        // Get cropped image canvas (we set a max size of 1200x1200 to prevent huge payloads)
+        const canvas = cropper.getCroppedCanvas({
+          maxWidth: 1200,
+          maxHeight: 1200,
+          imageSmoothingEnabled: true,
+          imageSmoothingQuality: 'high'
+        });
+        
+        const croppedBase64 = canvas.toDataURL('image/jpeg', 0.9); // high quality JPEG
+        
+        // Update social mockup image source
+        if (mockSocialImage) {
+          mockSocialImage.src = croppedBase64;
+        }
+        
+        // Save base64 string to the ad creative payload for Meta Ads API upload
+        if (currentCampaignPayload && currentCampaignPayload.ad_creative) {
+          currentCampaignPayload.ad_creative.manual_banner_base64 = croppedBase64;
+        }
+        
+        // Show reset button and update upload status text
+        if (resetBannerBtn) resetBannerBtn.classList.remove('hidden');
+        const adImageStatus = document.getElementById('ad-image-status');
+        if (adImageStatus) adImageStatus.textContent = 'Custom Image Cropped';
+
+        closeCropModal();
+      }
+    });
+  }
 
   setupTabNavigation();
   setupLeadsEventListeners();

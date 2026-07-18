@@ -14,6 +14,9 @@
   <link rel="stylesheet" href="style.css">
   <!-- Chart.js for leads analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Cropper.js for image resizing and cropping -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 </head>
 <body>
   <div class="app-container">
@@ -573,6 +576,50 @@
             <button class="status-pill-btn qualified" data-status="Qualified">Qualified</button>
             <button class="status-pill-btn lost" data-status="Lost">Lost</button>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ad Image Cropping Modal Overlay -->
+  <div class="modal-overlay hidden" id="image-crop-modal" style="z-index: 10000;">
+    <div class="modal-card" style="max-width: 700px; width: 90%;">
+      <div class="modal-header">
+        <i class="fa-solid fa-crop-simple modal-shield-icon" style="color: #4299e1;"></i>
+        <h3>Crop & Resize Ad Image</h3>
+        <button type="button" class="modal-close-btn" id="btn-close-crop-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <p style="margin-bottom: 15px; font-size: 0.85rem; color: #a0aec0;">
+          Select crop aspect ratio and adjust image. Landscape (16:9) is recommended for Meta feeds.
+        </p>
+        
+        <!-- Aspect Ratio Selector Buttons -->
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+          <button type="button" class="btn btn-secondary btn-sm" id="ratio-landscape" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; cursor: pointer; background: #3182ce; color: #fff;">
+            Landscape (16:9)
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="ratio-square" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; cursor: pointer;">
+            Square (1:1)
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="ratio-free" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; cursor: pointer;">
+            Free Crop
+          </button>
+        </div>
+
+        <!-- Crop container -->
+        <div class="crop-container" style="max-height: 400px; min-height: 250px; background: #1a202c; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid #2d3748;">
+          <img id="image-to-crop" style="max-width: 100%; display: block;">
+        </div>
+
+        <!-- Action Footer -->
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-crop" style="padding: 8px 16px; font-size: 0.9rem; border-radius: 6px;">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary" id="btn-save-crop" style="padding: 8px 24px; font-size: 0.9rem; border-radius: 6px; background: linear-gradient(135deg, #3182ce, #319795);">
+            Apply Crop
+          </button>
         </div>
       </div>
     </div>
