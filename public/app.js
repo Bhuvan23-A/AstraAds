@@ -165,36 +165,35 @@ document.addEventListener('DOMContentLoaded', () => {
   function addCustomQuestionRow(label = '', type = 'TEXT', options = null) {
     const row = document.createElement('div');
     row.className = 'custom-question-row';
-    row.style = 'display: flex; flex-direction: column; gap: 8px; background: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #334155; margin-top: 10px;';
+    row.style = 'display: flex; gap: 10px; align-items: center; background: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #334155; margin-top: 10px; width: 100%;';
     
     const optionsCsv = options ? options.map(o => o.value).join(', ') : '';
     const isMc = type === 'MULTIPLE_CHOICE';
 
     row.innerHTML = `
-      <div style="display: flex; gap: 10px; align-items: center; width: 100%;">
-        <input type="text" placeholder="Question text (e.g. When can we call?)" class="custom-q-label" style="flex: 3; padding: 8px 12px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px; font-size: 0.85rem;" value="${escapeHtml(label)}" required>
-        <select class="custom-q-type" style="flex: 1.5; padding: 8px 12px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px; font-size: 0.85rem; min-width: 140px; color-scheme: dark;">
-          <option value="TEXT" ${!isMc ? 'selected' : ''}>Short Answer</option>
-          <option value="MULTIPLE_CHOICE" ${isMc ? 'selected' : ''}>Multiple Choice</option>
-        </select>
-        <button type="button" class="btn-delete-q" style="background: #ef4444; border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 38px; flex-shrink: 0;">
-          <i class="fa-solid fa-trash"></i>
-        </button>
-      </div>
-      <div class="options-container ${!isMc ? 'hidden' : ''}" style="display: flex; flex-direction: column; gap: 6px; padding-left: 10px; border-left: 2px solid #3b82f6; margin-top: 5px;">
-        <div style="font-size: 0.75rem; color: #94a3b8;">Enter dropdown options (comma-separated):</div>
-        <input type="text" placeholder="e.g. Morning, Afternoon, Evening" class="custom-q-options" style="padding: 8px 12px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px; font-size: 0.85rem; width: 100%;" value="${escapeHtml(optionsCsv)}">
-      </div>
+      <input type="text" placeholder="Question text (e.g. When can we call?)" class="custom-q-label" style="flex: ${isMc ? '2.5' : '5'}; padding: 8px 12px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px; font-size: 0.85rem;" value="${escapeHtml(label)}" required>
+      <select class="custom-q-type" style="flex: 1.5; padding: 8px 12px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px; font-size: 0.85rem; min-width: 140px; color-scheme: dark;">
+        <option value="TEXT" ${!isMc ? 'selected' : ''}>Short Answer</option>
+        <option value="MULTIPLE_CHOICE" ${isMc ? 'selected' : ''}>Multiple Choice</option>
+      </select>
+      <input type="text" placeholder="Options (comma-separated)" class="custom-q-options ${!isMc ? 'hidden' : ''}" style="flex: 2.5; padding: 8px 12px; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 6px; font-size: 0.85rem;" value="${escapeHtml(optionsCsv)}">
+      <button type="button" class="btn-delete-q" style="background: #ef4444; border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 38px; flex-shrink: 0;">
+        <i class="fa-solid fa-trash"></i>
+      </button>
     `;
 
-    // Toggle options field
+    // Toggle options field and adjust flex sizes
     const select = row.querySelector('.custom-q-type');
-    const optionsContainer = row.querySelector('.options-container');
+    const labelInput = row.querySelector('.custom-q-label');
+    const optionsInput = row.querySelector('.custom-q-options');
+    
     select.addEventListener('change', (e) => {
       if (e.target.value === 'MULTIPLE_CHOICE') {
-        optionsContainer.classList.remove('hidden');
+        optionsInput.classList.remove('hidden');
+        labelInput.style.flex = '2.5';
       } else {
-        optionsContainer.classList.add('hidden');
+        optionsInput.classList.add('hidden');
+        labelInput.style.flex = '5';
       }
     });
 
