@@ -150,13 +150,25 @@ document.addEventListener('DOMContentLoaded', () => {
     searchAdMock.classList.add('hidden');
   });
 
-  // Toggle Lead Form Config visibility
+  const useLeadFormCheckbox = document.getElementById('useLeadForm');
+  const leadFormInner = document.getElementById('lead-form-inner');
+
+  useLeadFormCheckbox.addEventListener('change', () => {
+    if (useLeadFormCheckbox.checked) {
+      leadFormInner.classList.remove('hidden');
+    } else {
+      leadFormInner.classList.add('hidden');
+    }
+  });
+
   primaryGoalSelect.addEventListener('change', (e) => {
     if (e.target.value === 'Lead Generation') {
-      leadFormConfig.classList.remove('hidden');
+      useLeadFormCheckbox.checked = true;
     } else {
-      leadFormConfig.classList.add('hidden');
+      useLeadFormCheckbox.checked = false;
     }
+    // Dispatch event to run checkbox change handler
+    useLeadFormCheckbox.dispatchEvent(new Event('change'));
   });
 
   // Lead Form Builder Modal Configuration State

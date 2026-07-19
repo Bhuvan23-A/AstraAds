@@ -430,7 +430,8 @@ app.post('/api/campaigns/launch', async (req, res) => {
       client_name,
       page_id,
       launch_status,
-      leadQuestions
+      leadQuestions,
+      useLeadForm
     } = req.body;
 
     const metaStatus = (launch_status === 'ACTIVE') ? 'ACTIVE' : 'PAUSED';
@@ -463,8 +464,11 @@ app.post('/api/campaigns/launch', async (req, res) => {
     }
 
     const destinationLink = ad_creative?.destination_url || process.env.DEFAULT_LANDING_PAGE_URL || 'https://example.com';
-    const optimizationGoal = mapOptimizationGoal(primaryGoal);
-    const objective = mapObjective(primaryGoal || budget_allocation?.strategy);
+    
+    // Check if user specifically requested a native lead form
+    const isLeadGen = (primaryGoal === 'Lead Generation') && (useLeadForm !== false);
+    const optimizationGoal = isLeadGen ? 'LEAD_GENERATION' : 'LINK_CLICKS';
+    const objective = isLeadGen ? 'OUTCOME_LEADS' : (primaryGoal === 'Lead Generation' ? 'OUTCOME_TRAFFIC' : mapObjective(primaryGoal || budget_allocation?.strategy));
 
     const ensureGoogleKeywords = (keywordsInput) => {
       const normalized = Array.isArray(keywordsInput)
@@ -1510,7 +1514,7 @@ app.get('/api/clients/connections', async (req, res) => {
 });
 
 // GET: Start Facebook/Meta Ads OAuth flow
-app.get('/api/auth/facebook', (req, res) => {
+app.get('/api/auth/facebook', requireAuth, (req, res) => {
   const client = req.query.client;
   if (!client) {
     return res.status(400).send('Client parameter is required.');
@@ -1539,7 +1543,7 @@ app.get('/api/auth/facebook', (req, res) => {
 });
 
 // GET: Facebook/Meta Ads OAuth callback
-app.get('/api/auth/facebook/callback', async (req, res) => {
+app.get('/api/auth/facebook/callback', requireAuth, async (req, res) => {
   const { code, state: clientName, error_description } = req.query;
 
   if (error_description) {

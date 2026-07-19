@@ -150,8 +150,12 @@
             </div>
           </div>
 
-          <div id="lead-form-config" class="hidden form-group" style="margin-top: 15px;">
-              <label>Lead Form Configuration</label>
+          <div id="lead-form-config" class="form-group" style="margin-top: 15px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="useLeadForm" name="useLeadForm" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
+              <span>Use Native Lead Form (Meta Ads)</span>
+            </label>
+            <div id="lead-form-inner" class="hidden" style="margin-top: 10px;">
               <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">
                 Configure the form questions that open inside Facebook/Instagram when users click your ad.
               </div>
@@ -162,6 +166,7 @@
                 <i class="fa-solid fa-circle-check"></i> Form configured successfully!
               </div>
             </div>
+          </div>
 
           <div class="form-group">
             <label for="websiteUrl">Client Website URL (used as Ad Destination)</label>
