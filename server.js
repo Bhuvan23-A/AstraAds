@@ -1070,6 +1070,40 @@ app.post('/api/campaigns/launch', async (req, res) => {
   } catch (error) {
     logStep('pipeline_error', 'error', 'Meta Ads publishing pipeline failed.', error.message);
     console.error('Error launching campaign:', error.message);
+
+    // Rollback: Clean up created Meta entities to prevent duplicates/orphans on Facebook
+    if (metaEntities.campaign_id) {
+      try {
+        console.log(`[Meta Rollback] Deleting failed campaign: ${metaEntities.campaign_id}...`);
+        const db = await getDatabase();
+        const resolvedClientName = client_name || req.body.businessName || req.body.campaign_name;
+        let metaAccessToken = null;
+        if (resolvedClientName) {
+          const clientConfig = await db.get(
+            'SELECT access_token, user_access_token FROM page_configs WHERE lower(client_name) = lower(?) LIMIT 1',
+            [resolvedClientName.trim()]
+          );
+          metaAccessToken = clientConfig?.user_access_token || clientConfig?.access_token || process.env.META_ACCESS_TOKEN;
+        } else {
+          metaAccessToken = process.env.META_ACCESS_TOKEN;
+        }
+
+        if (metaAccessToken) {
+          const deleteUrl = `https://graph.facebook.com/v20.0/${metaEntities.campaign_id}?access_token=${metaAccessToken}`;
+          const deleteResponse = await fetch(deleteUrl, { method: 'DELETE' });
+          const deleteResult = await deleteResponse.json();
+          if (deleteResult.success) {
+            console.log(`[Meta Rollback] Successfully deleted failed campaign ID ${metaEntities.campaign_id}`);
+            logStep('meta_rollback', 'success', `Rollback success: Deleted failed campaign ID ${metaEntities.campaign_id}.`);
+          } else {
+            console.warn('[Meta Rollback] Failed to delete campaign:', deleteResult.error);
+          }
+        }
+      } catch (rollbackErr) {
+        console.error('[Meta Rollback] Error during campaign rollback deletion:', rollbackErr.message);
+      }
+    }
+
     res.status(502).json({
       success: false,
       status: 'Launch Failed',
