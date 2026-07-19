@@ -9,6 +9,8 @@ services:
       - "8090:3000"
     volumes:
       - astraads-data:/var/data
+    env_file:
+      - .env
     environment:
       - PORT=3000
       - NODE_ENV=production
