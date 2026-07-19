@@ -59,6 +59,17 @@ export async function initializeDatabase() {
     )
   `);
 
+  // Create google_configs table for client-specific Google Ads connections
+  await database.exec(`
+    CREATE TABLE IF NOT EXISTS google_configs (
+      client_name TEXT PRIMARY KEY,
+      refresh_token TEXT NOT NULL,
+      customer_id TEXT NOT NULL,
+      account_name TEXT,
+      updated_at TEXT NOT NULL
+    )
+  `);
+
   // Seed default admin user if empty
   const userCount = await database.get('SELECT COUNT(*) as count FROM users');
   if (userCount.count === 0) {

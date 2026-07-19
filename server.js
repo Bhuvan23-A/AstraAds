@@ -831,11 +831,21 @@ app.post('/api/campaigns/launch', async (req, res) => {
     }
 
     if (shouldLaunchGoogle) {
+      const db = await getDatabase();
+      const resolvedClientName = client_name || req.body.businessName || req.body.campaign_name;
+      let googleConfig = null;
+      if (resolvedClientName) {
+        googleConfig = await db.get(
+          'SELECT refresh_token, customer_id FROM google_configs WHERE lower(client_name) = lower(?) LIMIT 1',
+          [resolvedClientName.trim()]
+        );
+      }
+
       const googleDeveloperToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN?.trim();
       const googleClientId = process.env.GOOGLE_ADS_CLIENT_ID?.trim();
       const googleClientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET?.trim();
-      const googleRefreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN?.trim();
-      const googleCustomerIdRaw = process.env.GOOGLE_ADS_CUSTOMER_ID?.trim();
+      const googleRefreshToken = googleConfig?.refresh_token || process.env.GOOGLE_ADS_REFRESH_TOKEN?.trim();
+      const googleCustomerIdRaw = googleConfig?.customer_id || process.env.GOOGLE_ADS_CUSTOMER_ID?.trim();
       const googleLoginCustomerIdRaw = process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID?.trim();
       const googleCustomerId = googleCustomerIdRaw ? googleCustomerIdRaw.replace(/-/g, '') : '';
       const googleLoginCustomerId = googleLoginCustomerIdRaw ? googleLoginCustomerIdRaw.replace(/-/g, '') : '';
@@ -1876,6 +1886,317 @@ app.post('/api/auth/facebook/save', requireAuth, express.urlencoded({ extended: 
   } catch (error) {
     console.error('Error saving Meta assets:', error);
     res.status(500).send(`Failed to save linked assets: ${error.message}`);
+  }
+});
+
+// GET: Check Google connection status for a client
+app.get('/api/clients/connections/google', async (req, res) => {
+  const { client } = req.query;
+  if (!client) {
+    return res.status(400).json({ error: 'Client query parameter is required.' });
+  }
+  try {
+    const db = await getDatabase();
+    const config = await db.get(
+      'SELECT customer_id, account_name FROM google_configs WHERE lower(client_name) = lower(?) LIMIT 1',
+      [client.trim()]
+    );
+
+    const hasEnvFallback = Boolean(
+      process.env.GOOGLE_ADS_REFRESH_TOKEN?.trim() && process.env.GOOGLE_ADS_CUSTOMER_ID?.trim()
+    );
+    const hasDbCredentials = Boolean(config?.customer_id?.trim());
+    const adsReady = hasDbCredentials || hasEnvFallback;
+
+    if (config) {
+      res.json({
+        connected: adsReady,
+        ads_ready: adsReady,
+        customer_id: config.customer_id,
+        account_name: config.account_name || 'Linked Google Account',
+        message: 'Google Ads account is ready for campaign launch.'
+      });
+    } else if (hasEnvFallback) {
+      res.json({
+        connected: true,
+        ads_ready: true,
+        customer_id: process.env.GOOGLE_ADS_CUSTOMER_ID?.trim() || null,
+        account_name: 'Environment credentials',
+        message: 'Using GOOGLE_ADS_REFRESH_TOKEN and GOOGLE_ADS_CUSTOMER_ID from server environment.'
+      });
+    } else {
+      res.json({
+        connected: false,
+        ads_ready: false,
+        message: 'No Google Ads connection found. Click Connect to link your ad account.'
+      });
+    }
+  } catch (error) {
+    console.error('Error checking Google client connection:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// GET: Start Google Ads OAuth flow
+app.get('/api/auth/google', requireAuth, (req, res) => {
+  const client = req.query.client;
+  if (!client) {
+    return res.status(400).send('Client parameter is required.');
+  }
+
+  const clientId = process.env.GOOGLE_ADS_CLIENT_ID;
+  const redirectUri = process.env.GOOGLE_ADS_REDIRECT_URI || `https://astraads.theastraai.com/api/auth/google/callback`;
+
+  if (!clientId) {
+    return res.status(500).send('GOOGLE_ADS_CLIENT_ID is not configured in environment variables.');
+  }
+
+  const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+  const options = {
+    redirect_uri: redirectUri,
+    client_id: clientId,
+    access_type: 'offline',
+    response_type: 'code',
+    prompt: 'consent',
+    scope: 'https://www.googleapis.com/auth/adwords',
+    state: client
+  };
+
+  const qs = new URLSearchParams(options).toString();
+  res.redirect(`${rootUrl}?${qs}`);
+});
+
+// GET: Google Ads OAuth callback
+app.get('/api/auth/google/callback', requireAuth, async (req, res) => {
+  const { code, state: clientName, error } = req.query;
+
+  if (error) {
+    return res.status(400).send(`OAuth Error: ${error}`);
+  }
+  if (!code || !clientName) {
+    return res.status(400).send('OAuth Error: Missing authorization code or client context.');
+  }
+
+  const clientId = process.env.GOOGLE_ADS_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET;
+  const redirectUri = process.env.GOOGLE_ADS_REDIRECT_URI || `https://astraads.theastraai.com/api/auth/google/callback`;
+  const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
+
+  try {
+    // 1. Exchange auth code for tokens
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code'
+      })
+    });
+
+    const tokenData = await tokenResponse.json();
+    if (!tokenResponse.ok || !tokenData.refresh_token) {
+      throw new Error(tokenData.error_description || tokenData.error || 'Failed to exchange Google OAuth code. Make sure to accept all permissions and consent prompts.');
+    }
+
+    const refreshToken = tokenData.refresh_token;
+    const accessToken = tokenData.access_token;
+
+    // 2. Fetch accessible Google Ads customer accounts
+    let accountsList = [];
+    if (developerToken) {
+      try {
+        const accountsResponse = await fetch('https://googleads.googleapis.com/v17/customers:listAccessibleCustomers', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'developer-token': developerToken,
+            'Content-Type': 'application/json'
+          }
+        });
+        const accountsData = await accountsResponse.json();
+        if (accountsResponse.ok && accountsData.resourceNames) {
+          accountsList = accountsData.resourceNames.map(resName => {
+            const id = resName.split('/')[1] || resName;
+            return { id, name: `Account ID: ${id}` };
+          });
+        }
+      } catch (apiErr) {
+        console.warn('Failed to fetch accessible Google Ads accounts:', apiErr.message);
+      }
+    }
+
+    // 3. Render account linking options
+    const accountsOptions = accountsList.map(acc => 
+      `<option value="${acc.id}">${acc.name}</option>`
+    ).join('\n');
+
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Google Ads Integration</title>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <style>
+          :root {
+            --bg: #0b0f19;
+            --card-bg: rgba(30, 41, 59, 0.45);
+            --text: #f3f4f6;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+          }
+          body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+          }
+          .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+          }
+          h2 { font-size: 24px; font-weight: 700; margin: 0 0 10px 0; color: white; }
+          p { font-size: 14px; color: #9ca3af; margin: 0 0 24px 0; line-height: 1.5; }
+          .form-group { margin-bottom: 20px; text-align: left; }
+          label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #cbd5e1; margin-bottom: 8px; letter-spacing: 0.05em; }
+          select, input {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-family: inherit;
+            font-size: 14px;
+            box-sizing: border-box;
+          }
+          select:focus, input:focus { outline: none; border-color: var(--accent); }
+          button {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+          }
+          button:hover { background: var(--accent-hover); }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h2>Link Google Ads Account</h2>
+          <p>Configure campaign deployment for client: <strong>${clientName}</strong></p>
+          <form action="/api/auth/google/save" method="POST">
+            <input type="hidden" name="client_name" value="${clientName}">
+            <input type="hidden" name="refresh_token" value="${refreshToken}">
+
+            <div class="form-group">
+              <label for="customer_id">Select Google Ads Customer ID:</label>
+              \${accountsOptions ? \`
+                <select name="customer_id" id="customer_id" required>
+                  \${accountsOptions}
+                </select>
+              \` : \`
+                <input type="text" name="customer_id" id="customer_id" placeholder="e.g. 123-456-7890" required>
+                <div style="font-size: 11px; color: #9ca3af; margin-top: 6px;">No accessible customer IDs returned automatically. Please type your Google Ads ID manually.</div>
+              \`}
+            </div>
+
+            <div class="form-group">
+              <label for="account_name">Display Account Name (Optional):</label>
+              <input type="text" name="account_name" id="account_name" placeholder="e.g. Sanna Innovations Manager Account">
+            </div>
+
+            <button type="submit">Link Account Details</button>
+          </form>
+        </div>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error('Google Ads OAuth callback failed:', error);
+    res.status(500).send(`Failed to complete Google Ads authentication: ${error.message}`);
+  }
+});
+
+// POST: Save Google connection details
+app.post('/api/auth/google/save', requireAuth, express.urlencoded({ extended: true }), async (req, res) => {
+  const { client_name, refresh_token, customer_id, account_name } = req.body;
+  try {
+    const db = await getDatabase();
+    const cleanCustomerId = String(customer_id || '').replace(/-/g, '').trim();
+
+    await db.run(`
+      INSERT INTO google_configs (client_name, refresh_token, customer_id, account_name, updated_at)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(client_name) DO UPDATE SET
+        refresh_token = excluded.refresh_token,
+        customer_id = excluded.customer_id,
+        account_name = excluded.account_name,
+        updated_at = excluded.updated_at
+    `, [client_name, refresh_token, cleanCustomerId, account_name || \`Account ID: \${cleanCustomerId}\`, new Date().toISOString()]);
+
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Connection Successful</title>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+        <style>
+          body {
+            font-family: 'Outfit', sans-serif;
+            background: #0b0f19;
+            color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+          }
+          .container { padding: 32px; }
+          h2 { color: #10b981; margin-bottom: 12px; }
+          p { color: #9ca3af; margin-bottom: 24px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h2>Connection Successful!</h2>
+          <p>Google Ads account for <strong>\${client_name}</strong> has been linked successfully.</p>
+          <p>This window will close automatically...</p>
+        </div>
+        <script>
+          if (window.opener) {
+            window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS', client: '\${client_name}' }, '*');
+          }
+          setTimeout(() => {
+            window.close();
+          }, 2000);
+        </script>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error('Error saving Google Ads configs:', error);
+    res.status(500).send(`Failed to save linked details: ${error.message}`);
   }
 });
 

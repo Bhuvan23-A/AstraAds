@@ -767,10 +767,16 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   // Listen for the OAuth success postMessage
   window.addEventListener('message', (event) => {
+    const client = document.getElementById('businessName')?.value?.trim();
+    if (!client) return;
+
     if (event.data && event.data.type === 'META_AUTH_SUCCESS') {
-      const client = document.getElementById('businessName')?.value?.trim();
-      if (client && event.data.client.toLowerCase() === client.toLowerCase()) {
+      if (event.data.client.toLowerCase() === client.toLowerCase()) {
         checkClientMetaConnection(client);
+      }
+    } else if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+      if (event.data.client.toLowerCase() === client.toLowerCase()) {
+        checkClientGoogleConnection(client);
       }
     }
   });
@@ -811,6 +817,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Dynamic connection checker for Google Ads
+  async function checkClientGoogleConnection(clientName) {
+    if (!clientName) {
+      connections['Google Search'] = null;
+      updateConnectionDOM('Google Search', statusGoogle, connectBtnGoogle, false);
+      saveConnectionsToStorage();
+      return;
+    }
+    try {
+      const res = await fetch(`/api/clients/connections/google?client=${encodeURIComponent(clientName)}`);
+      const data = await res.json();
+      if (data.connected && data.ads_ready) {
+        connections['Google Search'] = data.customer_id;
+        const label = data.customer_id
+          ? `Ads ready: Account ${data.customer_id}`
+          : `Connected via server credentials`;
+        updateConnectionDOM('Google Search', statusGoogle, connectBtnGoogle, true, label);
+      } else {
+        connections['Google Search'] = null;
+        updateConnectionDOM('Google Search', statusGoogle, connectBtnGoogle, false);
+      }
+      saveConnectionsToStorage();
+    } catch (err) {
+      console.error('Error checking Google connection:', err);
+      connections['Google Search'] = null;
+      updateConnectionDOM('Google Search', statusGoogle, connectBtnGoogle, false);
+      saveConnectionsToStorage();
+    }
+  }
+
   // Monitor Business Name input to update connection status dynamically
   const businessNameInput = document.getElementById('businessName');
   if (businessNameInput) {
@@ -820,6 +856,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const val = e.target.value.trim();
       checkTimeout = setTimeout(() => {
         checkClientMetaConnection(val);
+        checkClientGoogleConnection(val);
       }, 500);
     });
   }
@@ -849,6 +886,32 @@ document.addEventListener('DOMContentLoaded', () => {
       window.open(
         `/api/auth/facebook?client=${encodeURIComponent(client)}`,
         'meta_oauth',
+        `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
+      );
+      return;
+    }
+
+    if (platformKey === 'Google Search') {
+      const client = document.getElementById('businessName')?.value?.trim();
+      if (!client) {
+        alert('Please enter your Business Name first to connect Google Ads.');
+        return;
+      }
+      if (connections[platformKey]) {
+        if (confirm(`Do you want to disconnect Google Ads for "${client}"?`)) {
+          connections[platformKey] = null;
+          saveConnectionsToStorage();
+          updateConnectionDOM(platformKey, statusEl, buttonEl, false);
+        }
+        return;
+      }
+      // Open real Google OAuth Popup
+      const width = 600, height = 720;
+      const left = (window.innerWidth - width) / 2;
+      const top = (window.innerHeight - height) / 2;
+      window.open(
+        `/api/auth/google?client=${encodeURIComponent(client)}`,
+        'google_oauth',
         `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
       );
       return;
@@ -919,15 +982,16 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('Failed to parse connections from localStorage', e);
     }
     // Update elements on startup
-    updateConnectionDOM('Google Search', statusGoogle, connectBtnGoogle);
     updateConnectionDOM('LinkedIn', statusLinkedin, connectBtnLinkedin);
     
-    // Check Meta connection status dynamically based on current business name input
+    // Check Meta and Google connection status dynamically based on current business name input
     const initialClientName = document.getElementById('businessName')?.value?.trim();
     if (initialClientName) {
       checkClientMetaConnection(initialClientName);
+      checkClientGoogleConnection(initialClientName);
     } else {
       updateConnectionDOM('Facebook / Instagram', statusMeta, connectBtnMeta);
+      updateConnectionDOM('Google Search', statusGoogle, connectBtnGoogle);
     }
   }
 
