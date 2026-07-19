@@ -485,6 +485,8 @@ document.addEventListener('DOMContentLoaded', () => {
        ...currentCampaignPayload,
        client_name: lastSubmittedParams?.businessName,
        primaryGoal: lastSubmittedParams?.primaryGoal,
+       useLeadForm: lastSubmittedParams?.useLeadForm,
+       leadQuestions: lastSubmittedParams?.leadQuestions,
        launch_status: document.getElementById('launch-status')?.value || 'PAUSED',
        linked_accounts: {
          google: connections['Google Search'],

@@ -590,17 +590,29 @@ app.post('/api/campaigns/launch', async (req, res) => {
         }
         logStep('ad_image_prepare', 'success', 'Prepared image bytes from ad_creative.manual_banner_base64.');
       } else if (ad_creative?.generated_image_url) {
-        const imageResponse = await fetch(ad_creative.generated_image_url, {
-          signal: AbortSignal.timeout(30000)
-        });
-        if (!imageResponse.ok) {
-          throw new Error(`Failed to download generated image URL. HTTP ${imageResponse.status}`);
+        try {
+          const imageResponse = await fetch(ad_creative.generated_image_url, {
+            signal: AbortSignal.timeout(30000)
+          });
+          if (!imageResponse.ok) {
+            throw new Error(`HTTP ${imageResponse.status}`);
+          }
+          imageBytes = Buffer.from(await imageResponse.arrayBuffer());
+          if (!imageBytes || imageBytes.length === 0) {
+            throw new Error('Response body was empty.');
+          }
+          logStep('ad_image_prepare', 'success', 'Downloaded image bytes from ad_creative.generated_image_url.');
+        } catch (fetchErr) {
+          logStep('ad_image_prepare', 'warning', `Failed to download generated image (${fetchErr.message}). Using local fallback banner ad-banner.png.`);
+          try {
+            const fs = await import('fs');
+            const path = await import('path');
+            const fallbackPath = path.join(process.cwd(), 'public', 'ad-banner.png');
+            imageBytes = fs.readFileSync(fallbackPath);
+          } catch (fsErr) {
+            throw new Error(`Failed to load local fallback banner: ${fsErr.message}`);
+          }
         }
-        imageBytes = Buffer.from(await imageResponse.arrayBuffer());
-        if (!imageBytes || imageBytes.length === 0) {
-          throw new Error('Generated image URL response did not contain bytes.');
-        }
-        logStep('ad_image_prepare', 'success', 'Downloaded image bytes from ad_creative.generated_image_url.');
       } else {
         throw new Error('No image source provided. Upload a banner image in the preview panel or wait for the AI image to finish generating.');
       }
