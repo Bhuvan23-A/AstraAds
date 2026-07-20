@@ -2110,14 +2110,14 @@ app.get('/api/auth/google/callback', requireAuth, async (req, res) => {
 
             <div class="form-group">
               <label for="customer_id">Select Google Ads Customer ID:</label>
-              \${accountsOptions ? \`
+              ${accountsOptions ? `
                 <select name="customer_id" id="customer_id" required>
-                  \${accountsOptions}
+                  ${accountsOptions}
                 </select>
-              \` : \`
+              ` : `
                 <input type="text" name="customer_id" id="customer_id" placeholder="e.g. 123-456-7890" required>
                 <div style="font-size: 11px; color: #9ca3af; margin-top: 6px;">No accessible customer IDs returned automatically. Please type your Google Ads ID manually.</div>
-              \`}
+              `}
             </div>
 
             <div class="form-group">
@@ -2152,7 +2152,7 @@ app.post('/api/auth/google/save', requireAuth, express.urlencoded({ extended: tr
         customer_id = excluded.customer_id,
         account_name = excluded.account_name,
         updated_at = excluded.updated_at
-    `, [client_name, refresh_token, cleanCustomerId, account_name || \`Account ID: \${cleanCustomerId}\`, new Date().toISOString()]);
+    `, [client_name, refresh_token, cleanCustomerId, account_name || `Account ID: ${cleanCustomerId}`, new Date().toISOString()]);
 
     res.send(`
       <!DOCTYPE html>
@@ -2180,12 +2180,12 @@ app.post('/api/auth/google/save', requireAuth, express.urlencoded({ extended: tr
       <body>
         <div class="container">
           <h2>Connection Successful!</h2>
-          <p>Google Ads account for <strong>\${client_name}</strong> has been linked successfully.</p>
+          <p>Google Ads account for <strong>${client_name}</strong> has been linked successfully.</p>
           <p>This window will close automatically...</p>
         </div>
         <script>
           if (window.opener) {
-            window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS', client: '\${client_name}' }, '*');
+            window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS', client: '${client_name}' }, '*');
           }
           setTimeout(() => {
             window.close();
