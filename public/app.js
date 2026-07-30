@@ -1226,20 +1226,23 @@ document.addEventListener('DOMContentLoaded', () => {
       leadsElements.btnRefreshLeads.classList.add('loading');
       
       const clientParam = encodeURIComponent(leadsState.selectedClient);
-      const [statsRes, leadsRes, clientsRes] = await Promise.all([
+      const [statsRes, leadsRes, clientsRes, historyRes] = await Promise.all([
         fetch(`/api/stats?client=${clientParam}`),
         fetch(`/api/leads?client=${clientParam}`),
-        fetch('/api/clients')
+        fetch('/api/clients'),
+        fetch(`/api/campaigns/history?client=${clientParam}`)
       ]);
       
       leadsState.stats = await statsRes.json();
       leadsState.leads = await leadsRes.json();
       leadsState.clients = await clientsRes.json();
+      const history = await historyRes.json();
       
       updateClientDropdown();
       updateLeadsMetrics();
       renderLeadsTable();
       renderLeadsCharts();
+      renderCampaignHistoryTable(history);
       
       leadsElements.btnRefreshLeads.classList.remove('loading');
     } catch (error) {
@@ -1247,6 +1250,68 @@ document.addEventListener('DOMContentLoaded', () => {
       leadsElements.btnRefreshLeads.classList.remove('loading');
       showLeadsToast('Sync Failed', 'Could not sync database with server.', 'error');
     }
+  }
+
+  function renderCampaignHistoryTable(history) {
+    const tableBody = document.getElementById('campaign-history-table-body');
+    if (!tableBody) return;
+    tableBody.innerHTML = '';
+    
+    if (!history || history.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 24px; color: #64748b; font-style: italic;">
+            No campaigns have been launched yet in this workspace.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+    
+    history.forEach(camp => {
+      const tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid #334155';
+      
+      const tdName = document.createElement('td');
+      tdName.style.padding = '12px 10px';
+      tdName.style.fontWeight = '600';
+      tdName.style.color = '#fff';
+      tdName.textContent = camp.campaign_name;
+      tr.appendChild(tdName);
+
+      const tdPlatform = document.createElement('td');
+      tdPlatform.style.padding = '12px 10px';
+      tdPlatform.style.color = '#cbd5e1';
+      tdPlatform.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 4px;"><i class="${camp.platform === 'Meta' ? 'fa-brands fa-facebook' : camp.platform === 'Google' ? 'fa-brands fa-google' : 'fa-solid fa-flask'}" style="color: ${camp.platform === 'Meta' ? '#1877f2' : camp.platform === 'Google' ? '#ea4335' : '#a855f7'};"></i> ${camp.platform}</span>`;
+      tr.appendChild(tdPlatform);
+
+      const tdID = document.createElement('td');
+      tdID.style.padding = '12px 10px';
+      tdID.style.fontFamily = 'monospace';
+      tdID.style.fontSize = '0.85rem';
+      tdID.style.color = '#94a3b8';
+      tdID.textContent = camp.platform_campaign_id || 'N/A';
+      tr.appendChild(tdID);
+
+      const tdBudget = document.createElement('td');
+      tdBudget.style.padding = '12px 10px';
+      tdBudget.style.color = '#cbd5e1';
+      tdBudget.textContent = `$${camp.budget}/day`;
+      tr.appendChild(tdBudget);
+
+      const tdStatus = document.createElement('td');
+      tdStatus.style.padding = '12px 10px';
+      tdStatus.innerHTML = `<span class="badge" style="background: #065f46; color: #34d399; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; color: #34d399;">${camp.status}</span>`;
+      tr.appendChild(tdStatus);
+
+      const tdDate = document.createElement('td');
+      tdDate.style.padding = '12px 10px';
+      tdDate.style.color = '#94a3b8';
+      tdDate.textContent = new Date(camp.launched_at).toLocaleString();
+      tr.appendChild(tdDate);
+
+      tableBody.appendChild(tr);
+    });
   }
 
   function updateClientDropdown() {

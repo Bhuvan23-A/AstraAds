@@ -1259,6 +1259,7 @@ app.post('/api/campaigns/launch', rateLimiter({ windowMs: 60 * 1000, max: 3, mes
       receipt: buildReceipt(req.body)
     });
   }
+});
 // GET: Fetch campaign launch history
 app.get('/api/campaigns/history', async (req, res) => {
   const { client } = req.query;
