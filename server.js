@@ -78,6 +78,48 @@ function requireAuth(req, res, next) {
   res.status(401).json({ error: 'Unauthorized. Please login.' });
 }
 
+// Tenancy / B2B SaaS Isolation middleware
+function requireTenantAccess(req, res, next) {
+  if (!req.session || !req.session.user) {
+    return res.status(401).json({ error: 'Unauthorized. Please login.' });
+  }
+
+  const { role, client_name } = req.session.user;
+
+  // Admins have access to everything
+  if (role === 'admin') {
+    return next();
+  }
+
+  // Enforce tenant isolation for clients
+  const requestedClient = (
+    req.query.client || 
+    req.body.client_name || 
+    req.body.businessName ||
+    req.body.campaign_name ||
+    req.params.client
+  );
+
+  // If no client parameter is requested, automatically default/lock it to user's client workspace
+  if (!requestedClient) {
+    if (req.method === 'GET') {
+      req.query.client = client_name;
+    } else if (req.method === 'POST') {
+      req.body.client_name = client_name;
+      req.body.businessName = client_name;
+    }
+    return next();
+  }
+
+  // If client is explicitly requested, it must match user's client_name
+  if (requestedClient.trim().toLowerCase() !== client_name.trim().toLowerCase()) {
+    console.warn(`[Tenant Violation] User ${req.session.user.username} tried to access client "${requestedClient}", but is locked to "${client_name}"`);
+    return res.status(403).json({ error: 'Access denied: You do not have permissions for this workspace.' });
+  }
+
+  return next();
+}
+
 // Authentication API endpoints
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
@@ -89,8 +131,17 @@ app.post('/api/auth/login', async (req, res) => {
     const db = await getDatabase();
     const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
     if (user && bcrypt.compareSync(password, user.password)) {
-      req.session.user = { username: user.username };
-      return res.json({ success: true, username: user.username });
+      req.session.user = { 
+        username: user.username,
+        role: user.role || 'client',
+        client_name: user.client_name
+      };
+      return res.json({ 
+        success: true, 
+        username: user.username, 
+        role: user.role || 'client', 
+        client_name: user.client_name 
+      });
     }
     return res.status(401).json({ error: 'Invalid username or password.' });
   } catch (error) {
@@ -126,10 +177,10 @@ app.get('/dashboard', requireAuth, (req, res) => {
 });
 
 // Protect user-facing APIs
-app.use('/api/campaigns', requireAuth);
-app.use('/api/leads', requireAuth);
-app.use('/api/stats', requireAuth);
-app.use('/api/clients', requireAuth);
+app.use('/api/campaigns', requireAuth, requireTenantAccess);
+app.use('/api/leads', requireAuth, requireTenantAccess);
+app.use('/api/stats', requireAuth, requireTenantAccess);
+app.use('/api/clients', requireAuth, requireTenantAccess);
 
 // Serve other static files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -1156,6 +1207,15 @@ app.put('/api/leads/:id/status', async (req, res) => {
 
   try {
     const db = await getDatabase();
+
+    // Tenant check: Regular client users can only update leads belonging to their own client workspace
+    if (req.session.user.role !== 'admin') {
+      const lead = await db.get('SELECT client_name FROM leads WHERE id = ?', [id]);
+      if (!lead || lead.client_name.trim().toLowerCase() !== req.session.user.client_name.trim().toLowerCase()) {
+        return res.status(403).json({ error: 'Access denied: You do not have permissions for this lead.' });
+      }
+    }
+
     const result = await db.run('UPDATE leads SET status = ? WHERE id = ?', [status, id]);
     
     if (result.changes === 0) {
@@ -1502,6 +1562,10 @@ app.get('/api/stats', async (req, res) => {
 // GET: Fetch list of unique clients
 app.get('/api/clients', async (req, res) => {
   try {
+    // Tenant check: Regular clients only see their own client name in client list response
+    if (req.session.user.role !== 'admin') {
+      return res.json([req.session.user.client_name]);
+    }
     const db = await getDatabase();
     const rows = await db.all('SELECT DISTINCT client_name FROM leads ORDER BY client_name ASC');
     const clients = rows.map(r => r.client_name);

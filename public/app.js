@@ -13,6 +13,9 @@ window.fetch = async function(...args) {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Global currentUser state
+  let currentUser = null;
+
   // Session check on load
   async function checkSession() {
     try {
@@ -20,6 +23,37 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
       if (!data.loggedIn) {
         window.location.href = '/login.html';
+        return;
+      }
+      
+      currentUser = data.user;
+      
+      // Adapt workspace UI based on client role
+      if (currentUser.role === 'client') {
+        // 1. Lock business name input in Campaign onboarding
+        const businessNameInput = document.getElementById('businessName');
+        if (businessNameInput) {
+          businessNameInput.value = currentUser.client_name;
+          businessNameInput.disabled = true;
+          // Dispatch input event to trigger downstream event handlers (like active channel state checks)
+          businessNameInput.dispatchEvent(new Event('input'));
+        }
+
+        // 2. Lock leads manager client scoping
+        leadsState.selectedClient = currentUser.client_name;
+        if (leadsElements.clientSelector) {
+          leadsElements.clientSelector.style.display = 'none';
+          
+          // Show client scope header/label instead
+          let scopeLabel = document.getElementById('client-scope-label');
+          if (!scopeLabel) {
+            scopeLabel = document.createElement('span');
+            scopeLabel.id = 'client-scope-label';
+            scopeLabel.className = 'text-sm bg-indigo-500/20 text-indigo-300 px-3 py-1.5 rounded-lg border border-indigo-500/30';
+            leadsElements.clientSelector.parentNode.insertBefore(scopeLabel, leadsElements.clientSelector);
+          }
+          scopeLabel.textContent = `Workspace: ${currentUser.client_name}`;
+        }
       }
     } catch (e) {
       window.location.href = '/login.html';
@@ -1193,6 +1227,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateClientDropdown() {
     const currentVal = leadsState.selectedClient;
+    
+    if (currentUser && currentUser.role === 'client') {
+      leadsElements.clientSelector.innerHTML = '';
+      const option = document.createElement('option');
+      option.value = currentUser.client_name;
+      option.textContent = currentUser.client_name;
+      option.selected = true;
+      leadsElements.clientSelector.appendChild(option);
+      return;
+    }
+
     leadsElements.clientSelector.innerHTML = '<option value="All">All Clients</option>';
     
     leadsState.clients.forEach(client => {

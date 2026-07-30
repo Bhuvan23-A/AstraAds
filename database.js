@@ -56,7 +56,9 @@ export async function initializeDatabase() {
   await database.exec(`
     CREATE TABLE IF NOT EXISTS users (
       username TEXT PRIMARY KEY,
-      password TEXT NOT NULL
+      password TEXT NOT NULL,
+      client_name TEXT,
+      role TEXT DEFAULT 'client'
     )
   `);
 
@@ -71,26 +73,63 @@ export async function initializeDatabase() {
     )
   `);
 
+  // Migration: Add columns to users if they don't exist
+  const userColumns = await database.all("PRAGMA table_info(users)");
+  const hasUserClientName = userColumns.some(c => c.name === 'client_name');
+  const hasUserRole = userColumns.some(c => c.name === 'role');
+  if (!hasUserClientName) {
+    await database.exec("ALTER TABLE users ADD COLUMN client_name TEXT");
+    console.log('Database migrated: Added client_name column to users.');
+  }
+  if (!hasUserRole) {
+    await database.exec("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'client'");
+    console.log('Database migrated: Added role column to users.');
+  }
+
   // Seed default admin user if empty
   const userCount = await database.get('SELECT COUNT(*) as count FROM users');
   if (userCount.count === 0) {
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync('vzo-[S&ELe&ahU.D', salt);
     await database.run(
-      'INSERT INTO users (username, password) VALUES (?, ?)',
-      ['theastraai', hashedPassword]
+      'INSERT INTO users (username, password, client_name, role) VALUES (?, ?, ?, ?)',
+      ['theastraai', hashedPassword, null, 'admin']
+    );
+
+    // Seed test client user
+    const clientHashedPassword = bcrypt.hashSync('jalmahal123', salt);
+    await database.run(
+      'INSERT INTO users (username, password, client_name, role) VALUES (?, ?, ?, ?)',
+      ['jalmahal', clientHashedPassword, 'Jal Mahal Resort & Spa', 'client']
     );
     console.log('Database initialized: Seeded default user accounts.');
   } else {
-    // Migration: Update existing plain text user passwords to hashed passwords
-    const users = await database.all('SELECT username, password FROM users');
+    // Migration: Update existing plain text user passwords to hashed passwords and verify roles
+    const users = await database.all('SELECT username, password, role FROM users');
     for (const u of users) {
+      if (u.username === 'theastraai' && u.role !== 'admin') {
+        await database.run("UPDATE users SET role = 'admin' WHERE username = 'theastraai'");
+        console.log('Database migrated: Set admin role for theastraai.');
+      }
+
       if (!u.password.startsWith('$2a$') && !u.password.startsWith('$2b$')) {
         const salt = bcrypt.genSaltSync(10);
         const hashed = bcrypt.hashSync(u.password, salt);
         await database.run('UPDATE users SET password = ? WHERE username = ?', [hashed, u.username]);
         console.log(`Database migrated: Hashed plain text password for user ${u.username}`);
       }
+    }
+
+    // Seed test client user if it doesn't exist
+    const testUser = await database.get('SELECT * FROM users WHERE username = ?', ['jalmahal']);
+    if (!testUser) {
+      const salt = bcrypt.genSaltSync(10);
+      const clientHashedPassword = bcrypt.hashSync('jalmahal123', salt);
+      await database.run(
+        'INSERT INTO users (username, password, client_name, role) VALUES (?, ?, ?, ?)',
+        ['jalmahal', clientHashedPassword, 'Jal Mahal Resort & Spa', 'client']
+      );
+      console.log('Database migrated: Seeded jalmahal client user accounts.');
     }
   }
 
