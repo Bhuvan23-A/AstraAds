@@ -73,6 +73,20 @@ export async function initializeDatabase() {
     )
   `);
 
+  // Create campaign_launches table for audit trail
+  await database.exec(`
+    CREATE TABLE IF NOT EXISTS campaign_launches (
+      id TEXT PRIMARY KEY,
+      client_name TEXT NOT NULL,
+      campaign_name TEXT NOT NULL,
+      platform TEXT NOT NULL,
+      platform_campaign_id TEXT,
+      budget REAL,
+      status TEXT,
+      launched_at TEXT NOT NULL
+    )
+  `);
+
   // Migration: Add columns to users if they don't exist
   const userColumns = await database.all("PRAGMA table_info(users)");
   const hasUserClientName = userColumns.some(c => c.name === 'client_name');

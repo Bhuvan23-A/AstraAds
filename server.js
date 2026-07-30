@@ -56,6 +56,31 @@ const __dirname = path.dirname(__filename);
 // Middleware
 app.use(express.json());
 
+// Simple sliding window in-memory rate limiter to prevent abuse
+const rateLimitMap = new Map();
+function rateLimiter(options) {
+  const { windowMs, max, message } = options;
+  return (req, res, next) => {
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const now = Date.now();
+
+    if (!rateLimitMap.has(ip)) {
+      rateLimitMap.set(ip, []);
+    }
+
+    const timestamps = rateLimitMap.get(ip);
+    const activeTimestamps = timestamps.filter(time => now - time < windowMs);
+    
+    if (activeTimestamps.length >= max) {
+      return res.status(429).json({ error: message || 'Too many requests. Please try again later.' });
+    }
+
+    activeTimestamps.push(now);
+    rateLimitMap.set(ip, activeTimestamps);
+    next();
+  };
+}
+
 // Session setup
 app.use(session({
   secret: process.env.SESSION_SECRET || 'astraads-secure-session-key-19482',
@@ -121,7 +146,7 @@ function requireTenantAccess(req, res, next) {
 }
 
 // Authentication API endpoints
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', rateLimiter({ windowMs: 60 * 1000, max: 5, message: 'Too many login attempts. Please try again in a minute.' }), async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required.' });
@@ -189,7 +214,7 @@ app.use(express.static(path.join(__dirname, 'public')));
  * Route: POST /api/campaigns/generate
  * Pipes onboarding details (and target platforms) to aiService.js and returns structured JSON campaign output.
  */
-app.post('/api/campaigns/generate', async (req, res) => {
+app.post('/api/campaigns/generate', rateLimiter({ windowMs: 60 * 1000, max: 5, message: 'Too many campaign generation requests. Please try again in a minute.' }), async (req, res) => {
   try {
     const { businessName, products, targetAudience, monthlyBudget, primaryGoal, platforms } = req.body;
     
@@ -358,7 +383,7 @@ app.post('/api/campaigns/launch', async (req, res) => {
  * Full Meta Ads publishing pipeline:
  * Campaign -> Ad Set -> Ad Image -> Ad Creative -> Ad Object
  */
-app.post('/api/campaigns/launch', async (req, res) => {
+app.post('/api/campaigns/launch', rateLimiter({ windowMs: 60 * 1000, max: 3, message: 'Too many campaign launch requests. Please try again in a minute.' }), async (req, res) => {
   const deploymentLog = [];
   const metaEntities = {
     campaign_id: null,
@@ -1117,6 +1142,65 @@ app.post('/api/campaigns/launch', async (req, res) => {
       ad_id: metaEntities.ad_id
     });
 
+    try {
+      const db = await getDatabase();
+      const clientName = req.body.client_name || req.session.user.client_name || 'Sandbox Client';
+      const budget = budget_allocation?.daily_budget || budget_allocation?.monthly_budget || 0;
+      
+      if (metaEntities.campaign_id) {
+        await db.run(
+          `INSERT INTO campaign_launches (id, client_name, campaign_name, platform, platform_campaign_id, budget, status, launched_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            `meta_${metaEntities.campaign_id}`,
+            clientName,
+            campaign_name,
+            'Meta',
+            metaEntities.campaign_id,
+            budget,
+            'ACTIVE',
+            new Date().toISOString()
+          ]
+        );
+      }
+      
+      if (googleEntities.campaign_resource_name) {
+        await db.run(
+          `INSERT INTO campaign_launches (id, client_name, campaign_name, platform, platform_campaign_id, budget, status, launched_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            `google_${googleEntities.campaign_resource_name.split('/').pop()}`,
+            clientName,
+            campaign_name,
+            'Google',
+            googleEntities.campaign_resource_name,
+            budget,
+            'ACTIVE',
+            new Date().toISOString()
+          ]
+        );
+      }
+
+      if (!metaEntities.campaign_id && !googleEntities.campaign_resource_name) {
+        await db.run(
+          `INSERT INTO campaign_launches (id, client_name, campaign_name, platform, platform_campaign_id, budget, status, launched_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            `sandbox_${Math.random().toString(36).substring(2, 9)}`,
+            clientName,
+            campaign_name,
+            'Sandbox',
+            'sandbox_mock_id',
+            budget,
+            'ACTIVE',
+            new Date().toISOString()
+          ]
+        );
+      }
+    } catch (dbErr) {
+      console.error('Error logging campaign launch in DB:', dbErr);
+    }
+
     res.json({
       success: true,
       status: 'Active & Live',
@@ -1174,6 +1258,22 @@ app.post('/api/campaigns/launch', async (req, res) => {
       deployment_log: deploymentLog,
       receipt: buildReceipt(req.body)
     });
+  }
+// GET: Fetch campaign launch history
+app.get('/api/campaigns/history', async (req, res) => {
+  const { client } = req.query;
+  try {
+    const db = await getDatabase();
+    let history;
+    if (client && client !== 'All') {
+      history = await db.all('SELECT * FROM campaign_launches WHERE client_name = ? ORDER BY launched_at DESC', [client]);
+    } else {
+      history = await db.all('SELECT * FROM campaign_launches ORDER BY launched_at DESC');
+    }
+    res.json(history);
+  } catch (error) {
+    console.error('Error fetching campaign history:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -1672,6 +1772,33 @@ app.get('/api/clients/connections', async (req, res) => {
     const adsReady = hasDbAdsCredentials || hasEnvFallback;
 
     if (config) {
+      let daysRemaining = null;
+      let tokenExpired = false;
+      const tokenToDebug = config.user_access_token || config.access_token;
+
+      if (tokenToDebug && process.env.META_APP_ID && process.env.META_APP_SECRET) {
+        try {
+          const appToken = `${process.env.META_APP_ID}|${process.env.META_APP_SECRET}`;
+          const debugUrl = `https://graph.facebook.com/debug_token?input_token=${tokenToDebug}&access_token=${appToken}`;
+          const debugRes = await fetch(debugUrl);
+          const debugData = await debugRes.json();
+          
+          if (debugData?.data) {
+            const { is_valid, expires_at } = debugData.data;
+            tokenExpired = !is_valid;
+            if (expires_at) {
+              const expiryDate = new Date(expires_at * 1000);
+              const diffTime = expiryDate.getTime() - Date.now();
+              daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+            } else {
+              daysRemaining = 999; // permanent token fallback
+            }
+          }
+        } catch (err) {
+          console.error('Error debugging Facebook token:', err.message);
+        }
+      }
+
       res.json({
         connected: adsReady,
         page_linked: true,
@@ -1679,6 +1806,8 @@ app.get('/api/clients/connections', async (req, res) => {
         page_id: config.page_id,
         page_name: config.page_name || 'Linked Page',
         ad_account_id: config.ad_account_id || null,
+        days_remaining: daysRemaining,
+        token_expired: tokenExpired,
         message: adsReady
           ? 'Meta page and ad account are ready for campaign launch.'
           : 'Facebook Page is linked for lead webhooks, but no ad account is connected. Click Connect and complete OAuth to enable campaign launch.'

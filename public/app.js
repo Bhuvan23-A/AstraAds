@@ -833,10 +833,27 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       if (data.connected && data.ads_ready) {
         connections['Facebook / Instagram'] = data.ad_account_id || data.page_id;
-        const label = data.ad_account_id
+        let label = data.ad_account_id
           ? `Ads ready: ${data.page_name || clientName}`
           : `Connected via server credentials`;
-        updateConnectionDOM('Facebook / Instagram', statusMeta, connectBtnMeta, true, label);
+        
+        if (data.token_expired) {
+          label = 'Token Expired — Reconnect';
+          updateConnectionDOM('Facebook / Instagram', statusMeta, connectBtnMeta, true, label);
+          statusMeta.className = 'status-badge status-warning';
+          statusMeta.style.background = '#e53e3e';
+          statusMeta.style.color = '#fff';
+        } else if (data.days_remaining !== null && data.days_remaining <= 7) {
+          label = `Expires in ${data.days_remaining} days`;
+          updateConnectionDOM('Facebook / Instagram', statusMeta, connectBtnMeta, true, label);
+          statusMeta.className = 'status-badge status-warning';
+          statusMeta.style.background = '#dd6b20';
+          statusMeta.style.color = '#fff';
+        } else {
+          updateConnectionDOM('Facebook / Instagram', statusMeta, connectBtnMeta, true, label);
+          statusMeta.style.background = '';
+          statusMeta.style.color = '';
+        }
       } else if (data.page_linked) {
         connections['Facebook / Instagram'] = null;
         updateConnectionDOM(
