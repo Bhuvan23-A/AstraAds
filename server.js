@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import session from 'express-session';
 import { generateAdCampaign } from './aiService.js';
 import { getDatabase, initializeDatabase } from './database.js';
+import bcrypt from 'bcryptjs';
 
 // Load environment variables
 dotenv.config();
@@ -57,7 +58,7 @@ app.use(express.json());
 
 // Session setup
 app.use(session({
-  secret: 'astraads-secure-session-key-19482',
+  secret: process.env.SESSION_SECRET || 'astraads-secure-session-key-19482',
   resave: false,
   saveUninitialized: false,
   cookie: { 
@@ -87,7 +88,7 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const db = await getDatabase();
     const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
-    if (user && user.password === password) {
+    if (user && bcrypt.compareSync(password, user.password)) {
       req.session.user = { username: user.username };
       return res.json({ success: true, username: user.username });
     }

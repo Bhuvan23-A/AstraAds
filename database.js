@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import fs from 'fs';
+import bcrypt from 'bcryptjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -73,11 +74,24 @@ export async function initializeDatabase() {
   // Seed default admin user if empty
   const userCount = await database.get('SELECT COUNT(*) as count FROM users');
   if (userCount.count === 0) {
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync('vzo-[S&ELe&ahU.D', salt);
     await database.run(
       'INSERT INTO users (username, password) VALUES (?, ?)',
-      ['theastraai', 'vzo-[S&ELe&ahU.D']
+      ['theastraai', hashedPassword]
     );
     console.log('Database initialized: Seeded default user accounts.');
+  } else {
+    // Migration: Update existing plain text user passwords to hashed passwords
+    const users = await database.all('SELECT username, password FROM users');
+    for (const u of users) {
+      if (!u.password.startsWith('$2a$') && !u.password.startsWith('$2b$')) {
+        const salt = bcrypt.genSaltSync(10);
+        const hashed = bcrypt.hashSync(u.password, salt);
+        await database.run('UPDATE users SET password = ? WHERE username = ?', [hashed, u.username]);
+        console.log(`Database migrated: Hashed plain text password for user ${u.username}`);
+      }
+    }
   }
 
   // Migration: Add columns to page_configs if they don't exist
@@ -202,49 +216,4 @@ export async function initializeDatabase() {
     console.log('Database already exists.');
   }
 
-  // Seed page tokens config table
-  const configCount = await database.get('SELECT COUNT(*) as count FROM page_configs');
-  if (configCount.count === 0) {
-    const pageConfigs = [
-      {
-        page_id: '918154964722656',
-        access_token: 'EAAM6yF3UmKsBR4FtARI73plpg2IdqngQ6YQyEOZCmy0P2HZB4R3FYrZAxzZBTf3ian7UTr3KgU948JX4r3j8GLoezZBIZCufnz1QcSeuY9HUu1BtlDlNMPAAPKUyPgP9azCJ6pe2yd8pxDcBfAZBfZChp4mqXcyhBCDBX9LI7WDWc4R1IPjmzkpOgazi4PJH3WhtUYmgm1VbEl94vWnsWORPFGB6D8xuwA4xJ1iRklMZD',
-        client_name: 'Ashirwada Leads'
-      },
-      {
-        page_id: '956007024262197',
-        access_token: 'EAAM6yF3UmKsBRy0C2lBZBLJfutyc9dA4RlrT4Up8WnkXTbaTOJKAYTR0GSe0Cjkw9vzVEQV7WmP3YK3khMBmit8q66LewtRX04X0N3x7fcgFDLSMfc6I3XXqKztmUwqbHpM5IDpOWkZCAopLCqJI7jOUyPtqvrUxLIlONpi0WApt33iuwDjWNbzl77ZBPuArLz0on1e0joH3KrloY2VZC1KRuN7vi8vFZAlW3BWgZD',
-        client_name: 'Sanna Innovations'
-      },
-      {
-        page_id: '825355443995473',
-        access_token: 'EAAM6yF3UmKsBRyu8ZAKwXVGhzT8zEIoeerSdAV5RS2RFkljfnIuFOUkKs3CqzMhIsiMzojlFGiiElzlkDN8iTDf90qXGRZCpF1K7QFhfiZCcEatcLHx9Oax56W4cFMHzPIngCONhRlkt5iwqIODB19rdNVizxMrCmYJt5Q1dViiBNuawJ6LZCjeXgrqGSXWkC7ZCbQvzzEWGnKNyr3ytEtJgm6tBKKzeS8U20xZAkZD',
-        client_name: 'Dr. Manjunath G'
-      },
-      {
-        page_id: '730386160147641',
-        access_token: 'EAAM6yF3UmKsBR0AGsBFQLdFkLac0Qr1jRI2zdi2PHNzswGMSBqM2bKnQCHWvfYkIWXGrpTNCaXeJMAzpzglqenAXRfpqRY1XY8GsZBK5ak1i1PAIApk9ZC8MctC6bVKtCvCBaJPHvFyxCAhQ0J7HzRhUHaShXld1lptfK2slJ2RlFOXs7vFXrmZCeTOjnOQrV2x4OUZBKfq1AtJxz51ntvO3UsSJLe84gIIJgvcZD',
-        client_name: 'The Tiffanys House'
-      },
-      {
-        page_id: '201036076435672',
-        access_token: 'EAAM6yF3UmKsBR7jRyPogOlH7I43I5NcBZCXZA9f8OZBGpyaEV62ndQVHtzPNilDowXWZAISZA3YZA8NB0Ao5AgCe8kOfcD844xafXzquEVzQGvNCDAENGZAklii7BUr6Jrh74YUi0DNcyxrf7sKJ5r3Cg0VUQQIZC9JYWhNVubcgUdzu8M5dmm0p4L3LzpWEf7TyYDKM6jwiNKSHpZCZAC0himnjPIKsXSf7ZC9lSzSEwZDZD',
-        client_name: 'Poojaris Nirantara'
-      },
-      {
-        page_id: '1593739557565082',
-        access_token: 'EAAM6yF3UmKsBRZCIqbCysC78LGojbfmYSA3DT4QJYa4SwQI9fJmqle5NXzoImZARtPpfIadJ5coTQWKceOTnQLyidJTHlqMi9UnRt2TVAKgC8EQ2AwClv7FNrMYV0idGj5u8A2e1hxOagPfTnfH6uAFbeFLpa3E6im895tZC3x0jQQxjYS1gnfvLCxZC7pblFwMhgJIMHtIjVHOZAxbxZCj42LHmXKvPw8ZADJTyWAZD',
-        client_name: 'Jal Mahal Resort & Spa'
-      }
-    ];
-
-    for (const config of pageConfigs) {
-      await database.run(
-        `INSERT OR REPLACE INTO page_configs (page_id, access_token, client_name)
-         VALUES (?, ?, ?)`,
-        [config.page_id, config.access_token, config.client_name]
-      );
-    }
-    console.log('Seeded database with page configs.');
-  }
 }
