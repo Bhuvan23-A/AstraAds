@@ -35,6 +35,9 @@
         <button class="nav-tab" data-tab="leads-manager">
           <i class="fa-solid fa-users"></i> Leads Manager
         </button>
+        <button class="nav-tab hidden" id="admin-nav-users" data-tab="user-management">
+          <i class="fa-solid fa-user-gear"></i> User Manager
+        </button>
         <button type="button" id="btn-logout" style="background: transparent; border: 1px solid #f87171; color: #f87171; padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; cursor: pointer; border-radius: 6px; font-weight: 500; font-family: inherit; transition: all 0.2s ease;">
           <i class="fa-solid fa-right-from-bracket"></i> Logout
         </button>
@@ -557,6 +560,66 @@
                   <p>Trigger a sandbox POST request with sample lead data mapped to one of your active campaigns.</p>
                   <button class="btn btn-primary" id="btn-trigger-test-webhook">Send Live Test Lead</button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. USER MANAGEMENT TAB (ADMIN ONLY) -->
+      <div id="tab-user-management" class="tab-panel hidden">
+        <div class="leads-layout-wrapper">
+          <div class="leads-header-row">
+            <div class="leads-title">
+              <h2><i class="fa-solid fa-user-gear header-icon"></i> User Accounts Manager</h2>
+              <p class="panel-subtitle">Create, monitor, and delete client-isolated dashboard login accounts.</p>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-top: 20px;">
+            <!-- Create User Card -->
+            <div class="panel" style="padding: 20px; border-radius: 12px; background: #1e293b; border: 1px solid #334155;">
+              <h3 style="font-size: 1.1rem; color: #fff; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-user-plus" style="color: #3b82f6;"></i> Create Client Account
+              </h3>
+              <form id="form-create-user" style="display: flex; flex-direction: column; gap: 15px;">
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <label for="admin-new-username" style="font-size: 0.8rem; font-weight: 600; color: #94a3b8;">Username</label>
+                  <input type="text" id="admin-new-username" required style="width: 100%; padding: 10px; font-size: 0.9rem; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #fff; outline: none; font-family: inherit;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <label for="admin-new-password" style="font-size: 0.8rem; font-weight: 600; color: #94a3b8;">Password</label>
+                  <input type="password" id="admin-new-password" required style="width: 100%; padding: 10px; font-size: 0.9rem; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #fff; outline: none; font-family: inherit;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <label for="admin-new-client-name" style="font-size: 0.8rem; font-weight: 600; color: #94a3b8;">Workspace Client Name</label>
+                  <input type="text" id="admin-new-client-name" required placeholder="e.g. Jal Mahal Resort & Spa" style="width: 100%; padding: 10px; font-size: 0.9rem; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #fff; outline: none; font-family: inherit;">
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-top: 10px; font-weight: 600; padding: 10px 16px; border-radius: 8px; background: linear-gradient(135deg, #2563eb, #1d4ed8); display: flex; align-items: center; justify-content: center; gap: 8px;">
+                  <i class="fa-solid fa-plus"></i> Create Account
+                </button>
+              </form>
+            </div>
+
+            <!-- Existing Users List Table Panel -->
+            <div class="panel" style="padding: 20px; border-radius: 12px; background: #1e293b; border: 1px solid #334155;">
+              <h3 style="font-size: 1.1rem; color: #fff; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-users-viewfinder" style="color: #10b981;"></i> Existing Client Accounts
+              </h3>
+              <div class="leads-table-container" style="overflow-x: auto; max-height: 400px;">
+                <table class="leads-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                  <thead>
+                    <tr style="border-bottom: 2px solid #334155;">
+                      <th style="padding: 12px 10px; font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Username</th>
+                      <th style="padding: 12px 10px; font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Workspace Client</th>
+                      <th style="padding: 12px 10px; font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Role</th>
+                      <th style="padding: 12px 10px; font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; text-align: right;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-users-table-body">
+                    <!-- Client rows will be dynamically loaded here -->
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

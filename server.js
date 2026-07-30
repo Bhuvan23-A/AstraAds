@@ -1576,6 +1576,79 @@ app.get('/api/clients', async (req, res) => {
   }
 });
 
+// Admin endpoint: Fetch all user accounts
+app.get('/api/admin/users', requireAuth, async (req, res) => {
+  if (req.session.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied: Admin privileges required.' });
+  }
+  try {
+    const db = await getDatabase();
+    const users = await db.all('SELECT username, client_name, role FROM users ORDER BY username ASC');
+    res.json(users);
+  } catch (error) {
+    console.error('Error fetching admin users:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Admin endpoint: Create client user account
+app.post('/api/admin/users', requireAuth, async (req, res) => {
+  if (req.session.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied: Admin privileges required.' });
+  }
+  const { username, password, client_name } = req.body;
+  if (!username || !password || !client_name) {
+    return res.status(400).json({ error: 'All fields (username, password, client_name) are required.' });
+  }
+
+  try {
+    const db = await getDatabase();
+    
+    // Check if username already exists
+    const existing = await db.get('SELECT username FROM users WHERE username = ?', [username]);
+    if (existing) {
+      return res.status(400).json({ error: 'Username already exists.' });
+    }
+
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(password, salt);
+    await db.run(
+      'INSERT INTO users (username, password, client_name, role) VALUES (?, ?, ?, ?)',
+      [username.trim(), hashedPassword, client_name.trim(), 'client']
+    );
+
+    res.json({ success: true, message: `Account for ${username} has been created successfully.` });
+  } catch (error) {
+    console.error('Error creating user account:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Admin endpoint: Delete user account
+app.delete('/api/admin/users/:username', requireAuth, async (req, res) => {
+  if (req.session.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied: Admin privileges required.' });
+  }
+  const { username } = req.params;
+
+  // Prevent deleting oneself
+  if (username.toLowerCase() === req.session.user.username.toLowerCase()) {
+    return res.status(400).json({ error: 'Access denied: You cannot delete your own admin account.' });
+  }
+
+  try {
+    const db = await getDatabase();
+    const result = await db.run('DELETE FROM users WHERE username = ?', [username]);
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+    res.json({ success: true, message: `Account ${username} has been deleted successfully.` });
+  } catch (error) {
+    console.error('Error deleting user account:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // GET: Check connection status for a client
 app.get('/api/clients/connections', async (req, res) => {
   const { client } = req.query;

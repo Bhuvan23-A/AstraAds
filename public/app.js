@@ -29,7 +29,12 @@ document.addEventListener('DOMContentLoaded', () => {
       currentUser = data.user;
       
       // Adapt workspace UI based on client role
-      if (currentUser.role === 'client') {
+      if (currentUser.role === 'admin') {
+        const adminNavBtn = document.getElementById('admin-nav-users');
+        if (adminNavBtn) {
+          adminNavBtn.classList.remove('hidden');
+        }
+      } else if (currentUser.role === 'client') {
         // 1. Lock business name input in Campaign onboarding
         const businessNameInput = document.getElementById('businessName');
         if (businessNameInput) {
@@ -1152,6 +1157,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (tab.getAttribute('data-tab') === 'leads-manager') {
           refreshLeadsData();
+        } else if (tab.getAttribute('data-tab') === 'user-management') {
+          refreshAdminUsersData();
         }
       });
     });
@@ -1780,6 +1787,128 @@ document.addEventListener('DOMContentLoaded', () => {
       currentCampaignPayload.ad_creative.destination_url = newUrl;
     }
   };
+
+  // Admin User Management State & DOM Elements
+  const adminUsersTableBody = document.getElementById('admin-users-table-body');
+  const formCreateUser = document.getElementById('form-create-user');
+
+  async function refreshAdminUsersData() {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    try {
+      const res = await fetch('/api/admin/users');
+      const users = await res.json();
+      renderAdminUsersTable(users);
+    } catch (error) {
+      console.error('Error fetching admin users:', error);
+      showLeadsToast('Sync Failed', 'Could not fetch user list.', 'error');
+    }
+  }
+
+  function renderAdminUsersTable(users) {
+    if (!adminUsersTableBody) return;
+    adminUsersTableBody.innerHTML = '';
+    
+    users.forEach(user => {
+      const tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid #334155';
+      
+      const tdUsername = document.createElement('td');
+      tdUsername.style.padding = '12px 10px';
+      tdUsername.style.fontSize = '0.9rem';
+      tdUsername.style.color = '#fff';
+      tdUsername.textContent = user.username;
+      tr.appendChild(tdUsername);
+
+      const tdClient = document.createElement('td');
+      tdClient.style.padding = '12px 10px';
+      tdClient.style.fontSize = '0.9rem';
+      tdClient.style.color = '#cbd5e1';
+      tdClient.textContent = user.client_name || 'Global Admin';
+      tr.appendChild(tdClient);
+
+      const tdRole = document.createElement('td');
+      tdRole.style.padding = '12px 10px';
+      tdRole.style.fontSize = '0.9rem';
+      tdRole.style.color = '#cbd5e1';
+      tdRole.innerHTML = `<span class="badge ${user.role === 'admin' ? 'badge-primary' : 'badge-secondary'}" style="background: ${user.role === 'admin' ? '#2563eb' : '#475569'}; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; color: #fff;">${user.role}</span>`;
+      tr.appendChild(tdRole);
+
+      const tdActions = document.createElement('td');
+      tdActions.style.padding = '12px 10px';
+      tdActions.style.textAlign = 'right';
+      
+      if (user.username.toLowerCase() !== currentUser.username.toLowerCase()) {
+        const btnDelete = document.createElement('button');
+        btnDelete.className = 'btn btn-secondary btn-sm';
+        btnDelete.style.background = '#b91c1c';
+        btnDelete.style.borderColor = '#b91c1c';
+        btnDelete.style.color = '#fff';
+        btnDelete.style.padding = '4px 8px';
+        btnDelete.style.fontSize = '0.8rem';
+        btnDelete.style.cursor = 'pointer';
+        btnDelete.innerHTML = '<i class="fa-solid fa-trash"></i> Delete';
+        btnDelete.addEventListener('click', async () => {
+          if (confirm(`Are you sure you want to delete account: ${user.username}?`)) {
+            try {
+              const delRes = await fetch(`/api/admin/users/${encodeURIComponent(user.username)}`, { method: 'DELETE' });
+              const result = await delRes.json();
+              if (result.success) {
+                showLeadsToast('Success', 'User deleted successfully', 'success');
+                refreshAdminUsersData();
+              } else {
+                showLeadsToast('Delete Failed', result.error, 'error');
+              }
+            } catch (err) {
+              console.error('Error deleting user:', err);
+              showLeadsToast('Error', 'Failed to delete user account', 'error');
+            }
+          }
+        });
+        tdActions.appendChild(btnDelete);
+      } else {
+        tdActions.innerHTML = '<span style="font-size: 0.8rem; color: #64748b; font-style: italic;">Active Session</span>';
+      }
+      tr.appendChild(tdActions);
+      adminUsersTableBody.appendChild(tr);
+    });
+  }
+
+  if (formCreateUser) {
+    formCreateUser.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const usernameInput = document.getElementById('admin-new-username');
+      const passwordInput = document.getElementById('admin-new-password');
+      const clientNameInput = document.getElementById('admin-new-client-name');
+      
+      const payload = {
+        username: usernameInput.value,
+        password: passwordInput.value,
+        client_name: clientNameInput.value
+      };
+
+      try {
+        const res = await fetch('/api/admin/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        
+        if (result.success) {
+          showLeadsToast('Success', 'User created successfully', 'success');
+          usernameInput.value = '';
+          passwordInput.value = '';
+          clientNameInput.value = '';
+          refreshAdminUsersData();
+        } else {
+          showLeadsToast('Failed', result.error, 'error');
+        }
+      } catch (err) {
+        console.error('Error creating user account:', err);
+        showLeadsToast('Error', 'Failed to create user account', 'error');
+      }
+    });
+  }
 
   setupTabNavigation();
   setupLeadsEventListeners();
