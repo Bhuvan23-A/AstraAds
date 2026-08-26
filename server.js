@@ -519,12 +519,17 @@ app.post('/api/campaigns/launch', rateLimiter({ windowMs: 60 * 1000, max: 3, mes
       });
     }
 
-    const dailyBudget = Number(budget_allocation?.daily_budget);
-    if (!Number.isFinite(dailyBudget) || dailyBudget <= 0) {
+    // Meta requires a minimum daily ad set budget of ~₹96.15 (9615 paise).
+    // We enforce a safe floor of ₹100/day to avoid deployment errors for low monthly budgets.
+    const META_MIN_DAILY_BUDGET_INR = 100; // ₹100/day floor
+    const rawDailyBudget = Number(budget_allocation?.daily_budget);
+    if (!Number.isFinite(rawDailyBudget) || rawDailyBudget <= 0) {
       return res.status(400).json({
         error: 'Invalid campaign payload. budget_allocation.daily_budget must be a positive number.'
       });
     }
+    // Enforce minimum: if the computed daily budget is below ₹100, bump it up automatically
+    const dailyBudget = Math.max(rawDailyBudget, META_MIN_DAILY_BUDGET_INR);
 
     const activeDestinations = [];
     const shouldLaunchMeta = Boolean(linked_accounts?.meta);
@@ -819,7 +824,8 @@ app.post('/api/campaigns/launch', rateLimiter({ windowMs: 60 * 1000, max: 3, mes
         logStep('meta_ad_set_targeting', 'warning', 'No audience interests were mapped. Using broad geo targeting fallback (IN/US).');
       }
 
-      const dailyBudgetMinorUnits = Math.max(100, Math.round(dailyBudget * 100));
+      // Meta minimum is ~9615 paise (₹96.15); we use 10000 paise (₹100) as a safe floor
+      const dailyBudgetMinorUnits = Math.max(10000, Math.round(dailyBudget * 100));
       const adSetPayload = new URLSearchParams({
         name: `${campaign_name} - Ad Set`,
         campaign_id: metaEntities.campaign_id,
