@@ -437,11 +437,13 @@ app.post('/api/campaigns/launch', rateLimiter({ windowMs: 60 * 1000, max: 3, mes
 
   // Maps the Meta campaign OBJECTIVE to the correct compatible optimization goal.
   // Meta is strict: each objective only allows specific optimization goals.
+  // NOTE: OFFSITE_CONVERSIONS requires a Facebook Pixel — we use LINK_CLICKS for Sales
+  // to avoid the "promoted_object required" error (Subcode 1815430) for clients without pixels.
   const mapOptimizationGoal = (objective) => {
     switch (objective) {
       case 'OUTCOME_AWARENESS':  return 'REACH';
       case 'OUTCOME_LEADS':      return 'LEAD_GENERATION';
-      case 'OUTCOME_SALES':      return 'OFFSITE_CONVERSIONS';
+      case 'OUTCOME_SALES':      return 'LINK_CLICKS';  // OFFSITE_CONVERSIONS needs pixel
       case 'OUTCOME_TRAFFIC':
       default:                   return 'LINK_CLICKS';
     }
