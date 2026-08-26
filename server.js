@@ -435,9 +435,16 @@ app.post('/api/campaigns/launch', rateLimiter({ windowMs: 60 * 1000, max: 3, mes
     return 'OUTCOME_TRAFFIC';
   };
 
-  const mapOptimizationGoal = (goalText) => {
-    const normalized = (goalText || '').toLowerCase();
-    return normalized.includes('lead') ? 'LEAD_GENERATION' : 'LINK_CLICKS';
+  // Maps the Meta campaign OBJECTIVE to the correct compatible optimization goal.
+  // Meta is strict: each objective only allows specific optimization goals.
+  const mapOptimizationGoal = (objective) => {
+    switch (objective) {
+      case 'OUTCOME_AWARENESS':  return 'REACH';
+      case 'OUTCOME_LEADS':      return 'LEAD_GENERATION';
+      case 'OUTCOME_SALES':      return 'OFFSITE_CONVERSIONS';
+      case 'OUTCOME_TRAFFIC':
+      default:                   return 'LINK_CLICKS';
+    }
   };
 
   const mapCallToActionType = (ctaText) => {
@@ -547,10 +554,13 @@ app.post('/api/campaigns/launch', rateLimiter({ windowMs: 60 * 1000, max: 3, mes
 
     const destinationLink = ad_creative?.destination_url || process.env.DEFAULT_LANDING_PAGE_URL || 'https://example.com';
     
-    // Check if user specifically requested a native lead form
+    // Resolve campaign objective first, then derive the compatible optimization goal from it.
+    // Meta is strict — optimization goal must be compatible with the campaign objective.
     const isLeadGen = (primaryGoal === 'Lead Generation') && (useLeadForm !== false);
-    const optimizationGoal = isLeadGen ? 'LEAD_GENERATION' : 'LINK_CLICKS';
-    const objective = isLeadGen ? 'OUTCOME_LEADS' : (primaryGoal === 'Lead Generation' ? 'OUTCOME_TRAFFIC' : mapObjective(primaryGoal || budget_allocation?.strategy));
+    const objective = isLeadGen
+      ? 'OUTCOME_LEADS'
+      : mapObjective(primaryGoal || budget_allocation?.strategy);
+    const optimizationGoal = isLeadGen ? 'LEAD_GENERATION' : mapOptimizationGoal(objective);
 
     const ensureGoogleKeywords = (keywordsInput) => {
       const normalized = Array.isArray(keywordsInput)
