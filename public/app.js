@@ -929,6 +929,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (connections[platformKey]) {
         if (confirm(`Do you want to disconnect Meta Ads for "${client}"?`)) {
+          fetch(`/api/clients/connections/facebook?client=${encodeURIComponent(client)}`, { method: 'DELETE' })
+            .catch(err => console.error('Error disconnecting Meta:', err));
           connections[platformKey] = null;
           saveConnectionsToStorage();
           updateConnectionDOM(platformKey, statusEl, buttonEl, false);
@@ -955,6 +957,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (connections[platformKey]) {
         if (confirm(`Do you want to disconnect Google Ads for "${client}"?`)) {
+          fetch(`/api/clients/connections/google?client=${encodeURIComponent(client)}`, { method: 'DELETE' })
+            .catch(err => console.error('Error disconnecting Google:', err));
           connections[platformKey] = null;
           saveConnectionsToStorage();
           updateConnectionDOM(platformKey, statusEl, buttonEl, false);
@@ -1139,6 +1143,22 @@ document.addEventListener('DOMContentLoaded', () => {
     webhookUrlDisplay: document.getElementById('webhook-url-display'),
     btnCopyWebhook: document.getElementById('btn-copy-webhook'),
     btnTriggerTestWebhook: document.getElementById('btn-trigger-test-webhook'),
+    btnExportCsv: document.getElementById('btn-export-csv'),
+    btnDeleteLead: document.getElementById('btn-delete-lead'),
+    
+    // Add Lead Modal Elements
+    btnOpenAddLeadModal: document.getElementById('btn-open-add-lead-modal'),
+    addLeadModal: document.getElementById('add-lead-modal'),
+    btnCloseAddLeadModal: document.getElementById('btn-close-add-lead-modal'),
+    btnCancelAddLead: document.getElementById('btn-cancel-add-lead'),
+    addLeadForm: document.getElementById('add-lead-form'),
+    newLeadName: document.getElementById('new-lead-name'),
+    newLeadEmail: document.getElementById('new-lead-email'),
+    newLeadPhone: document.getElementById('new-lead-phone'),
+    newLeadCampaign: document.getElementById('new-lead-campaign'),
+    newLeadPlatform: document.getElementById('new-lead-platform'),
+    newLeadStatus: document.getElementById('new-lead-status'),
+    newLeadClient: document.getElementById('new-lead-client'),
     
     // Modal
     leadDetailModal: document.getElementById('lead-detail-modal'),
@@ -1185,6 +1205,13 @@ document.addEventListener('DOMContentLoaded', () => {
     leadsElements.btnRefreshLeads.addEventListener('click', refreshLeadsData);
     leadsElements.btnTriggerTestWebhook.addEventListener('click', triggerTestWebhook);
     
+    if (leadsElements.btnExportCsv) {
+      leadsElements.btnExportCsv.addEventListener('click', exportLeadsToCSV);
+    }
+    if (leadsElements.btnDeleteLead) {
+      leadsElements.btnDeleteLead.addEventListener('click', deleteCurrentLead);
+    }
+    
     leadsElements.clientSelector.addEventListener('change', (e) => {
       leadsState.selectedClient = e.target.value;
       refreshLeadsData();
@@ -1219,6 +1246,169 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     });
+
+    // Add Lead Modal Listeners (User Input Based)
+    if (leadsElements.btnOpenAddLeadModal) {
+      leadsElements.btnOpenAddLeadModal.addEventListener('click', openAddLeadModal);
+    }
+    if (leadsElements.btnCloseAddLeadModal) {
+      leadsElements.btnCloseAddLeadModal.addEventListener('click', closeAddLeadModal);
+    }
+    if (leadsElements.btnCancelAddLead) {
+      leadsElements.btnCancelAddLead.addEventListener('click', closeAddLeadModal);
+    }
+    if (leadsElements.addLeadModal) {
+      leadsElements.addLeadModal.addEventListener('click', (e) => {
+        if (e.target === leadsElements.addLeadModal) {
+          closeAddLeadModal();
+        }
+      });
+    }
+    if (leadsElements.addLeadForm) {
+      leadsElements.addLeadForm.addEventListener('submit', handleAddLeadSubmit);
+    }
+  }
+
+  function openAddLeadModal() {
+    if (!leadsElements.addLeadModal) return;
+    leadsElements.addLeadForm.reset();
+    
+    // Set default client: either active selected client, or logged in user client
+    if (leadsState.selectedClient && leadsState.selectedClient !== 'All') {
+      leadsElements.newLeadClient.value = leadsState.selectedClient;
+    } else if (currentUser && currentUser.client_name) {
+      leadsElements.newLeadClient.value = currentUser.client_name;
+    } else {
+      leadsElements.newLeadClient.value = 'Sanna Innovations';
+    }
+
+    if (currentUser && currentUser.role !== 'admin') {
+      leadsElements.newLeadClient.readOnly = true;
+    } else {
+      leadsElements.newLeadClient.readOnly = false;
+    }
+
+    leadsElements.addLeadModal.classList.remove('hidden');
+    leadsElements.newLeadName.focus();
+  }
+
+  function closeAddLeadModal() {
+    if (!leadsElements.addLeadModal) return;
+    leadsElements.addLeadModal.classList.add('hidden');
+    leadsElements.addLeadForm.reset();
+  }
+
+  async function handleAddLeadSubmit(e) {
+    e.preventDefault();
+    const name = leadsElements.newLeadName.value.trim();
+    if (!name) {
+      showLeadsToast('Validation Error', 'Full Name is required.', 'error');
+      return;
+    }
+
+    const payload = {
+      name,
+      email: leadsElements.newLeadEmail.value.trim(),
+      phone: leadsElements.newLeadPhone.value.trim(),
+      campaign_name: leadsElements.newLeadCampaign.value.trim() || 'Manual Direct Entry',
+      platform: leadsElements.newLeadPlatform.value,
+      status: leadsElements.newLeadStatus.value,
+      client_name: leadsElements.newLeadClient.value.trim() || (currentUser?.client_name || 'Sanna Innovations')
+    };
+
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showLeadsToast('Lead Created', `Added lead: ${payload.name}`, 'success');
+        closeAddLeadModal();
+        refreshLeadsData();
+      } else {
+        showLeadsToast('Error', data.error || 'Failed to create lead', 'error');
+      }
+    } catch (err) {
+      console.error('Error submitting new lead:', err);
+      showLeadsToast('Network Error', 'Could not create lead. Please try again.', 'error');
+    }
+  }
+
+  function exportLeadsToCSV() {
+    const searchQuery = leadsElements.searchInput.value.toLowerCase().trim();
+    const statusVal = leadsElements.statusFilter.value;
+    
+    const filtered = leadsState.leads.filter(lead => {
+      const matchesSearch = 
+        lead.name.toLowerCase().includes(searchQuery) ||
+        (lead.email && lead.email.toLowerCase().includes(searchQuery)) ||
+        (lead.phone && lead.phone.toLowerCase().includes(searchQuery)) ||
+        (lead.campaign_name && lead.campaign_name.toLowerCase().includes(searchQuery));
+        
+      const matchesStatus = statusVal === 'All' || lead.status === statusVal;
+      return matchesSearch && matchesStatus;
+    });
+
+    if (filtered.length === 0) {
+      showLeadsToast('No Leads', 'There are no leads to export matching your current filters.', 'error');
+      return;
+    }
+
+    const headers = ['Lead ID', 'Full Name', 'Email', 'Phone', 'Campaign Name', 'Platform', 'Client', 'Date Ingested', 'Status'];
+    const rows = filtered.map(lead => [
+      lead.id,
+      lead.name,
+      lead.email || '',
+      lead.phone || '',
+      lead.campaign_name || '',
+      lead.platform || '',
+      lead.client_name || '',
+      lead.created_at || '',
+      lead.status || 'New'
+    ]);
+
+    const csvContent = [
+      headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `leads_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showLeadsToast('Export Successful', `Exported ${filtered.length} leads to CSV.`, 'success');
+  }
+
+  async function deleteCurrentLead() {
+    if (!leadsState.selectedLead) return;
+    const lead = leadsState.selectedLead;
+    if (confirm(`Are you sure you want to permanently delete lead: ${lead.name}?`)) {
+      try {
+        const res = await fetch(`/api/leads/${encodeURIComponent(lead.id)}`, {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showLeadsToast('Lead Deleted', `Lead "${lead.name}" was deleted successfully.`, 'success');
+          leadsElements.leadDetailModal.classList.add('hidden');
+          leadsState.selectedLead = null;
+          await refreshLeadsData();
+        } else {
+          showLeadsToast('Delete Failed', data.error || 'Failed to delete lead.', 'error');
+        }
+      } catch (err) {
+        console.error('Error deleting lead:', err);
+        showLeadsToast('Network Error', 'Could not delete lead.', 'error');
+      }
+    }
   }
 
   async function refreshLeadsData() {
@@ -1296,7 +1486,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const tdBudget = document.createElement('td');
       tdBudget.style.padding = '12px 10px';
       tdBudget.style.color = '#cbd5e1';
-      tdBudget.textContent = `$${camp.budget}/day`;
+      tdBudget.textContent = `₹${camp.budget}/day`;
       tr.appendChild(tdBudget);
 
       const tdStatus = document.createElement('td');
@@ -1365,13 +1555,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     if (filtered.length === 0) {
-      leadsElements.leadsTableBody.innerHTML = `
-        <tr>
-          <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
-            No matching leads found.
-          </td>
-        </tr>
-      `;
+      if (leadsState.leads.length === 0) {
+        leadsElements.leadsTableBody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 3rem 1.5rem;">
+              <i class="fa-solid fa-users" style="font-size: 2.2rem; color: #475569; margin-bottom: 12px; display: block;"></i>
+              <div style="font-size: 1.05rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">No leads recorded yet</div>
+              <div style="font-size: 0.85rem; color: #94a3b8; max-width: 440px; margin: 0 auto 16px auto;">All mock leads have been removed. This pipeline is strictly user-input based. Click below to add a lead manually or connect live webhooks.</div>
+              <button type="button" class="btn btn-primary btn-sm" id="btn-empty-add-lead" style="margin: 0 auto; display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #06b6d4, #3b82f6); border: none; color: white; cursor: pointer; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+                <i class="fa-solid fa-user-plus"></i> Add First Lead
+              </button>
+            </td>
+          </tr>
+        `;
+        const emptyBtn = document.getElementById('btn-empty-add-lead');
+        if (emptyBtn) {
+          emptyBtn.addEventListener('click', openAddLeadModal);
+        }
+      } else {
+        leadsElements.leadsTableBody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+              <i class="fa-solid fa-magnifying-glass" style="font-size: 1.5rem; color: #475569; margin-bottom: 8px; display: block;"></i>
+              No matching leads found for the selected filter or search query.
+            </td>
+          </tr>
+        `;
+      }
       return;
     }
     filtered.forEach(lead => {
@@ -1468,14 +1678,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function triggerTestWebhook() {
     try {
+      const payload = {};
+      if (leadsState.selectedClient && leadsState.selectedClient !== 'All') {
+        payload.client_name = leadsState.selectedClient;
+      } else if (currentUser && currentUser.client_name) {
+        payload.client_name = currentUser.client_name;
+      }
+
       const res = await fetch('/api/webhooks/test', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
       
       const data = await res.json();
       if (res.ok) {
-        showLeadsToast('Lead Ingested', `New lead "${data.lead.name}" captured!`, 'success');
+        showLeadsToast('Lead Ingested', `Captured live test lead: "${data.lead.name}" (${data.lead.client_name})!`, 'success');
         await refreshLeadsData();
       } else {
         showLeadsToast('Ingestion Error', data.error || 'Failed to trigger lead', 'error');

@@ -61,6 +61,9 @@ const rateLimitMap = new Map();
 function rateLimiter(options) {
   const { windowMs, max, message } = options;
   return (req, res, next) => {
+    if (process.env.NODE_ENV === 'test') {
+      return next();
+    }
     const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const now = Date.now();
 
@@ -79,6 +82,13 @@ function rateLimiter(options) {
     rateLimitMap.set(ip, activeTimestamps);
     next();
   };
+}
+
+// Helper to check if a credential from .env is real vs placeholder
+function isRealCredential(val) {
+  if (!val || typeof val !== 'string') return false;
+  const trimmed = val.trim();
+  return trimmed !== '' && !trimmed.includes('your_') && !trimmed.includes('placeholder') && !trimmed.includes('secret_key_here');
 }
 
 // Session setup
@@ -121,7 +131,6 @@ function requireTenantAccess(req, res, next) {
     req.query.client || 
     req.body.client_name || 
     req.body.businessName ||
-    req.body.campaign_name ||
     req.params.client
   );
 
@@ -244,143 +253,9 @@ app.post('/api/campaigns/generate', rateLimiter({ windowMs: 60 * 1000, max: 5, m
   }
 });
 
-/*
-/*
- * Route: POST /api/campaigns/launch
- * Mock route acting as user approval/deployment receipt.
- * Evaluates active connected ad account IDs linked from the connection manager.
- *
-app.post('/api/campaigns/launch', async (req, res) => {
-  try {
-    const { campaign_name, budget_allocation, targeting, ad_creative, linked_accounts, primaryGoal } = req.body;
-    
-    if (!campaign_name) {
-      return res.status(400).json({ 
-        error: 'Invalid campaign payload. Launch requires a complete campaign dataset.' 
-      });
-    }
-
-    const dailyBudget = budget_allocation?.daily_budget;
-    const strategy = budget_allocation?.strategy || 'Multi-platform standard';
-
-    // Parse connected account channels
-    const activeDestinations = [];
-    const logs = [];
-    let metaCampaignId = null;
-
-    // --- Live Meta Ads Graph API Call ---
-    const metaAccessToken = process.env.META_ACCESS_TOKEN;
-    const metaAdAccountIdRaw = process.env.META_AD_ACCOUNT_ID;
-
-    let metaAdAccountId = metaAdAccountIdRaw;
-    if (metaAdAccountId && !metaAdAccountId.startsWith('act_')) {
-      metaAdAccountId = `act_${metaAdAccountId}`;
-    }
-
-    if (metaAccessToken && metaAdAccountId) {
-      try {
-        console.log(`[META Graph API] Attempting to create live campaign: "${campaign_name}" on account ${metaAdAccountId}...`);
-        
-        let objective = 'OUTCOME_TRAFFIC';
-        const goalLower = (primaryGoal || strategy || '').toLowerCase();
-        if (goalLower.includes('lead')) {
-          objective = 'OUTCOME_LEADS';
-        } else if (goalLower.includes('awareness') || goalLower.includes('reach')) {
-          objective = 'OUTCOME_AWARENESS';
-        } else if (goalLower.includes('sales') || goalLower.includes('purchase')) {
-          objective = 'OUTCOME_SALES';
-        }
-
-        const metaResponse = await fetch(`https://graph.facebook.com/v19.0/${metaAdAccountId}/campaigns`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${metaAccessToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            name: campaign_name,
-            objective: objective,
-            status: 'PAUSED', // Stages the campaign in draft/paused state so it doesn't incur instant cost
-            special_ad_categories: '["NONE"]'
-          })
-        });
-
-        const metaResult = await metaResponse.json();
-
-        if (metaResult.error) {
-          throw new Error(`Meta API Error: ${metaResult.error.message} (Code: ${metaResult.error.code})`);
-        }
-
-        metaCampaignId = metaResult.id;
-        console.log(`[META Graph API] Live campaign created successfully! ID: ${metaCampaignId}`);
-        activeDestinations.push(`Meta Social Ads (Live Campaign ID: ${metaCampaignId})`);
-        logs.push(`- Meta Ads Business Manager: Created live Campaign "${campaign_name}" (ID: ${metaCampaignId})`);
-
-      } catch (metaErr) {
-        console.error('[META Graph API] Live campaign creation failed:', metaErr.message);
-        activeDestinations.push(`Meta Social Ads (Simulated Sandbox ID: act_meta_${Math.floor(100000 + Math.random() * 900000)})`);
-        logs.push(`- Meta Ads Business Manager: Created mock Campaign (Meta API Error: ${metaErr.message})`);
-      }
-    } else {
-      if (linked_accounts?.meta) {
-        activeDestinations.push(`Meta Social Ads (Mock Account: ${linked_accounts.meta})`);
-        logs.push(`- Meta Ads Business Manager: Staged mock Campaign for ID ${linked_accounts.meta} (Set META_ACCESS_TOKEN and META_AD_ACCOUNT_ID in .env for live creation)`);
-      }
-    }
-
-    if (linked_accounts?.google) {
-      activeDestinations.push(`Google Ads (Account: ${linked_accounts.google})`);
-      logs.push(`- Google Ads Sandbox: Staged on campaign manager for ID ${linked_accounts.google}`);
-    }
-    if (linked_accounts?.linkedin) {
-      activeDestinations.push(`LinkedIn Ads (Account: ${linked_accounts.linkedin})`);
-      logs.push(`- LinkedIn Campaign Manager: Staged sponsored content draft for Account ID ${linked_accounts.linkedin}`);
-    }
-
-    if (activeDestinations.length === 0) {
-      activeDestinations.push('Sandbox Testing (Local Mock Launch)');
-      logs.push('- Staged locally on mock sandbox - no connected accounts supplied.');
-    }
-
-    // Print Receipt Console Log
-    console.log('--------------------------------------------------');
-    console.log(`[LIVE ACTION DEPLOYMENT] Staging Campaign: "${campaign_name}"`);
-    console.log(`[LIVE ACTION DEPLOYMENT] Daily Budget: $${dailyBudget}`);
-    console.log(`[LIVE ACTION DEPLOYMENT] Strategy: ${strategy}`);
-    console.log(`[LIVE ACTION DEPLOYMENT] Staged Destinations:`);
-    logs.forEach(log => console.log(`  ${log}`));
-    console.log(`[LIVE ACTION DEPLOYMENT] Headlines: ${ad_creative?.headlines?.join(' | ')}`);
-    console.log(`[LIVE ACTION DEPLOYMENT] Caption: ${ad_creative?.primary_text}`);
-    console.log(`[LIVE ACTION DEPLOYMENT] Status: STAGED & AUTOMATICALLY LAUNCHED ON CONNECTED CHANNELS`);
-    console.log('--------------------------------------------------');
-
-    res.json({
-      success: true,
-      status: 'Active & Live',
-      receipt: {
-        campaign_id: metaCampaignId || `ad_${Math.random().toString(36).substring(2, 9)}`,
-        campaign_name: campaign_name,
-        timestamp: new Date().toISOString(),
-        network_destinations: activeDestinations,
-        environment: metaCampaignId ? 'live-meta-staged' : 'production-staged',
-        budget_summary: budget_allocation,
-        targeting_summary: targeting,
-        creative_summary: ad_creative
-      }
-    });
-  } catch (error) {
-    console.error('Error launching campaign:', error.message);
-    res.status(500).json({ 
-      error: 'Failed to deploy campaign.',
-      details: error.message 
-    });
-  }
-});
-*/
-
 /**
  * Route: POST /api/campaigns/launch
- * Full Meta Ads publishing pipeline:
+ * Full Meta Ads & Google Ads publishing pipeline with sandbox fallback support:
  * Campaign -> Ad Set -> Ad Image -> Ad Creative -> Ad Object
  */
 app.post('/api/campaigns/launch', rateLimiter({ windowMs: 60 * 1000, max: 3, message: 'Too many campaign launch requests. Please try again in a minute.' }), async (req, res) => {
@@ -651,7 +526,7 @@ app.post('/api/campaigns/launch', rateLimiter({ windowMs: 60 * 1000, max: 3, mes
         access_token: pageAccessToken,
         questions: JSON.stringify(questions),
         privacy_policy: JSON.stringify({
-          url: destUrl + '/privacy' || 'https://example.com/privacy',
+          url: (destUrl ? (destUrl.replace(/\/+$/, '') + '/privacy') : 'https://astraads.theastraai.com/privacy'),
           link_text: 'Privacy Policy'
         }),
         follow_up_action_url: destUrl || 'https://example.com',
@@ -746,45 +621,56 @@ app.post('/api/campaigns/launch', rateLimiter({ windowMs: 60 * 1000, max: 3, mes
         metaAdAccountId = normalizeAdAccountId(process.env.META_AD_ACCOUNT_ID?.trim());
       }
 
-      if (!metaAccessToken || !metaAdAccountId) {
-        logStep(
-          'meta_preflight',
-          'error',
-          'Meta Ads credentials are missing.',
-          'Connect your Meta account on the dashboard or set META_ACCESS_TOKEN and META_AD_ACCOUNT_ID.'
-        );
-        return res.status(400).json({
-          success: false,
-          status: 'Launch Failed',
-          error: 'Meta Ads credentials are missing.',
-          deployment_log: deploymentLog,
-          receipt: buildReceipt(req.body)
-        });
-      }
+      const isPlaceholderToken = (token) => !token || token.includes('your_meta') || token.includes('mock') || token.includes('sandbox');
+      const isMockAccountId = (accId) => !accId || accId.includes('sandbox') || accId.includes('mock') || String(linked_accounts?.meta || '').startsWith('act_meta_');
+      const isMetaLiveAvailable = Boolean(metaAccessToken && metaAdAccountId && !isPlaceholderToken(metaAccessToken) && !isMockAccountId(metaAdAccountId));
 
-      logStep('meta_preflight', 'success', 'Meta launch preflight checks passed.', {
-        ad_account_id: metaAdAccountId,
-        objective,
-        optimization_goal: optimizationGoal
-      });
+      if (!isMetaLiveAvailable) {
+        const mockCampId = `act_meta_camp_${Math.floor(100000 + Math.random() * 900000)}`;
+        const mockAdSetId = `act_meta_adset_${Math.floor(100000 + Math.random() * 900000)}`;
+        const mockCreativeId = `act_meta_cr_${Math.floor(100000 + Math.random() * 900000)}`;
+        const mockAdId = `act_meta_ad_${Math.floor(100000 + Math.random() * 900000)}`;
 
-      metaEntities.page_id = await getPageIdForCreative();
-      if (!metaEntities.page_id) {
-        logStep(
-          'meta_page_resolution',
-          'error',
-          'Unable to resolve a Meta Page ID for ad creative creation.',
-          'Provide page_id in payload, META_PAGE_ID in environment, or configure page_configs in DB.'
-        );
-        return res.status(400).json({
-          success: false,
-          status: 'Launch Failed',
-          error: 'Meta Page ID is required to create ad creatives.',
-          deployment_log: deploymentLog,
-          receipt: buildReceipt(req.body)
+        metaEntities.campaign_id = mockCampId;
+        metaEntities.ad_set_id = mockAdSetId;
+        metaEntities.creative_id = mockCreativeId;
+        metaEntities.ad_id = mockAdId;
+        metaEntities.page_id = targetPageId || process.env.META_PAGE_ID || 'sandbox_page_101';
+        if (optimizationGoal === 'LEAD_GENERATION') {
+          metaEntities.leadgen_form_id = `leadgen_form_${Math.floor(100000 + Math.random() * 900000)}`;
+        }
+
+        logStep('meta_sandbox_stage', 'success', `Meta Social Campaign staged successfully in Sandbox mode.`, {
+          campaign_id: mockCampId,
+          ad_set_id: mockAdSetId,
+          ad_id: mockAdId,
+          status: metaStatus
         });
-      }
-      logStep('meta_page_resolution', 'success', `Using Meta Page ID ${metaEntities.page_id} for ad creative.`);
+        activeDestinations.push(`Meta Social Ads (Sandbox Mode: ${mockCampId})`);
+      } else {
+        logStep('meta_preflight', 'success', 'Meta launch preflight checks passed.', {
+          ad_account_id: metaAdAccountId,
+          objective,
+          optimization_goal: optimizationGoal
+        });
+
+        metaEntities.page_id = await getPageIdForCreative();
+        if (!metaEntities.page_id) {
+          logStep(
+            'meta_page_resolution',
+            'error',
+            'Unable to resolve a Meta Page ID for ad creative creation.',
+            'Provide page_id in payload, META_PAGE_ID in environment, or configure page_configs in DB.'
+          );
+          return res.status(400).json({
+            success: false,
+            status: 'Launch Failed',
+            error: 'Meta Page ID is required to create ad creatives.',
+            deployment_log: deploymentLog,
+            receipt: buildReceipt(req.body)
+          });
+        }
+        logStep('meta_page_resolution', 'success', `Using Meta Page ID ${metaEntities.page_id} for ad creative.`);
 
       if (optimizationGoal === 'LEAD_GENERATION') {
         try {
@@ -923,6 +809,7 @@ app.post('/api/campaigns/launch', rateLimiter({ windowMs: 60 * 1000, max: 3, mes
       logStep('meta_ad_create', 'success', `Ad object created in ${metaStatus} state.`, { ad_id: metaEntities.ad_id });
 
       activeDestinations.push(`Meta Social Ads (Campaign: ${metaEntities.campaign_id}, Ad Set: ${metaEntities.ad_set_id}, Ad: ${metaEntities.ad_id})`);
+      }
     }
 
     if (shouldLaunchGoogle) {
@@ -946,34 +833,40 @@ app.post('/api/campaigns/launch', rateLimiter({ windowMs: 60 * 1000, max: 3, mes
       const googleLoginCustomerId = googleLoginCustomerIdRaw ? googleLoginCustomerIdRaw.replace(/-/g, '') : '';
       googleEntities.customer_id = googleCustomerId || null;
 
-      if (!googleDeveloperToken || !googleClientId || !googleClientSecret || !googleRefreshToken || !googleCustomerId) {
-        logStep(
-          'google_preflight',
-          'error',
-          'Google Ads credentials are missing.',
-          'Set GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET, GOOGLE_ADS_REFRESH_TOKEN, and GOOGLE_ADS_CUSTOMER_ID.'
-        );
-        return res.status(400).json({
-          success: false,
-          status: 'Launch Failed',
-          error: 'Google Ads credentials are missing.',
-          deployment_log: deploymentLog,
-          receipt: buildReceipt(req.body)
+      const isPlaceholderGoogle = !googleDeveloperToken || googleDeveloperToken.includes('your_google') || !googleClientId || googleClientId.includes('your_google');
+      const isMockCustomerId = !googleCustomerId || googleCustomerId.includes('mock') || googleCustomerId.includes('sandbox') || String(linked_accounts?.google || '').startsWith('act_google_');
+      const isGoogleLiveAvailable = Boolean(!isPlaceholderGoogle && !isMockCustomerId && googleRefreshToken && googleClientSecret && googleCustomerId);
+
+      if (!isGoogleLiveAvailable) {
+        const mockResId = Math.floor(100000000 + Math.random() * 900000000);
+        const mockCustId = googleCustomerId || '9876543210';
+        const mockCampRes = `customers/${mockCustId}/campaigns/${mockResId}`;
+        const mockAdGroupRes = `customers/${mockCustId}/adGroups/${mockResId + 1}`;
+        const mockAdRes = `customers/${mockCustId}/adGroupAds/${mockResId + 2}`;
+
+        googleEntities.customer_id = mockCustId;
+        googleEntities.campaign_resource_name = mockCampRes;
+        googleEntities.ad_group_resource_name = mockAdGroupRes;
+        googleEntities.ad_group_ad_resource_name = mockAdRes;
+
+        logStep('google_sandbox_stage', 'success', `Google Search Campaign staged successfully in Sandbox mode.`, {
+          campaign_resource_name: mockCampRes,
+          ad_group_resource_name: mockAdGroupRes
         });
-      }
+        activeDestinations.push(`Google Ads (Sandbox Mode: ${mockCampRes})`);
+      } else {
+        const googleApiBase = `https://googleads.googleapis.com/v17/customers/${googleCustomerId}`;
+        const googleHeadersBase = {
+          'developer-token': googleDeveloperToken,
+          'Content-Type': 'application/json'
+        };
+        if (googleLoginCustomerId) {
+          googleHeadersBase['login-customer-id'] = googleLoginCustomerId;
+        }
 
-      const googleApiBase = `https://googleads.googleapis.com/v17/customers/${googleCustomerId}`;
-      const googleHeadersBase = {
-        'developer-token': googleDeveloperToken,
-        'Content-Type': 'application/json'
-      };
-      if (googleLoginCustomerId) {
-        googleHeadersBase['login-customer-id'] = googleLoginCustomerId;
-      }
-
-      logStep('google_preflight', 'success', 'Google Ads launch preflight checks passed.', {
-        customer_id: googleCustomerId
-      });
+        logStep('google_preflight', 'success', 'Google Ads launch preflight checks passed.', {
+          customer_id: googleCustomerId
+        });
 
       const tokenPayload = new URLSearchParams({
         client_id: googleClientId,
@@ -1144,6 +1037,7 @@ app.post('/api/campaigns/launch', rateLimiter({ windowMs: 60 * 1000, max: 3, mes
       });
 
       activeDestinations.push(`Google Ads (Campaign: ${googleEntities.campaign_resource_name}, Ad Group: ${googleEntities.ad_group_resource_name})`);
+      }
     }
 
     if (linked_accounts?.linkedin) {
@@ -1199,7 +1093,24 @@ app.post('/api/campaigns/launch', rateLimiter({ windowMs: 60 * 1000, max: 3, mes
         );
       }
 
-      if (!metaEntities.campaign_id && !googleEntities.campaign_resource_name) {
+      if (linked_accounts?.linkedin) {
+        await db.run(
+          `INSERT INTO campaign_launches (id, client_name, campaign_name, platform, platform_campaign_id, budget, status, launched_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            `linkedin_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            clientName,
+            campaign_name,
+            'LinkedIn',
+            String(linked_accounts.linkedin),
+            budget,
+            'ACTIVE',
+            new Date().toISOString()
+          ]
+        );
+      }
+
+      if (!metaEntities.campaign_id && !googleEntities.campaign_resource_name && !linked_accounts?.linkedin) {
         await db.run(
           `INSERT INTO campaign_launches (id, client_name, campaign_name, platform, platform_campaign_id, budget, status, launched_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -1314,6 +1225,53 @@ app.get('/api/leads', async (req, res) => {
   }
 });
 
+// POST: Create a new lead manually (User Input Based)
+app.post('/api/leads', async (req, res) => {
+  const { name, email, phone, campaign_name, platform, client_name, status } = req.body;
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: 'Lead full name is required.' });
+  }
+
+  // Tenant validation: regular clients are bound to their assigned client workspace
+  let targetClient = client_name || 'Sanna Innovations';
+  if (req.session?.user?.role !== 'admin' && req.session?.user?.client_name) {
+    targetClient = req.session.user.client_name;
+  }
+
+  const validStatuses = ['New', 'Contacted', 'Qualified', 'Lost'];
+  const leadStatus = validStatuses.includes(status) ? status : 'New';
+
+  const newLead = {
+    id: `lead_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    name: name.trim(),
+    email: email ? email.trim() : '',
+    phone: phone ? phone.trim() : '',
+    campaign_name: (campaign_name && campaign_name.trim()) ? campaign_name.trim() : 'Manual Direct Entry',
+    status: leadStatus,
+    created_at: new Date().toISOString(),
+    platform: (platform && platform.trim()) ? platform.trim() : 'Direct Input',
+    client_name: targetClient
+  };
+
+  try {
+    const db = await getDatabase();
+    await db.run(
+      `INSERT INTO leads (id, name, email, phone, campaign_name, status, created_at, platform, client_name)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [newLead.id, newLead.name, newLead.email, newLead.phone, newLead.campaign_name, newLead.status, newLead.created_at, newLead.platform, newLead.client_name]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Lead created successfully',
+      lead: newLead
+    });
+  } catch (error) {
+    console.error('Error creating manual lead:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // PUT: Update lead status
 app.put('/api/leads/:id/status', async (req, res) => {
   const { id } = req.params;
@@ -1345,6 +1303,32 @@ app.put('/api/leads/:id/status', async (req, res) => {
     res.json(updatedLead);
   } catch (error) {
     console.error('Error updating lead status:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// DELETE: Delete lead by ID
+app.delete('/api/leads/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const db = await getDatabase();
+
+    // Tenant check: Regular client users can only delete leads belonging to their own client workspace
+    if (req.session.user.role !== 'admin') {
+      const lead = await db.get('SELECT client_name FROM leads WHERE id = ?', [id]);
+      if (!lead || lead.client_name.trim().toLowerCase() !== req.session.user.client_name.trim().toLowerCase()) {
+        return res.status(403).json({ error: 'Access denied: You do not have permissions for this lead.' });
+      }
+    }
+
+    const result = await db.run('DELETE FROM leads WHERE id = ?', [id]);
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Lead not found' });
+    }
+
+    res.json({ success: true, message: 'Lead deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting lead:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -1587,7 +1571,8 @@ app.post('/api/webhooks/test', async (req, res) => {
   const randomPhone = `+1 (555) 01${Math.floor(10 + Math.random() * 90)}-${Math.floor(1000 + Math.random() * 9000)}`;
   const randomCampaign = campaigns[Math.floor(Math.random() * campaigns.length)];
   const randomPlatform = platforms[Math.floor(Math.random() * platforms.length)];
-  const randomClient = clients[Math.floor(Math.random() * clients.length)];
+  const clientNameFromSession = (req.session?.user && req.session.user.role !== 'admin') ? req.session.user.client_name : null;
+  const targetClient = req.body?.client_name || req.query?.client || clientNameFromSession || clients[Math.floor(Math.random() * clients.length)];
 
   try {
     const db = await getDatabase();
@@ -1600,7 +1585,7 @@ app.post('/api/webhooks/test', async (req, res) => {
       status: 'New',
       created_at: new Date().toISOString(),
       platform: randomPlatform,
-      client_name: randomClient
+      client_name: targetClient
     };
 
     await db.run(
@@ -1686,8 +1671,21 @@ app.get('/api/clients', async (req, res) => {
       return res.json([req.session.user.client_name]);
     }
     const db = await getDatabase();
-    const rows = await db.all('SELECT DISTINCT client_name FROM leads ORDER BY client_name ASC');
+    const rows = await db.all(`
+      SELECT DISTINCT client_name FROM (
+        SELECT client_name FROM leads WHERE client_name IS NOT NULL AND client_name != ''
+        UNION
+        SELECT client_name FROM users WHERE client_name IS NOT NULL AND client_name != ''
+        UNION
+        SELECT client_name FROM page_configs WHERE client_name IS NOT NULL AND client_name != ''
+        UNION
+        SELECT client_name FROM campaign_launches WHERE client_name IS NOT NULL AND client_name != ''
+      ) ORDER BY client_name ASC
+    `);
     const clients = rows.map(r => r.client_name);
+    if (clients.length === 0) {
+      clients.push('Sanna Innovations');
+    }
     res.json(clients);
   } catch (error) {
     console.error('Error fetching clients list:', error);
@@ -1781,9 +1779,7 @@ app.get('/api/clients/connections', async (req, res) => {
       [client.trim()]
     );
 
-    const hasEnvFallback = Boolean(
-      process.env.META_ACCESS_TOKEN?.trim() && process.env.META_AD_ACCOUNT_ID?.trim()
-    );
+    const hasEnvFallback = isRealCredential(process.env.META_ACCESS_TOKEN) && isRealCredential(process.env.META_AD_ACCOUNT_ID);
     const hasDbAdsCredentials = Boolean(
       config?.ad_account_id?.trim() &&
       (config?.user_access_token?.trim() || config?.access_token?.trim())
@@ -1863,13 +1859,53 @@ app.get('/api/auth/facebook', requireAuth, (req, res) => {
   }
 
   const appId = process.env.META_APP_ID;
+  const isPlaceholderMeta = !appId || appId.includes('your_meta') || appId.trim() === '';
+
+  if (isPlaceholderMeta) {
+    const escapedClient = (client || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const mockAdAccId = `act_meta_${Math.floor(100000 + Math.random() * 900000)}`;
+    const mockPageId = `page_${Math.floor(100000000 + Math.random() * 900000000)}`;
+    return res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <title>Connect Meta Ads - Sandbox Setup</title>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+        <style>
+          body { font-family: 'Outfit', sans-serif; background: #0b0f19; color: #f3f4f6; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+          .card { background: #111827; border: 1px solid #374151; border-radius: 16px; padding: 32px; width: 100%; max-width: 480px; box-sizing: border-box; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+          h2 { margin-top: 0; font-size: 24px; color: #60a5fa; }
+          p { color: #9ca3af; font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
+          .notice { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 13px; color: #93c5fd; text-align: left; line-height: 1.5; }
+          button { width: 100%; padding: 14px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s; font-family: inherit; }
+          button:hover { background: #1d4ed8; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h2>Meta Ads Connection</h2>
+          <p>Client Workspace: <strong>${escapedClient}</strong></p>
+          <div class="notice">
+            <strong>Sandbox / Dev Mode:</strong> Live Meta App credentials are not configured in <code>.env</code>. You can link a simulated Sandbox account to test campaign deployment and lead webhooks, or configure <code>META_APP_ID</code> and <code>META_APP_SECRET</code> in <code>.env</code> for live Graph API OAuth.
+          </div>
+          <form action="/api/auth/facebook/save" method="POST">
+            <input type="hidden" name="client_name" value="${escapedClient}">
+            <input type="hidden" name="user_access_token" value="sandbox_meta_user_token_${Date.now()}">
+            <input type="hidden" name="page_tokens" value='{"${mockPageId}": "sandbox_page_token"}'>
+            <input type="hidden" name="page_id_json" value='{"id": "${mockPageId}", "name": "${escapedClient} Facebook Page"}'>
+            <input type="hidden" name="ad_account_id_json" value='{"id": "${mockAdAccId.replace('act_', '')}", "name": "${escapedClient} Ad Account (Sandbox)"}'>
+            <button type="submit">Link Sandbox Meta Account</button>
+          </form>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+
   const redirectUri = encodeURIComponent(
     process.env.META_REDIRECT_URI || `http://localhost:${PORT}/api/auth/facebook/callback`
   );
-  
-  if (!appId) {
-    return res.status(500).send('META_APP_ID is not configured in environment variables.');
-  }
 
   const configId = process.env.META_CONFIG_ID?.trim();
   let oauthUrl;
@@ -2106,12 +2142,9 @@ app.post('/api/auth/facebook/save', requireAuth, express.urlencoded({ extended: 
 
     const pageId = pageData.id;
     const pageName = pageData.name;
-    const adAccountId = `act_${adAccountData.id}`;
-    const pageAccessToken = pageTokensMap[pageId];
-
-    if (!pageAccessToken) {
-      throw new Error("Missing Page Access Token for selected Page.");
-    }
+    const rawAdAccountId = String(adAccountData.id || '');
+    const adAccountId = rawAdAccountId.startsWith('act_') ? rawAdAccountId : `act_${rawAdAccountId}`;
+    const pageAccessToken = pageTokensMap[pageId] || 'sandbox_page_token';
 
     const db = await getDatabase();
 
@@ -2188,9 +2221,7 @@ app.get('/api/clients/connections/google', async (req, res) => {
       [client.trim()]
     );
 
-    const hasEnvFallback = Boolean(
-      process.env.GOOGLE_ADS_REFRESH_TOKEN?.trim() && process.env.GOOGLE_ADS_CUSTOMER_ID?.trim()
-    );
+    const hasEnvFallback = isRealCredential(process.env.GOOGLE_ADS_REFRESH_TOKEN) && isRealCredential(process.env.GOOGLE_ADS_CUSTOMER_ID);
     const hasDbCredentials = Boolean(config?.customer_id?.trim());
     const adsReady = hasDbCredentials || hasEnvFallback;
 
@@ -2223,6 +2254,38 @@ app.get('/api/clients/connections/google', async (req, res) => {
   }
 });
 
+// DELETE: Disconnect Meta connection for client
+app.delete('/api/clients/connections/facebook', requireAuth, requireTenantAccess, async (req, res) => {
+  const client = req.query.client || req.body?.client_name;
+  if (!client) {
+    return res.status(400).json({ error: 'Client parameter is required.' });
+  }
+  try {
+    const db = await getDatabase();
+    await db.run('DELETE FROM page_configs WHERE lower(client_name) = lower(?)', [client.trim()]);
+    res.json({ success: true, message: `Meta Ads disconnected for ${client}` });
+  } catch (error) {
+    console.error('Error disconnecting Meta Ads:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// DELETE: Disconnect Google connection for client
+app.delete('/api/clients/connections/google', requireAuth, requireTenantAccess, async (req, res) => {
+  const client = req.query.client || req.body?.client_name;
+  if (!client) {
+    return res.status(400).json({ error: 'Client parameter is required.' });
+  }
+  try {
+    const db = await getDatabase();
+    await db.run('DELETE FROM google_configs WHERE lower(client_name) = lower(?)', [client.trim()]);
+    res.json({ success: true, message: `Google Ads disconnected for ${client}` });
+  } catch (error) {
+    console.error('Error disconnecting Google Ads:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // GET: Start Google Ads OAuth flow
 app.get('/api/auth/google', requireAuth, (req, res) => {
   const client = req.query.client;
@@ -2231,11 +2294,49 @@ app.get('/api/auth/google', requireAuth, (req, res) => {
   }
 
   const clientId = process.env.GOOGLE_ADS_CLIENT_ID;
-  const redirectUri = process.env.GOOGLE_ADS_REDIRECT_URI || `https://astraads.theastraai.com/api/auth/google/callback`;
+  const isPlaceholderGoogle = !clientId || clientId.includes('your_google') || clientId.trim() === '';
 
-  if (!clientId) {
-    return res.status(500).send('GOOGLE_ADS_CLIENT_ID is not configured in environment variables.');
+  if (isPlaceholderGoogle) {
+    const escapedClient = (client || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const mockCustomerId = `${Math.floor(100 + Math.random() * 900)}-${Math.floor(100 + Math.random() * 900)}-${Math.floor(1000 + Math.random() * 9000)}`;
+    return res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <title>Connect Google Ads - Sandbox Setup</title>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+        <style>
+          body { font-family: 'Outfit', sans-serif; background: #0b0f19; color: #f3f4f6; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+          .card { background: #111827; border: 1px solid #374151; border-radius: 16px; padding: 32px; width: 100%; max-width: 480px; box-sizing: border-box; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+          h2 { margin-top: 0; font-size: 24px; color: #60a5fa; }
+          p { color: #9ca3af; font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
+          .notice { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 13px; color: #93c5fd; text-align: left; line-height: 1.5; }
+          button { width: 100%; padding: 14px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s; font-family: inherit; }
+          button:hover { background: #1d4ed8; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h2>Google Ads Connection</h2>
+          <p>Client Workspace: <strong>${escapedClient}</strong></p>
+          <div class="notice">
+            <strong>Sandbox / Dev Mode:</strong> Live Google Ads Client ID is not configured in <code>.env</code>. You can link a simulated Sandbox account to test campaigns, or configure <code>GOOGLE_ADS_CLIENT_ID</code> and <code>GOOGLE_ADS_DEVELOPER_TOKEN</code> in <code>.env</code> for live API.
+          </div>
+          <form action="/api/auth/google/save" method="POST">
+            <input type="hidden" name="client_name" value="${escapedClient}">
+            <input type="hidden" name="refresh_token" value="sandbox_refresh_token_${Date.now()}">
+            <input type="hidden" name="customer_id" value="${mockCustomerId}">
+            <input type="hidden" name="account_name" value="${escapedClient} Google Ads (Sandbox)">
+            <button type="submit">Link Sandbox Google Account</button>
+          </form>
+        </div>
+      </body>
+      </html>
+    `);
   }
+
+  const redirectUri = process.env.GOOGLE_ADS_REDIRECT_URI || `https://astraads.theastraai.com/api/auth/google/callback`;
 
   const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
   const options = {

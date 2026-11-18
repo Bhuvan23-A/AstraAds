@@ -440,6 +440,12 @@
               <select id="client-selector" class="leads-select">
                 <option value="All">All Clients</option>
               </select>
+              <button class="btn btn-primary btn-sm" id="btn-open-add-lead-modal" title="Add a new lead manually" style="background: linear-gradient(135deg, #06b6d4, #3b82f6); border: none; color: white; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(6, 182, 212, 0.25);">
+                <i class="fa-solid fa-user-plus"></i> Add Lead
+              </button>
+              <button class="btn btn-secondary btn-sm" id="btn-export-csv" title="Export current leads to CSV">
+                <i class="fa-solid fa-file-csv"></i> Export CSV
+              </button>
               <button class="btn btn-secondary btn-sm" id="btn-refresh-leads">
                 <i class="fa-solid fa-rotate"></i> Sync Database
               </button>
@@ -705,7 +711,82 @@
             <button class="status-pill-btn lost" data-status="Lost">Lost</button>
           </div>
         </div>
+
+        <div style="margin-top: 20px; border-top: 1px solid #334155; padding-top: 15px; display: flex; justify-content: flex-end;">
+          <button type="button" id="btn-delete-lead" class="btn btn-secondary btn-sm" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 12px; border-radius: 6px; font-weight: 500; font-family: inherit; transition: all 0.2s ease;">
+            <i class="fa-solid fa-trash"></i> Delete Lead
+          </button>
+        </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Add New Lead Modal Overlay (User Input Based) -->
+  <div class="modal-overlay hidden" id="add-lead-modal" style="z-index: 10000;">
+    <div class="modal-card" style="max-width: 520px; width: 92%; text-align: left; background: #0f172a; border: 1px solid #334155; border-radius: 16px; padding: 25px;">
+      <div class="modal-header" style="flex-direction: row; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-user-plus" style="color: #06b6d4; font-size: 1.3rem;"></i>
+          <h3 style="margin: 0; font-size: 1.15rem; color: #fff;">Add New Lead</h3>
+        </div>
+        <button type="button" class="modal-close-btn" id="btn-close-add-lead-modal" style="background: transparent; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+      <form id="add-lead-form">
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px;">Full Name *</label>
+          <input type="text" id="new-lead-name" class="leads-input" placeholder="e.g. Rahul Sharma" required style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+          <div class="form-group">
+            <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px;">Email Address</label>
+            <input type="email" id="new-lead-email" class="leads-input" placeholder="rahul@example.com" style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
+          </div>
+          <div class="form-group">
+            <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px;">Phone Number</label>
+            <input type="tel" id="new-lead-phone" class="leads-input" placeholder="+91 98765 43210" style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+          <div class="form-group">
+            <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px;">Campaign Name</label>
+            <input type="text" id="new-lead-campaign" class="leads-input" placeholder="e.g. Summer Promo 2026" style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
+          </div>
+          <div class="form-group">
+            <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px;">Source / Platform</label>
+            <select id="new-lead-platform" class="leads-select" style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
+              <option value="Direct Input" selected>Direct / User Input</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Instagram">Instagram</option>
+              <option value="Google">Google Search</option>
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="Website">Website Form</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+          <div class="form-group">
+            <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px;">Initial Status</label>
+            <select id="new-lead-status" class="leads-select" style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
+              <option value="New" selected>New</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Qualified">Qualified</option>
+              <option value="Lost">Lost</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px;">Client Workspace</label>
+            <input type="text" id="new-lead-client" class="leads-input" placeholder="e.g. Sanna Innovations" style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #334155; padding-top: 15px;">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-cancel-add-lead" style="padding: 9px 16px;">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm" id="btn-submit-add-lead" style="background: linear-gradient(135deg, #06b6d4, #3b82f6); border: none; padding: 9px 18px; font-weight: 600; color: white; cursor: pointer;">Save Lead</button>
+        </div>
+      </form>
     </div>
   </div>
 
