@@ -223,6 +223,35 @@ describe('AstraAds Integration & Completeness Test Suite', () => {
       assert.ok(Array.isArray(res.body));
       assert.ok(res.body.some(u => u.username === 'admin'));
     });
+
+    test('client user cannot add new client workspace (403 Forbidden)', async () => {
+      const res = await request('POST', '/api/clients', { client_name: 'Unauthorized Client' }, {}, clientCookie);
+      assert.strictEqual(res.status, 403);
+    });
+
+    test('admin user rejects adding client without client_name (400 Bad Request)', async () => {
+      const res = await request('POST', '/api/clients', { client_name: '   ' }, {}, adminCookie);
+      assert.strictEqual(res.status, 400);
+    });
+
+    test('admin user adds new client successfully (201 Created)', async () => {
+      const res = await request('POST', '/api/clients', { client_name: 'Apex Innovation Studio' }, {}, adminCookie);
+      assert.strictEqual(res.status, 201);
+      assert.strictEqual(res.body.success, true);
+      assert.strictEqual(res.body.client_name, 'Apex Innovation Studio');
+    });
+
+    test('admin user cannot add duplicate client name (409 Conflict)', async () => {
+      const res = await request('POST', '/api/clients', { client_name: 'apex innovation studio' }, {}, adminCookie);
+      assert.strictEqual(res.status, 409);
+    });
+
+    test('newly added client appears in GET /api/clients for admin', async () => {
+      const res = await request('GET', '/api/clients', null, {}, adminCookie);
+      assert.strictEqual(res.status, 200);
+      assert.ok(Array.isArray(res.body));
+      assert.ok(res.body.includes('Apex Innovation Studio'));
+    });
   });
 
   // 4. AI Campaign Generation

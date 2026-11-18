@@ -1673,6 +1673,8 @@ app.get('/api/clients', async (req, res) => {
     const db = await getDatabase();
     const rows = await db.all(`
       SELECT DISTINCT client_name FROM (
+        SELECT client_name FROM clients WHERE client_name IS NOT NULL AND client_name != ''
+        UNION
         SELECT client_name FROM leads WHERE client_name IS NOT NULL AND client_name != ''
         UNION
         SELECT client_name FROM users WHERE client_name IS NOT NULL AND client_name != ''
@@ -1690,6 +1692,45 @@ app.get('/api/clients', async (req, res) => {
   } catch (error) {
     console.error('Error fetching clients list:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// POST: Add new client (Admin only)
+app.post('/api/clients', async (req, res) => {
+  if (req.session?.user?.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied: Admin privileges required.' });
+  }
+  const { client_name } = req.body;
+  if (!client_name || !client_name.trim()) {
+    return res.status(400).json({ error: 'Client name is required.' });
+  }
+  const cleanName = client_name.trim();
+  try {
+    const db = await getDatabase();
+    const existing = await db.get(
+      `SELECT client_name FROM (
+        SELECT client_name FROM clients WHERE lower(client_name) = lower(?)
+        UNION
+        SELECT client_name FROM leads WHERE lower(client_name) = lower(?)
+        UNION
+        SELECT client_name FROM users WHERE lower(client_name) = lower(?)
+        UNION
+        SELECT client_name FROM page_configs WHERE lower(client_name) = lower(?)
+      ) LIMIT 1`,
+      [cleanName, cleanName, cleanName, cleanName]
+    );
+
+    if (existing) {
+      return res.status(409).json({ error: 'A client with this name already exists.' });
+    }
+
+    const id = `client_${Date.now()}`;
+    const createdAt = new Date().toISOString();
+    await db.run('INSERT INTO clients (id, client_name, created_at) VALUES (?, ?, ?)', [id, cleanName, createdAt]);
+    res.status(201).json({ success: true, client_name: cleanName, id, created_at: createdAt });
+  } catch (err) {
+    console.error('Error adding client:', err);
+    res.status(500).json({ error: 'Failed to add client.' });
   }
 });
 

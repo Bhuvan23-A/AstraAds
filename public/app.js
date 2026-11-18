@@ -46,6 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. Lock leads manager client scoping
         leadsState.selectedClient = currentUser.client_name;
+        if (leadsElements.btnOpenAddClientModal) {
+          leadsElements.btnOpenAddClientModal.style.display = 'none';
+        }
         if (leadsElements.clientSelector) {
           leadsElements.clientSelector.style.display = 'none';
           
@@ -1146,6 +1149,14 @@ document.addEventListener('DOMContentLoaded', () => {
     btnExportCsv: document.getElementById('btn-export-csv'),
     btnDeleteLead: document.getElementById('btn-delete-lead'),
     
+    // Add Client Modal Elements
+    btnOpenAddClientModal: document.getElementById('btn-open-add-client-modal'),
+    addClientModal: document.getElementById('add-client-modal'),
+    btnCloseAddClientModal: document.getElementById('btn-close-add-client-modal'),
+    btnCancelAddClient: document.getElementById('btn-cancel-add-client'),
+    addClientForm: document.getElementById('add-client-form'),
+    newClientName: document.getElementById('new-client-name'),
+
     // Add Lead Modal Elements
     btnOpenAddLeadModal: document.getElementById('btn-open-add-lead-modal'),
     addLeadModal: document.getElementById('add-lead-modal'),
@@ -1266,6 +1277,87 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (leadsElements.addLeadForm) {
       leadsElements.addLeadForm.addEventListener('submit', handleAddLeadSubmit);
+    }
+
+    // Add Client Modal Listeners
+    if (leadsElements.btnOpenAddClientModal) {
+      leadsElements.btnOpenAddClientModal.addEventListener('click', openAddClientModal);
+    }
+    if (leadsElements.btnCloseAddClientModal) {
+      leadsElements.btnCloseAddClientModal.addEventListener('click', closeAddClientModal);
+    }
+    if (leadsElements.btnCancelAddClient) {
+      leadsElements.btnCancelAddClient.addEventListener('click', closeAddClientModal);
+    }
+    if (leadsElements.addClientModal) {
+      leadsElements.addClientModal.addEventListener('click', (e) => {
+        if (e.target === leadsElements.addClientModal) {
+          closeAddClientModal();
+        }
+      });
+    }
+    if (leadsElements.addClientForm) {
+      leadsElements.addClientForm.addEventListener('submit', handleAddClientSubmit);
+    }
+  }
+
+  function openAddClientModal() {
+    if (!leadsElements.addClientModal) return;
+    leadsElements.addClientForm.reset();
+    leadsElements.addClientModal.classList.remove('hidden');
+    if (leadsElements.newClientName) leadsElements.newClientName.focus();
+  }
+
+  function closeAddClientModal() {
+    if (!leadsElements.addClientModal) return;
+    leadsElements.addClientModal.classList.add('hidden');
+    leadsElements.addClientForm.reset();
+  }
+
+  async function handleAddClientSubmit(e) {
+    e.preventDefault();
+    const name = leadsElements.newClientName.value.trim();
+    if (!name) {
+      showLeadsToast('Validation Error', 'Client / Business Name is required.', 'error');
+      return;
+    }
+
+    const submitBtn = document.getElementById('btn-submit-add-client');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving...';
+    }
+
+    try {
+      const res = await fetch('/api/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_name: name })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showLeadsToast('Client Added', `Workspace for "${name}" created successfully!`, 'success');
+        closeAddClientModal();
+        // Set new client as active in Leads Manager state
+        leadsState.selectedClient = name;
+        // Trigger database sync to refresh dropdowns and state
+        await syncDatabase();
+        // Ensure client selector reflects the newly created client
+        if (leadsElements.clientSelector) {
+          leadsElements.clientSelector.value = name;
+          refreshLeadsData();
+        }
+      } else {
+        showLeadsToast('Error', data.error || 'Failed to create client.', 'error');
+      }
+    } catch (err) {
+      console.error('Error submitting new client:', err);
+      showLeadsToast('Network Error', 'Could not create client. Please try again.', 'error');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save Client';
+      }
     }
   }
 

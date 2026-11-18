@@ -440,6 +440,9 @@
               <select id="client-selector" class="leads-select">
                 <option value="All">All Clients</option>
               </select>
+              <button class="btn btn-primary btn-sm" id="btn-open-add-client-modal" title="Add a new client workspace" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; color: white; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);">
+                <i class="fa-solid fa-building-circle-plus"></i> Add Client
+              </button>
               <button class="btn btn-primary btn-sm" id="btn-open-add-lead-modal" title="Add a new lead manually" style="background: linear-gradient(135deg, #06b6d4, #3b82f6); border: none; color: white; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(6, 182, 212, 0.25);">
                 <i class="fa-solid fa-user-plus"></i> Add Lead
               </button>
@@ -785,6 +788,32 @@
         <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #334155; padding-top: 15px;">
           <button type="button" class="btn btn-secondary btn-sm" id="btn-cancel-add-lead" style="padding: 9px 16px;">Cancel</button>
           <button type="submit" class="btn btn-primary btn-sm" id="btn-submit-add-lead" style="background: linear-gradient(135deg, #06b6d4, #3b82f6); border: none; padding: 9px 18px; font-weight: 600; color: white; cursor: pointer;">Save Lead</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add New Client Modal Overlay -->
+  <div class="modal-overlay hidden" id="add-client-modal" style="z-index: 10000;">
+    <div class="modal-card" style="max-width: 480px; width: 92%; text-align: left; background: #0f172a; border: 1px solid #334155; border-radius: 16px; padding: 25px;">
+      <div class="modal-header" style="flex-direction: row; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-building-circle-plus" style="color: #8b5cf6; font-size: 1.3rem;"></i>
+          <h3 style="margin: 0; font-size: 1.15rem; color: #fff;">Add New Client</h3>
+        </div>
+        <button type="button" class="modal-close-btn" id="btn-close-add-client-modal" style="background: transparent; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+      <form id="add-client-form">
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px;">Client / Business Name *</label>
+          <input type="text" id="new-client-name" class="leads-input" placeholder="e.g. Acme Corp, FitLife Studio" required style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
+          <small style="display: block; font-size: 0.75rem; color: #94a3b8; margin-top: 6px;">
+            Creates a client workspace for campaigns, ad accounts, and leads tracking.
+          </small>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #334155; padding-top: 15px;">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-cancel-add-client" style="padding: 9px 16px;">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm" id="btn-submit-add-client" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; padding: 9px 18px; font-weight: 600; color: white; cursor: pointer;">Save Client</button>
         </div>
       </form>
     </div>

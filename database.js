@@ -27,6 +27,14 @@ export async function getDatabase() {
 export async function initializeDatabase() {
   const database = await getDatabase();
   await database.exec(`
+    CREATE TABLE IF NOT EXISTS clients (
+      id TEXT PRIMARY KEY,
+      client_name TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL
+    )
+  `);
+
+  await database.exec(`
     CREATE TABLE IF NOT EXISTS leads (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
