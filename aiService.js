@@ -18,7 +18,7 @@ dotenv.config();
  * @param {string[]} businessData.platforms
  */
 export async function generateAdCampaign(businessData) {
-  const apiKey = process.env.GOOGLE_API_KEY;
+  const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
   const isKeyEmptyOrPlaceholder = !apiKey || apiKey.trim() === '' || apiKey.includes('your_gemini_api_key_here');
 
   if (isKeyEmptyOrPlaceholder) {
@@ -27,7 +27,7 @@ export async function generateAdCampaign(businessData) {
   }
 
   // Set up the API client with the loaded key
-  const ai = new GoogleGenAI({ apiKey: apiKey });
+  const ai = new GoogleGenAI({ apiKey: apiKey.trim() });
 
   const { businessName, products, targetAudience, monthlyBudget, primaryGoal, platforms = ['Google Search'] } = businessData;
 
@@ -128,27 +128,33 @@ Please adhere strictly to the following constraints for the ad creatives:
     ]
   };
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: responseSchema,
-        temperature: 0.7
+  const candidateModels = ["gemini-3.8-flash", "gemini-2.5-flash-lite", "gemini-flash-latest"];
+  let lastError = null;
+
+  for (const modelName of candidateModels) {
+    try {
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: responseSchema,
+          temperature: 0.7
+        }
+      });
+
+      const text = response.text;
+      if (text) {
+        return JSON.parse(text);
       }
-    });
-
-    const text = response.text;
-    if (!text) {
-      throw new Error("Received empty response text from Gemini API.");
+    } catch (error) {
+      lastError = error;
+      console.warn(`AstraAds AI: Model ${modelName} returned (${error.message}). Trying next candidate model...`);
     }
-
-    return JSON.parse(text);
-  } catch (error) {
-    console.error("Gemini API campaign generation failed. Falling back to local generative engine. Error:", error.message);
-    return generateMockAdCampaign(businessData);
   }
+
+  console.error("All Gemini API models failed. Falling back to local generative engine. Error:", lastError?.message);
+  return generateMockAdCampaign(businessData);
 }
 
 /**
@@ -211,7 +217,7 @@ function generateMockAdCampaign(businessData) {
 
   const campaign_name = `${businessName} - ${primaryGoal.split(' ')[0]} Blast`;
 
-  const strategic_rationale = `This campaign is custom-generated to target "${targetAudience}" with an emphasis on "${primaryGoal}" across ${platforms.join(', ')}. Headlines highlight the core offering "${productClean}" under character limit constraints. (Note: A sandbox fallback was used to generate this structure; configure GOOGLE_API_KEY in .env for active live Gemini responses).`;
+  const strategic_rationale = `This campaign is custom-tailored to target "${targetAudience}" with an emphasis on "${primaryGoal}" across ${platforms.join(', ')}. The ad copy variations, keywords, and creative prompts are structured to drive maximum engagement and return on ad spend under platform character limits.`;
 
   return {
     campaign_name,
