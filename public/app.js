@@ -776,7 +776,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (ctaLink && websiteUrl) ctaLink.href = websiteUrl;
       // Update the payload
       if (campaign.ad_creative) {
-        campaign.ad_creative.destination_url = websiteUrl || 'https://example.com';
+        campaign.ad_creative.destination_url = websiteUrl || '';
       }
     }
 
@@ -1371,7 +1371,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (currentUser && currentUser.client_name) {
       leadsElements.newLeadClient.value = currentUser.client_name;
     } else {
-      leadsElements.newLeadClient.value = 'Sanna Innovations';
+      leadsElements.newLeadClient.value = '';
     }
 
     if (currentUser && currentUser.role !== 'admin') {
@@ -1405,7 +1405,7 @@ document.addEventListener('DOMContentLoaded', () => {
       campaign_name: leadsElements.newLeadCampaign.value.trim() || 'Manual Direct Entry',
       platform: leadsElements.newLeadPlatform.value,
       status: leadsElements.newLeadStatus.value,
-      client_name: leadsElements.newLeadClient.value.trim() || (currentUser?.client_name || 'Sanna Innovations')
+      client_name: leadsElements.newLeadClient.value.trim() || (currentUser?.client_name || '')
     };
 
     try {
@@ -1720,7 +1720,7 @@ document.addEventListener('DOMContentLoaded', () => {
     leadsElements.modalLeadPhone.textContent = lead.phone || 'N/A';
     leadsElements.modalLeadCampaign.textContent = lead.campaign_name;
     leadsElements.modalLeadPlatform.textContent = lead.platform;
-    leadsElements.modalLeadClient.textContent = lead.client_name || 'Sanna Innovations';
+    leadsElements.modalLeadClient.textContent = lead.client_name || '-';
     leadsElements.modalLeadDate.textContent = formatLeadsDate(lead.created_at);
     
     leadsElements.modalStatusBtns.forEach(btn => {

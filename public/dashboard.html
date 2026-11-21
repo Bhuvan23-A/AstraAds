@@ -60,7 +60,7 @@
             <label for="businessName">Business Name</label>
             <div class="input-wrapper">
               <i class="fa-solid fa-briefcase input-icon"></i>
-              <input type="text" id="businessName" name="businessName" placeholder="e.g. Apex Bakery, FitLife Studio" required>
+              <input type="text" id="businessName" name="businessName" placeholder="Enter your business name" required>
             </div>
           </div>
 
@@ -68,7 +68,7 @@
             <label for="products">Products & Services</label>
             <div class="input-wrapper">
               <i class="fa-solid fa-box-open input-icon"></i>
-              <textarea id="products" name="products" rows="3" placeholder="e.g. Artisan sourdough breads, custom cakes, and morning pastries." required></textarea>
+              <textarea id="products" name="products" rows="3" placeholder="Describe the products or services you offer" required></textarea>
             </div>
           </div>
 
@@ -76,7 +76,7 @@
             <label for="targetAudience">Target Audience</label>
             <div class="input-wrapper">
               <i class="fa-solid fa-users input-icon"></i>
-              <input type="text" id="targetAudience" name="targetAudience" placeholder="e.g. Local foodies, organic-only shoppers, wedding planners" required>
+              <input type="text" id="targetAudience" name="targetAudience" placeholder="Describe your ideal target audience" required>
             </div>
           </div>
 
@@ -134,7 +134,7 @@
               <label for="monthlyBudget">Monthly Budget (₹)</label>
               <div class="input-wrapper">
                 <span class="input-prefix">₹</span>
-                <input type="number" id="monthlyBudget" name="monthlyBudget" placeholder="e.g. 5000" required>
+                <input type="number" id="monthlyBudget" name="monthlyBudget" placeholder="Enter monthly budget" required>
               </div>
             </div>
 
@@ -205,7 +205,7 @@
         <div class="dashboard-content hidden" id="dashboard-content">
           <div class="dashboard-header">
             <div>
-              <h1 id="campaign-title">Spring Promotion Campaign</h1>
+              <h1 id="campaign-title">New Campaign Plan</h1>
               <div class="campaign-meta-row">
                 <span class="meta-label">Status:</span>
                 <div class="status-pill status-draft" id="campaign-status">
@@ -227,13 +227,13 @@
                 <div class="budget-stat">
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 1.8rem; font-weight: bold; color: #fff;">₹</span>
-                    <input type="number" id="daily-budget-input" value="100" step="1" style="width: 120px; font-size: 1.8rem; font-weight: bold; background: transparent; border: none; border-bottom: 2px dashed #4a5568; color: #fff; padding: 0 4px; outline: none; margin-bottom: 4px;">
+                    <input type="number" id="daily-budget-input" value="" placeholder="0" step="1" style="width: 120px; font-size: 1.8rem; font-weight: bold; background: transparent; border: none; border-bottom: 2px dashed #4a5568; color: #fff; padding: 0 4px; outline: none; margin-bottom: 4px;">
                   </div>
                   <div class="budget-label">Daily Budget (Editable)</div>
                 </div>
                 <div class="strategy-box">
                   <strong>Staging Strategy</strong>
-                  <p id="budget-strategy">Optimized for local reach and search impressions during weekend spikes.</p>
+                  <p id="budget-strategy">Budget staging strategy will appear here once generated.</p>
                 </div>
               </div>
             </div>
@@ -289,17 +289,17 @@
                   <!-- Google Search Mock -->
                   <div class="google-ad-mock" id="search-ad-mock">
                     <div class="ad-url">
-                      https://www.example.com/<span id="mock-path">bakery</span>
+                      https://www.example.com/<span id="mock-path"></span>
                       <i class="fa-solid fa-ellipsis-vertical ad-menu-icon"></i>
                     </div>
                     <a href="#" class="ad-title-link" id="mock-ad-title">
-                      Best Sourdough Bakery | Golden Crust Bread
+                      Ad Headline Preview
                     </a>
                     <p class="ad-description-text" id="mock-ad-desc">
-                      Freshly baked artisan sourdough, pastries & custom cakes. Order online for local store pickup!
+                      Ad description preview will appear here once generated.
                     </p>
                     <div class="ad-extension-row">
-                      <span class="ad-extension-item" id="mock-ad-cta">Shop Now</span>
+                      <span class="ad-extension-item" id="mock-ad-cta">Learn More</span>
                     </div>
                   </div>
 
@@ -310,14 +310,14 @@
                         <i class="fa-solid fa-store"></i>
                       </div>
                       <div class="social-profile-meta">
-                        <div class="social-page-name" id="mock-social-page-name">Sweet Treats Bakery</div>
+                        <div class="social-page-name" id="mock-social-page-name">Brand Name</div>
                         <div class="social-sponsored-tag">Sponsored · <i class="fa-solid fa-earth-americas"></i></div>
                       </div>
                       <i class="fa-solid fa-ellipsis social-menu-icon"></i>
                     </div>
                     
                     <p class="social-caption-text" id="mock-social-caption">
-                      Delicious fresh treats at Sweet Treats Bakery! Grab your custom cakes, cookies & cupcakes today.
+                      Social ad copy will appear here once generated.
                     </p>
                     
                     <div class="social-image-block" id="social-image-block">
@@ -336,11 +336,11 @@
                     
                     <div class="social-details-block">
                       <div class="social-details-text">
-                        <div class="social-display-url" id="mock-social-display-url">sweettreatsbakery.com</div>
-                        <div class="social-headline" id="mock-social-headline">Premium Bakery Cakes & Cupcakes</div>
+                        <div class="social-display-url" id="mock-social-display-url">yourwebsite.com</div>
+                        <div class="social-headline" id="mock-social-headline">Ad Headline Preview</div>
                       </div>
                       <div class="social-cta-wrapper">
-                        <a class="social-cta-btn" id="mock-social-cta" id="mock-cta-link" href="#" target="_blank" style="text-decoration: none; color: inherit;">Shop Now</a>
+                        <a class="social-cta-btn" id="mock-social-cta" id="mock-cta-link" href="#" target="_blank" style="text-decoration: none; color: inherit;">Learn More</a>
                       </div>
                     </div>
                   </div>
@@ -399,8 +399,7 @@
               </div>
               <div class="card-body">
                 <p id="strategic-rationale-text">
-                  This campaign focuses on capture local foodies searching specifically for artisan baked products. 
-                  By aligning budget to local Google Search, the campaigns drive higher-intent clicks with lower waste.
+                  AI strategic rationale and targeting recommendations will appear here once generated.
                 </p>
               </div>
             </div>
@@ -559,7 +558,7 @@
                 <div class="webhook-display-box">
                   <span class="webhook-label">Target Webhook Endpoint URL</span>
                   <div class="webhook-url-row">
-                    <code id="webhook-url-display">http://localhost:3000/api/webhooks/leads</code>
+                    <code id="webhook-url-display">/api/webhooks/leads</code>
                     <button class="btn btn-secondary btn-sm" id="btn-copy-webhook">Copy</button>
                   </div>
                 </div>
@@ -629,7 +628,7 @@
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 6px;">
                   <label for="admin-new-client-name" style="font-size: 0.8rem; font-weight: 600; color: #94a3b8;">Workspace Client Name</label>
-                  <input type="text" id="admin-new-client-name" required placeholder="e.g. Jal Mahal Resort & Spa" style="width: 100%; padding: 10px; font-size: 0.9rem; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #fff; outline: none; font-family: inherit;">
+                  <input type="text" id="admin-new-client-name" required placeholder="Enter client workspace name" style="width: 100%; padding: 10px; font-size: 0.9rem; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #fff; outline: none; font-family: inherit;">
                 </div>
                 <button type="submit" class="btn btn-primary" style="margin-top: 10px; font-weight: 600; padding: 10px 16px; border-radius: 8px; background: linear-gradient(135deg, #2563eb, #1d4ed8); display: flex; align-items: center; justify-content: center; gap: 8px;">
                   <i class="fa-solid fa-plus"></i> Create Account
@@ -737,24 +736,24 @@
       <form id="add-lead-form">
         <div class="form-group" style="margin-bottom: 14px;">
           <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px;">Full Name *</label>
-          <input type="text" id="new-lead-name" class="leads-input" placeholder="e.g. Rahul Sharma" required style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
+          <input type="text" id="new-lead-name" class="leads-input" placeholder="Enter full name" required style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
           <div class="form-group">
             <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px;">Email Address</label>
-            <input type="email" id="new-lead-email" class="leads-input" placeholder="rahul@example.com" style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
+            <input type="email" id="new-lead-email" class="leads-input" placeholder="lead@example.com" style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
           </div>
           <div class="form-group">
             <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px;">Phone Number</label>
-            <input type="tel" id="new-lead-phone" class="leads-input" placeholder="+91 98765 43210" style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
+            <input type="tel" id="new-lead-phone" class="leads-input" placeholder="+1 (555) 000-0000" style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
           </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
           <div class="form-group">
             <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px;">Campaign Name</label>
-            <input type="text" id="new-lead-campaign" class="leads-input" placeholder="e.g. Summer Promo 2026" style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
+            <input type="text" id="new-lead-campaign" class="leads-input" placeholder="Enter campaign name" style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
           </div>
           <div class="form-group">
             <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px;">Source / Platform</label>
@@ -781,7 +780,7 @@
           </div>
           <div class="form-group">
             <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px;">Client Workspace</label>
-            <input type="text" id="new-lead-client" class="leads-input" placeholder="e.g. Sanna Innovations" style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
+            <input type="text" id="new-lead-client" class="leads-input" placeholder="Client workspace name" style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
           </div>
         </div>
 
@@ -806,7 +805,7 @@
       <form id="add-client-form">
         <div class="form-group" style="margin-bottom: 20px;">
           <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px;">Client / Business Name *</label>
-          <input type="text" id="new-client-name" class="leads-input" placeholder="e.g. Acme Corp, FitLife Studio" required style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
+          <input type="text" id="new-client-name" class="leads-input" placeholder="Enter client workspace name" required style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;">
           <small style="display: block; font-size: 0.75rem; color: #94a3b8; margin-top: 6px;">
             Creates a client workspace for campaigns, ad accounts, and leads tracking.
           </small>
@@ -952,7 +951,7 @@
         <div class="oauth-success hidden" id="oauth-success-block">
           <i class="fa-solid fa-circle-check oauth-success-icon"></i>
           <h4>Authorization Successful</h4>
-          <p id="oauth-success-text">Meta Ads sandbox account act_meta_9247 has been connected successfully.</p>
+          <p id="oauth-success-text">Ad account has been connected successfully.</p>
         </div>
       </div>
     </div>

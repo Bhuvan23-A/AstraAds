@@ -44,7 +44,7 @@ export async function initializeDatabase() {
       status TEXT DEFAULT 'New',
       created_at TEXT NOT NULL,
       platform TEXT DEFAULT 'Facebook',
-      client_name TEXT DEFAULT 'Sanna Innovations'
+      client_name TEXT
     )
   `);
 
@@ -152,11 +152,13 @@ export async function initializeDatabase() {
   const leadColumns = await database.all("PRAGMA table_info(leads)");
   const hasLeadClientName = leadColumns.some(c => c.name === 'client_name');
   if (!hasLeadClientName) {
-    await database.exec("ALTER TABLE leads ADD COLUMN client_name TEXT DEFAULT 'Sanna Innovations'");
+    await database.exec("ALTER TABLE leads ADD COLUMN client_name TEXT");
     console.log('Database migrated: Added client_name column to leads.');
   }
 
   // Remove all legacy hardcoded mock leads to ensure Leads Manager is strictly user-input based
-  await database.run("DELETE FROM leads WHERE id LIKE 'lead_00%'");
-  console.log('Database initialized: Hardcoded mock leads removed. Leads Manager is user-input based only.');
+  await database.run("DELETE FROM leads WHERE id LIKE 'lead_00%' OR id LIKE '%test%' OR email LIKE '%example.com%'");
+  await database.run("DELETE FROM campaign_launches WHERE campaign_name LIKE '%Test%'");
+  await database.run("DELETE FROM clients WHERE client_name = 'Apex Innovation Studio' OR client_name = 'Test Client Production'");
+  console.log('Database initialized: Hardcoded mock leads and test data removed. Leads Manager is user-input based only.');
 }

@@ -1233,7 +1233,7 @@ app.post('/api/leads', async (req, res) => {
   }
 
   // Tenant validation: regular clients are bound to their assigned client workspace
-  let targetClient = client_name || 'Sanna Innovations';
+  let targetClient = client_name || (req.session?.user?.client_name || '');
   if (req.session?.user?.role !== 'admin' && req.session?.user?.client_name) {
     targetClient = req.session.user.client_name;
   }
@@ -1352,7 +1352,7 @@ app.post('/api/webhooks/leads', async (req, res) => {
       status: 'New',
       created_at: new Date().toISOString(),
       platform: platform || 'Facebook',
-      client_name: client_name || 'Sanna Innovations'
+      client_name: client_name || (req.session?.user?.client_name || '')
     };
 
     await db.run(
@@ -1562,20 +1562,24 @@ app.post('/api/webhooks/meta/config', async (req, res) => {
 app.post('/api/webhooks/test', async (req, res) => {
   const firstNames = ['Liam', 'Olivia', 'Noah', 'Emma', 'Oliver', 'Ava', 'Elijah', 'Charlotte', 'William', 'Sophia'];
   const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
-  const campaigns = ['Summer Promo 2026', 'AI Automation Leads', 'Retargeting Q3', 'E-commerce Scale 2026', 'ASHIRWADA LEADS 1st may'];
+  const campaigns = ['Search Leads Campaign', 'Social Feed Engagement', 'Direct Prospecting', 'Targeted Ad Set'];
   const platforms = ['Facebook', 'Instagram'];
-  const clients = ['Sanna Innovations', 'Apex Marketing', 'Cyberdyne Systems', 'Ashirwada Leads'];
 
   const randomName = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
   const randomEmail = `${randomName.toLowerCase().replace(' ', '.')}@example.com`;
   const randomPhone = `+1 (555) 01${Math.floor(10 + Math.random() * 90)}-${Math.floor(1000 + Math.random() * 9000)}`;
   const randomCampaign = campaigns[Math.floor(Math.random() * campaigns.length)];
   const randomPlatform = platforms[Math.floor(Math.random() * platforms.length)];
-  const clientNameFromSession = (req.session?.user && req.session.user.role !== 'admin') ? req.session.user.client_name : null;
-  const targetClient = req.body?.client_name || req.query?.client || clientNameFromSession || clients[Math.floor(Math.random() * clients.length)];
 
   try {
     const db = await getDatabase();
+    const clientNameFromSession = (req.session?.user && req.session.user.role !== 'admin') ? req.session.user.client_name : null;
+    let targetClient = req.body?.client_name || req.query?.client || clientNameFromSession;
+    if (!targetClient) {
+      const anyClient = await db.get('SELECT client_name FROM clients ORDER BY created_at DESC LIMIT 1');
+      targetClient = anyClient ? anyClient.client_name : '';
+    }
+
     const testLead = {
       id: `lead_${Date.now()}_test`,
       name: randomName,
@@ -1685,9 +1689,6 @@ app.get('/api/clients', async (req, res) => {
       ) ORDER BY client_name ASC
     `);
     const clients = rows.map(r => r.client_name);
-    if (clients.length === 0) {
-      clients.push('Sanna Innovations');
-    }
     res.json(clients);
   } catch (error) {
     console.error('Error fetching clients list:', error);
@@ -2550,7 +2551,7 @@ app.get('/api/auth/google/callback', requireAuth, async (req, res) => {
 
             <div class="form-group">
               <label for="account_name">Display Account Name (Optional):</label>
-              <input type="text" name="account_name" id="account_name" placeholder="e.g. Sanna Innovations Manager Account">
+              <input type="text" name="account_name" id="account_name" placeholder="e.g. My Agency Manager Account">
             </div>
 
             <button type="submit">Link Account Details</button>
