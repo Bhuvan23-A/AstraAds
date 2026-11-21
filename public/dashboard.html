@@ -442,6 +442,9 @@
               <button class="btn btn-primary btn-sm" id="btn-open-add-client-modal" title="Add a new client workspace" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; color: white; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);">
                 <i class="fa-solid fa-building-circle-plus"></i> Add Client
               </button>
+              <button class="btn btn-secondary btn-sm" id="btn-open-delete-client-modal" title="Delete a client workspace" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.2s ease;">
+                <i class="fa-solid fa-trash-can"></i> Delete Client
+              </button>
               <button class="btn btn-primary btn-sm" id="btn-open-add-lead-modal" title="Add a new lead manually" style="background: linear-gradient(135deg, #06b6d4, #3b82f6); border: none; color: white; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(6, 182, 212, 0.25);">
                 <i class="fa-solid fa-user-plus"></i> Add Lead
               </button>
@@ -813,6 +816,37 @@
         <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #334155; padding-top: 15px;">
           <button type="button" class="btn btn-secondary btn-sm" id="btn-cancel-add-client" style="padding: 9px 16px;">Cancel</button>
           <button type="submit" class="btn btn-primary btn-sm" id="btn-submit-add-client" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; padding: 9px 18px; font-weight: 600; color: white; cursor: pointer;">Save Client</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Client Modal Overlay -->
+  <div class="modal-overlay hidden" id="delete-client-modal" style="z-index: 10000;">
+    <div class="modal-card" style="max-width: 480px; width: 92%; text-align: left; background: #0f172a; border: 1px solid #334155; border-radius: 16px; padding: 25px;">
+      <div class="modal-header" style="flex-direction: row; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-trash-can" style="color: #ef4444; font-size: 1.3rem;"></i>
+          <h3 style="margin: 0; font-size: 1.15rem; color: #fff;">Delete Client Workspace</h3>
+        </div>
+        <button type="button" class="modal-close-btn" id="btn-close-delete-client-modal" style="background: transparent; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+      <form id="delete-client-form">
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 6px;">Select Client Workspace to Delete *</label>
+          <select id="delete-client-select" class="leads-select" style="width: 100%; box-sizing: border-box; padding: 10px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff;" required>
+            <!-- Dynamically populated with active clients -->
+          </select>
+        </div>
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px;">
+          <i class="fa-solid fa-triangle-exclamation" style="color: #ef4444; font-size: 1.1rem; margin-top: 2px;"></i>
+          <span style="font-size: 0.82rem; color: #fca5a5; line-height: 1.4;">
+            Warning: Permanently removes the selected client workspace, including its leads, campaigns, and ad account connections. This action cannot be undone.
+          </span>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #334155; padding-top: 15px;">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-cancel-delete-client" style="padding: 9px 16px;">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm" id="btn-submit-delete-client" style="background: #ef4444; border: none; padding: 9px 18px; font-weight: 600; color: white; cursor: pointer;">Delete Client</button>
         </div>
       </form>
     </div>

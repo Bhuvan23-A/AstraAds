@@ -252,6 +252,22 @@ describe('AstraAds Integration & Completeness Test Suite', () => {
       assert.ok(Array.isArray(res.body));
       assert.ok(res.body.includes('Apex Innovation Studio'));
     });
+
+    test('client user cannot delete client workspace (403 Forbidden)', async () => {
+      const res = await request('DELETE', '/api/clients/Apex%20Innovation%20Studio', null, {}, clientCookie);
+      assert.strictEqual(res.status, 403);
+    });
+
+    test('admin user deletes client workspace successfully (200 OK)', async () => {
+      const res = await request('DELETE', '/api/clients/Apex%20Innovation%20Studio', null, {}, adminCookie);
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.body.success, true);
+
+      // Verify client is gone from clients list
+      const listRes = await request('GET', '/api/clients', null, {}, adminCookie);
+      assert.strictEqual(listRes.status, 200);
+      assert.ok(!listRes.body.includes('Apex Innovation Studio'));
+    });
   });
 
   // 4. AI Campaign Generation

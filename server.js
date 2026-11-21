@@ -1735,6 +1735,36 @@ app.post('/api/clients', async (req, res) => {
   }
 });
 
+// DELETE: Delete client workspace and cascade associated records (Admin only)
+const deleteClientWorkspace = async (req, res) => {
+  if (req.session?.user?.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied: Admin privileges required.' });
+  }
+  const clientParam = req.params.clientName || req.query.client || req.body?.client_name;
+  const clientName = clientParam ? decodeURIComponent(clientParam).trim() : '';
+  if (!clientName) {
+    return res.status(400).json({ error: 'Client name parameter is required.' });
+  }
+
+  try {
+    const db = await getDatabase();
+    await db.run('DELETE FROM clients WHERE lower(client_name) = lower(?)', [clientName]);
+    await db.run('DELETE FROM leads WHERE lower(client_name) = lower(?)', [clientName]);
+    await db.run('DELETE FROM page_configs WHERE lower(client_name) = lower(?)', [clientName]);
+    await db.run('DELETE FROM google_configs WHERE lower(client_name) = lower(?)', [clientName]);
+    await db.run('DELETE FROM campaign_launches WHERE lower(client_name) = lower(?)', [clientName]);
+    await db.run("DELETE FROM users WHERE lower(client_name) = lower(?) AND role != 'admin'", [clientName]);
+
+    res.json({ success: true, message: `Client workspace '${clientName}' deleted successfully.` });
+  } catch (error) {
+    console.error('Error deleting client workspace:', error);
+    res.status(500).json({ error: 'Failed to delete client workspace.' });
+  }
+};
+
+app.delete('/api/clients/:clientName', deleteClientWorkspace);
+app.delete('/api/clients', deleteClientWorkspace);
+
 // Admin endpoint: Fetch all user accounts
 app.get('/api/admin/users', requireAuth, async (req, res) => {
   if (req.session.user.role !== 'admin') {

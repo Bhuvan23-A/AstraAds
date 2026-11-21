@@ -49,6 +49,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (leadsElements.btnOpenAddClientModal) {
           leadsElements.btnOpenAddClientModal.style.display = 'none';
         }
+        if (leadsElements.btnOpenDeleteClientModal) {
+          leadsElements.btnOpenDeleteClientModal.style.display = 'none';
+        }
         if (leadsElements.clientSelector) {
           leadsElements.clientSelector.style.display = 'none';
           
@@ -1157,6 +1160,14 @@ document.addEventListener('DOMContentLoaded', () => {
     addClientForm: document.getElementById('add-client-form'),
     newClientName: document.getElementById('new-client-name'),
 
+    // Delete Client Modal Elements
+    btnOpenDeleteClientModal: document.getElementById('btn-open-delete-client-modal'),
+    deleteClientModal: document.getElementById('delete-client-modal'),
+    btnCloseDeleteClientModal: document.getElementById('btn-close-delete-client-modal'),
+    btnCancelDeleteClient: document.getElementById('btn-cancel-delete-client'),
+    deleteClientForm: document.getElementById('delete-client-form'),
+    deleteClientSelect: document.getElementById('delete-client-select'),
+
     // Add Lead Modal Elements
     btnOpenAddLeadModal: document.getElementById('btn-open-add-lead-modal'),
     addLeadModal: document.getElementById('add-lead-modal'),
@@ -1299,6 +1310,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (leadsElements.addClientForm) {
       leadsElements.addClientForm.addEventListener('submit', handleAddClientSubmit);
     }
+
+    // Delete Client Modal Listeners
+    if (leadsElements.btnOpenDeleteClientModal) {
+      leadsElements.btnOpenDeleteClientModal.addEventListener('click', openDeleteClientModal);
+    }
+    if (leadsElements.btnCloseDeleteClientModal) {
+      leadsElements.btnCloseDeleteClientModal.addEventListener('click', closeDeleteClientModal);
+    }
+    if (leadsElements.btnCancelDeleteClient) {
+      leadsElements.btnCancelDeleteClient.addEventListener('click', closeDeleteClientModal);
+    }
+    if (leadsElements.deleteClientModal) {
+      leadsElements.deleteClientModal.addEventListener('click', (e) => {
+        if (e.target === leadsElements.deleteClientModal) {
+          closeDeleteClientModal();
+        }
+      });
+    }
+    if (leadsElements.deleteClientForm) {
+      leadsElements.deleteClientForm.addEventListener('submit', handleDeleteClientSubmit);
+    }
   }
 
   function openAddClientModal() {
@@ -1357,6 +1389,75 @@ document.addEventListener('DOMContentLoaded', () => {
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Save Client';
+      }
+    }
+  }
+
+  function openDeleteClientModal() {
+    if (!leadsElements.deleteClientModal) return;
+    if (!leadsState.clients || leadsState.clients.length === 0) {
+      showLeadsToast('Notice', 'No client workspaces exist to delete.', 'info');
+      return;
+    }
+
+    leadsElements.deleteClientSelect.innerHTML = '';
+    leadsState.clients.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      if (leadsState.selectedClient && leadsState.selectedClient === c) {
+        opt.selected = true;
+      }
+      leadsElements.deleteClientSelect.appendChild(opt);
+    });
+
+    leadsElements.deleteClientModal.classList.remove('hidden');
+  }
+
+  function closeDeleteClientModal() {
+    if (!leadsElements.deleteClientModal) return;
+    leadsElements.deleteClientModal.classList.add('hidden');
+    leadsElements.deleteClientForm.reset();
+  }
+
+  async function handleDeleteClientSubmit(e) {
+    e.preventDefault();
+    const targetClient = leadsElements.deleteClientSelect.value;
+    if (!targetClient) {
+      showLeadsToast('Validation Error', 'Please select a client to delete.', 'error');
+      return;
+    }
+
+    const submitBtn = document.getElementById('btn-submit-delete-client');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Deleting...';
+    }
+
+    try {
+      const res = await fetch(`/api/clients/${encodeURIComponent(targetClient)}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showLeadsToast('Client Deleted', `Client workspace "${targetClient}" was removed.`, 'success');
+        closeDeleteClientModal();
+        leadsState.selectedClient = 'All';
+        await syncDatabase();
+        if (leadsElements.clientSelector) {
+          leadsElements.clientSelector.value = 'All';
+          refreshLeadsData();
+        }
+      } else {
+        showLeadsToast('Error', data.error || 'Failed to delete client workspace.', 'error');
+      }
+    } catch (err) {
+      console.error('Error deleting client:', err);
+      showLeadsToast('Network Error', 'Could not delete client workspace.', 'error');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Delete Client';
       }
     }
   }
