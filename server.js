@@ -1414,7 +1414,7 @@ app.post('/api/webhooks/meta', async (req, res) => {
         const pageConfig = await db.get('SELECT * FROM page_configs WHERE page_id = ?', [pageId]);
         
         let accessToken = process.env.META_ACCESS_TOKEN; // Fallback to global token
-        let clientName = 'ALIS Technology';
+        let clientName = pageConfig ? pageConfig.client_name : (process.env.DEFAULT_CLIENT_NAME || 'Direct Inbound');
 
         if (pageConfig) {
           accessToken = pageConfig.access_token;
@@ -1478,7 +1478,7 @@ app.post('/api/webhooks/meta', async (req, res) => {
 // POST: Google Webhook Receiver (Direct Integration)
 app.post('/api/webhooks/google', async (req, res) => {
   const { lead_id, user_column_data, campaign_id, google_key } = req.body;
-  const clientName = req.query.client || 'ALIS Technology'; // Passed as ?client=Name in URL
+  const clientName = req.query.client || (req.body && req.body.client_name) || (process.env.DEFAULT_CLIENT_NAME || 'Direct Inbound');
 
   // Optional key check for security
   const verifyKey = process.env.GOOGLE_VERIFY_KEY || 'astraads_google_key_secret';

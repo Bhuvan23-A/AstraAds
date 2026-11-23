@@ -157,7 +157,7 @@ export async function initializeDatabase() {
   }
 
   // Remove all legacy hardcoded mock leads to ensure Leads Manager is strictly user-input based
-  await database.run("DELETE FROM leads WHERE id LIKE 'lead_00%' OR id LIKE '%test%' OR email LIKE '%example.com%'");
+  await database.run("DELETE FROM leads WHERE id LIKE 'lead_00%' OR id LIKE '%test%' OR email LIKE '%example.com%' OR email LIKE '%jalmahal.com%'");
   await database.run("DELETE FROM campaign_launches WHERE campaign_name LIKE '%Test%'");
   await database.run("DELETE FROM clients WHERE client_name = 'Apex Innovation Studio' OR client_name = 'Test Client Production'");
   console.log('Database initialized: Hardcoded mock leads and test data removed. Leads Manager is user-input based only.');
