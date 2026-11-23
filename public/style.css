@@ -1966,3 +1966,170 @@ select {
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
+
+/* ========================================================
+   AstraAds Marketing BOS - New Components & Workspaces
+   ======================================================== */
+
+.human-loop-banner {
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  border-radius: 10px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.88rem;
+  color: #cbd5e1;
+}
+
+.specialists-review-card {
+  margin-top: 24px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.specialists-review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.specialist-mini-card {
+  background: #020617;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: left;
+}
+
+.specialist-mini-role {
+  font-size: 0.7rem;
+  color: #06b6d4;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.specialist-mini-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 2px 0 6px;
+}
+
+.specialist-mini-score {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+/* 9:16 Video Reel Mockup */
+.video-reel-mock {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  background: #020617;
+  border: 2px solid #334155;
+  border-radius: 20px;
+  padding: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.reel-phone-notch {
+  width: 80px;
+  height: 6px;
+  background: #1e293b;
+  border-radius: 3px;
+  margin: 0 auto 12px;
+}
+
+.reel-aspect-box {
+  aspect-ratio: 9/16;
+  background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.reel-overlay-badge {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #22d3ee;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reel-beats-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: auto 0;
+}
+
+.reel-beat-item {
+  background: rgba(2, 6, 23, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.78rem;
+}
+
+.reel-beat-header {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #06b6d4;
+  text-transform: uppercase;
+}
+
+.reel-bottom-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+}
+
+/* Brand Profile & Discover Workspace styling */
+.bos-workspace-wrap {
+  padding: 24px 32px;
+  width: 100%;
+}
+
+.bos-header {
+  margin-bottom: 24px;
+}
+
+.bos-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.trend-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s ease;
+}
+
+.trend-card:hover {
+  border-color: rgba(6, 182, 212, 0.35);
+  transform: translateY(-2px);
+}

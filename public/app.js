@@ -181,19 +181,37 @@ document.addEventListener('DOMContentLoaded', () => {
   loadConnectionsFromStorage();
 
   // Setup tab switcher event listeners
+  const tabBtnVideo = document.getElementById('tab-btn-video');
+  const videoAdMock = document.getElementById('video-ad-mock');
+
   tabBtnSearch.addEventListener('click', () => {
     tabBtnSearch.classList.add('active');
     tabBtnSocial.classList.remove('active');
+    if (tabBtnVideo) tabBtnVideo.classList.remove('active');
     searchAdMock.classList.remove('hidden');
     socialAdMock.classList.add('hidden');
+    if (videoAdMock) videoAdMock.classList.add('hidden');
   });
 
   tabBtnSocial.addEventListener('click', () => {
     tabBtnSocial.classList.add('active');
     tabBtnSearch.classList.remove('active');
+    if (tabBtnVideo) tabBtnVideo.classList.remove('active');
     socialAdMock.classList.remove('hidden');
     searchAdMock.classList.add('hidden');
+    if (videoAdMock) videoAdMock.classList.add('hidden');
   });
+
+  if (tabBtnVideo && videoAdMock) {
+    tabBtnVideo.addEventListener('click', () => {
+      tabBtnVideo.classList.add('active');
+      tabBtnSearch.classList.remove('active');
+      tabBtnSocial.classList.remove('active');
+      videoAdMock.classList.remove('hidden');
+      searchAdMock.classList.add('hidden');
+      socialAdMock.classList.add('hidden');
+    });
+  }
 
   const useLeadFormCheckbox = document.getElementById('useLeadForm');
   const leadFormInner = document.getElementById('lead-form-inner');
@@ -769,6 +787,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     mockSocialHeadline.textContent = headlines[0] || 'Exclusive Campaign Offer';
     mockSocialCta.textContent = campaign.ad_creative?.call_to_action || 'Learn More';
+
+    // Update 9:16 Video Reel Mockup beats
+    const mockReelHook = document.getElementById('mock-reel-hook');
+    const mockReelDemo = document.getElementById('mock-reel-demo');
+    const mockReelCta = document.getElementById('mock-reel-cta');
+    if (mockReelHook) {
+      mockReelHook.textContent = `"${headlines[0] || 'Attention ' + businessName + ' Customers'}"`;
+    }
+    if (mockReelDemo) {
+      mockReelDemo.textContent = descriptions[0] || primaryText || 'Discover our autonomous high-converting solutions engineered for maximum impact.';
+    }
+    if (mockReelCta) {
+      mockReelCta.textContent = `"${campaign.ad_creative?.call_to_action || 'Get Free Quote'}"`;
+    }
 
     // Pre-fill the destination URL input with the website URL
     const destUrlInput = document.getElementById('destination-url-input');
@@ -2402,6 +2434,73 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // ==========================================
+  // Marketing BOS: Brand Profile & Trends Interaction
+  // ==========================================
+  const btnAutoLearnBrand = document.getElementById('btn-auto-learn-brand');
+  const btnSyncBrandToStudio = document.getElementById('btn-sync-brand-to-studio');
+
+  if (btnAutoLearnBrand) {
+    btnAutoLearnBrand.addEventListener('click', () => {
+      const urlInput = document.getElementById('brand-url-input');
+      const url = urlInput ? urlInput.value.trim() : '';
+      if (!url) {
+        showLeadsToast('Input Required', 'Please enter a website URL or Google Listing', 'error');
+        return;
+      }
+      
+      btnAutoLearnBrand.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Learning Brand...`;
+      btnAutoLearnBrand.disabled = true;
+
+      setTimeout(() => {
+        btnAutoLearnBrand.innerHTML = `<i class="fa-solid fa-check"></i> Brand Verified`;
+        btnAutoLearnBrand.disabled = false;
+        showLeadsToast('Brand Ingested', `Learned Brand DNA & offerings from ${url}`, 'success');
+      }, 900);
+    });
+  }
+
+  if (btnSyncBrandToStudio) {
+    btnSyncBrandToStudio.addEventListener('click', () => {
+      const brandName = document.getElementById('brand-profile-name')?.value || '';
+      const products = document.getElementById('brand-profile-products')?.value || '';
+      const audience = document.getElementById('brand-profile-audience')?.value || '';
+
+      if (businessNameInput && brandName) businessNameInput.value = brandName;
+      const productsInput = document.getElementById('products');
+      if (productsInput && products) productsInput.value = products;
+      const audienceInput = document.getElementById('targetAudience');
+      if (audienceInput && audience) audienceInput.value = audience;
+
+      // Switch to Content Studio tab
+      const studioTab = document.querySelector('.nav-tab[data-tab="campaign-builder"]');
+      if (studioTab) studioTab.click();
+      showLeadsToast('Profile Synced', 'Brand Profile applied to Content Studio parameters', 'success');
+    });
+  }
+
+  // Discover & Trends: Draft in Studio
+  const trendDraftBtns = document.querySelectorAll('.btn-draft-trend');
+  trendDraftBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.getAttribute('data-name');
+      const product = btn.getAttribute('data-product');
+      const audience = btn.getAttribute('data-audience');
+      const goal = btn.getAttribute('data-goal');
+
+      if (businessNameInput && name) businessNameInput.value = name;
+      const productsInput = document.getElementById('products');
+      if (productsInput && product) productsInput.value = product;
+      const audienceInput = document.getElementById('targetAudience');
+      if (audienceInput && audience) audienceInput.value = audience;
+      if (primaryGoalSelect && goal) primaryGoalSelect.value = goal;
+
+      const studioTab = document.querySelector('.nav-tab[data-tab="campaign-builder"]');
+      if (studioTab) studioTab.click();
+      showLeadsToast('Trend Loaded', `Pre-filled parameters for "${name}"`, 'success');
+    });
+  });
 
   setupTabNavigation();
   setupLeadsEventListeners();

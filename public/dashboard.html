@@ -26,17 +26,26 @@
         <i class="fa-solid fa-wand-magic-sparkles logo-icon"></i>
         <span>Astra<span class="logo-accent">Ads</span></span>
       </div>
-      <div class="header-tagline">Autonomous Ad Ops for Small Businesses</div>
+      <div class="header-tagline">Marketing BOS &bull; Autonomous Ad &amp; Content Operating System</div>
       <!-- Tab Navigation Switcher -->
-      <nav class="tab-navigation" style="display: flex; align-items: center; gap: 12px;">
+      <nav class="tab-navigation" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
         <button class="nav-tab active" data-tab="campaign-builder">
-          <i class="fa-solid fa-rocket"></i> Campaign Builder
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Content Studio
+        </button>
+        <button class="nav-tab" data-tab="brand-brain">
+          <i class="fa-solid fa-brain"></i> Brand Profile
+        </button>
+        <button class="nav-tab" data-tab="discover-trends">
+          <i class="fa-solid fa-compass"></i> Discover &amp; Trends
         </button>
         <button class="nav-tab" data-tab="leads-manager">
-          <i class="fa-solid fa-users"></i> Leads Manager
+          <i class="fa-solid fa-users"></i> Leads &amp; Telemetry
+        </button>
+        <button class="nav-tab" data-tab="publish-hub">
+          <i class="fa-solid fa-satellite-dish"></i> Publish &amp; Accounts
         </button>
         <button class="nav-tab hidden" id="admin-nav-users" data-tab="user-management">
-          <i class="fa-solid fa-user-gear"></i> User Manager
+          <i class="fa-solid fa-building-user"></i> Agency Hub
         </button>
         <button type="button" id="btn-logout" style="background: transparent; border: 1px solid #f87171; color: #f87171; padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; cursor: pointer; border-radius: 6px; font-weight: 500; font-family: inherit; transition: all 0.2s ease;">
           <i class="fa-solid fa-right-from-bracket"></i> Logout
@@ -284,6 +293,9 @@
                     <button type="button" class="mockup-tab-btn" id="tab-btn-social">
                       <i class="fa-brands fa-facebook"></i> Social Media Feed
                     </button>
+                    <button type="button" class="mockup-tab-btn" id="tab-btn-video">
+                      <i class="fa-solid fa-film"></i> 9:16 Video Reel
+                    </button>
                   </div>
                   
                   <!-- Google Search Mock -->
@@ -341,6 +353,34 @@
                       </div>
                       <div class="social-cta-wrapper">
                         <a class="social-cta-btn" id="mock-social-cta" id="mock-cta-link" href="#" target="_blank" style="text-decoration: none; color: inherit;">Learn More</a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 9:16 Video Reel Mockup -->
+                  <div class="video-reel-mock hidden" id="video-ad-mock">
+                    <div class="reel-phone-notch"></div>
+                    <div class="reel-aspect-box">
+                      <div class="reel-overlay-badge">
+                        <i class="fa-solid fa-film"></i> 30s &bull; Vertical 1080p
+                      </div>
+                      <div class="reel-beats-stack">
+                        <div class="reel-beat-item" style="border-left: 3px solid #06b6d4;">
+                          <div class="reel-beat-header">Beat 1 &bull; Visual Hook (0:00 - 0:03)</div>
+                          <div id="mock-reel-hook" style="color: #fff; font-weight: 600; font-size: 0.82rem; margin-top: 2px;">"Still spending hours managing ad campaigns across 6 tools?"</div>
+                        </div>
+                        <div class="reel-beat-item" style="border-left: 3px solid #3b82f6;">
+                          <div class="reel-beat-header">Beat 2 &bull; Value &amp; Demo (0:03 - 0:18)</div>
+                          <div id="mock-reel-demo" style="color: #cbd5e1; font-size: 0.8rem; margin-top: 2px;">AstraAds autonomous engine plans, writes, and deploys high-converting ads in 60s.</div>
+                        </div>
+                        <div class="reel-beat-item" style="border-left: 3px solid #10b981;">
+                          <div class="reel-beat-header">Beat 3 &bull; Call to Action (0:18 - 0:30)</div>
+                          <div id="mock-reel-cta" style="color: #fff; font-weight: 600; font-size: 0.82rem; margin-top: 2px;">"Claim your free portal demo today."</div>
+                        </div>
+                      </div>
+                      <div class="reel-bottom-controls">
+                        <span style="color: #94a3b8;"><i class="fa-solid fa-music"></i> AI Voiceover Sync</span>
+                        <span style="color: #10b981; font-weight: 700;">Verified Ready</span>
                       </div>
                     </div>
                   </div>
@@ -403,6 +443,59 @@
                 </p>
               </div>
             </div>
+
+            <!-- Card 5: 7 AI Specialists Review Council -->
+            <div class="card card-specialists span-two-cols" style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 20px;">
+              <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 12px; margin-bottom: 14px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <i class="fa-solid fa-users-gear" style="color: #06b6d4; font-size: 1.1rem;"></i>
+                  <h3 style="font-size: 1.1rem; color: #fff;">7 AI Specialists Review Council</h3>
+                </div>
+                <span class="status-pill status-ready" style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 6px; font-size: 0.78rem;">
+                  <i class="fa-solid fa-shield-check"></i> Consensus: Proceed
+                </span>
+              </div>
+              <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 14px;">
+                Seven AI specialists critique and score this campaign across strategic positioning, objection handling, audience resonance, compliance guardrails, and forecasted CTR.
+              </p>
+              <div class="specialists-review-grid">
+                <div class="specialist-mini-card">
+                  <div class="specialist-mini-role">1. Visionary</div>
+                  <div class="specialist-mini-name">Strategic Angle</div>
+                  <div class="specialist-mini-score">95% &bull; Pass</div>
+                </div>
+                <div class="specialist-mini-card">
+                  <div class="specialist-mini-role">2. Critic</div>
+                  <div class="specialist-mini-name">Objection Shield</div>
+                  <div class="specialist-mini-score">91% &bull; Pass</div>
+                </div>
+                <div class="specialist-mini-card">
+                  <div class="specialist-mini-role">3. Audience</div>
+                  <div class="specialist-mini-name">Buyer Resonance</div>
+                  <div class="specialist-mini-score">96% &bull; Pass</div>
+                </div>
+                <div class="specialist-mini-card">
+                  <div class="specialist-mini-role">4. Guardian</div>
+                  <div class="specialist-mini-name">Brand &amp; Voice</div>
+                  <div class="specialist-mini-score">98% &bull; Pass</div>
+                </div>
+                <div class="specialist-mini-card">
+                  <div class="specialist-mini-role">5. Analyst</div>
+                  <div class="specialist-mini-name">CTR Forecast</div>
+                  <div class="specialist-mini-score">92% &bull; Pass</div>
+                </div>
+                <div class="specialist-mini-card">
+                  <div class="specialist-mini-role">6. Creative</div>
+                  <div class="specialist-mini-name">Visual &amp; Hook</div>
+                  <div class="specialist-mini-score">94% &bull; Pass</div>
+                </div>
+                <div class="specialist-mini-card">
+                  <div class="specialist-mini-role">7. Decision</div>
+                  <div class="specialist-mini-name">Final Seal</div>
+                  <div class="specialist-mini-score" style="color: #22d3ee;">Proceed</div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Action Buttons -->
@@ -425,6 +518,220 @@
           </div>
         </div>
       </section>
+      </div>
+
+      <!-- BRAND PROFILE TAB -->
+      <div id="tab-brand-brain" class="tab-panel hidden">
+        <div class="bos-workspace-wrap">
+          <div class="bos-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 18px;">
+            <div>
+              <h2><i class="fa-solid fa-brain header-icon" style="color: #06b6d4;"></i> Brand Profile &amp; Knowledge Base</h2>
+              <p class="panel-subtitle">Teach it your brand once. Every ad creative, search copy, and video hook is generated strictly aligned with your brand facts.</p>
+            </div>
+            <button type="button" id="btn-sync-brand-to-studio" class="btn btn-primary" style="background: linear-gradient(135deg, #06b6d4, #2563eb); border: none; color: white; font-weight: 600; padding: 10px 18px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Apply to Content Studio
+            </button>
+          </div>
+
+          <!-- URL Ingestion Tool -->
+          <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 20px; margin: 24px 0;">
+            <label style="display: block; font-size: 0.88rem; font-weight: 600; color: #fff; margin-bottom: 8px;">
+              <i class="fa-solid fa-globe" style="color: #06b6d4;"></i> Learn Brand from Website URL or Google Listing
+            </label>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <input type="url" id="brand-url-input" placeholder="https://yourbrand.com or https://g.page/yourbrand" value="https://astraads.theastraai.com" style="flex: 1; min-width: 280px; padding: 10px 14px; background: #020617; border: 1px solid #334155; color: white; border-radius: 8px; font-size: 0.9rem;">
+              <button type="button" id="btn-auto-learn-brand" class="btn btn-secondary" style="padding: 10px 18px; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> Auto-Learn Brand DNA
+              </button>
+            </div>
+            <p style="font-size: 0.78rem; color: #94a3b8; margin-top: 6px;">Reads your website pages, extracts core offerings, target audience, and brand tone rules in seconds.</p>
+          </div>
+
+          <div class="bos-grid-2">
+            <!-- Brand Identity -->
+            <div class="trend-card">
+              <h3 style="font-size: 1.15rem; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-fingerprint" style="color: #06b6d4;"></i> Brand Identity &amp; Voice
+              </h3>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                  <label style="font-size: 0.78rem; color: #94a3b8; text-transform: uppercase;">Brand Name</label>
+                  <input type="text" id="brand-profile-name" value="AstraAds" style="width: 100%; padding: 8px 12px; background: #020617; border: 1px solid #334155; color: white; border-radius: 6px; font-size: 0.88rem; margin-top: 4px;">
+                </div>
+                <div>
+                  <label style="font-size: 0.78rem; color: #94a3b8; text-transform: uppercase;">Tone of Voice</label>
+                  <select id="brand-profile-tone" style="width: 100%; padding: 8px 12px; background: #020617; border: 1px solid #334155; color: white; border-radius: 6px; font-size: 0.88rem; margin-top: 4px; color-scheme: dark;">
+                    <option value="Authoritative B2B SaaS" selected>Authoritative B2B SaaS (Direct, metric-backed)</option>
+                    <option value="High-Energy Direct Response">High-Energy Direct Response (Action-oriented)</option>
+                    <option value="Friendly & Conversational">Friendly &amp; Conversational (Approachable)</option>
+                    <option value="Luxury & Exclusive">Luxury &amp; Exclusive (Understated, prestigious)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size: 0.78rem; color: #94a3b8; text-transform: uppercase;">Core Offerings &amp; Catalog</label>
+                  <textarea id="brand-profile-products" rows="3" style="width: 100%; padding: 8px 12px; background: #020617; border: 1px solid #334155; color: white; border-radius: 6px; font-size: 0.88rem; margin-top: 4px; font-family: inherit;">Autonomous AI Ad Engine, Google Search Ad Automation, Meta Social Feed Creatives, 9:16 Video Reel Storyboards, Real-Time Lead Webhooks</textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Guardrails & Assets -->
+            <div class="trend-card">
+              <h3 style="font-size: 1.15rem; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> Compliance &amp; Guardrails
+              </h3>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                  <label style="font-size: 0.78rem; color: #94a3b8; text-transform: uppercase;">Active Negative Keywords / Disallowed Claims</label>
+                  <textarea id="brand-profile-rules" rows="3" style="width: 100%; padding: 8px 12px; background: #020617; border: 1px solid #334155; color: white; border-radius: 6px; font-size: 0.88rem; margin-top: 4px; font-family: inherit;">Never claim #1 without verified data source. Require human confirmation before launching ad spend. Always offer free live portal walkthrough.</textarea>
+                </div>
+                <div>
+                  <label style="font-size: 0.78rem; color: #94a3b8; text-transform: uppercase;">Default Target Persona</label>
+                  <input type="text" id="brand-profile-audience" value="Growth Marketers, Agency Owners, CMOs &amp; Enterprise Founders" style="width: 100%; padding: 8px 12px; background: #020617; border: 1px solid #334155; color: white; border-radius: 6px; font-size: 0.88rem; margin-top: 4px;">
+                </div>
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 12px; font-size: 0.82rem; color: #10b981;">
+                  <i class="fa-solid fa-circle-check"></i> Brand Profile is 100% active and checked by the 7 AI Specialists Council during creative generation.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DISCOVER & TRENDS TAB -->
+      <div id="tab-discover-trends" class="tab-panel hidden">
+        <div class="bos-workspace-wrap">
+          <div class="bos-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 18px;">
+            <h2><i class="fa-solid fa-compass header-icon" style="color: #06b6d4;"></i> Discover &amp; Market Intelligence</h2>
+            <p class="panel-subtitle">Trends, rivals, and high-intent campaign angles collected for your market. Each recommendation has its AI score explained.</p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 24px;">
+            <!-- Trend Card 1 -->
+            <div class="trend-card" style="border-top: 3px solid #06b6d4;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; background: rgba(6, 182, 212, 0.15); color: #06b6d4; font-weight: 700; text-transform: uppercase;">Surge Inbound Demand</span>
+                <span style="font-size: 0.85rem; font-weight: 800; color: #10b981;">Score: 96/100</span>
+              </div>
+              <h3 style="font-size: 1.15rem; color: #fff; margin-bottom: 8px;">Autonomous AI Ad Ops Workflows</h3>
+              <p style="font-size: 0.86rem; color: #94a3b8; line-height: 1.5; margin-bottom: 16px;">
+                Rising search volume for small businesses seeking automated ad management without hiring expensive agencies. High conversion on interactive live demo offers.
+              </p>
+              <div style="font-size: 0.78rem; color: #cbd5e1; margin-bottom: 16px;">
+                <i class="fa-solid fa-bullseye" style="color: #06b6d4;"></i> <strong>Recommended Channels:</strong> Google Search + Meta Feed
+              </div>
+              <button type="button" class="btn btn-primary btn-sm btn-draft-trend" data-name="Autonomous Ad Ops" data-product="Autonomous AI Ad Management Engine" data-audience="Small Business Owners &amp; Founders" data-goal="Generate Leads" style="width: 100%; justify-content: center;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Draft Campaign in Studio
+              </button>
+            </div>
+
+            <!-- Trend Card 2 -->
+            <div class="trend-card" style="border-top: 3px solid #3b82f6;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; font-weight: 700; text-transform: uppercase;">Seasonal High Intent</span>
+                <span style="font-size: 0.85rem; font-weight: 800; color: #10b981;">Score: 92/100</span>
+              </div>
+              <h3 style="font-size: 1.15rem; color: #fff; margin-bottom: 8px;">End-of-Quarter Budget Optimization</h3>
+              <p style="font-size: 0.86rem; color: #94a3b8; line-height: 1.5; margin-bottom: 16px;">
+                Growth teams and marketing directors are actively reviewing their cost-per-lead to optimize ad spend. Lead magnets focusing on CPL reduction achieve 4.2% CTR.
+              </p>
+              <div style="font-size: 0.78rem; color: #cbd5e1; margin-bottom: 16px;">
+                <i class="fa-solid fa-bullseye" style="color: #3b82f6;"></i> <strong>Recommended Channels:</strong> Google Search + LinkedIn
+              </div>
+              <button type="button" class="btn btn-primary btn-sm btn-draft-trend" data-name="Q4 Budget Optimization" data-product="Cost-Per-Lead Ad Reduction Suite" data-audience="Growth Marketing Directors &amp; CMOs" data-goal="Generate Leads" style="width: 100%; justify-content: center;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Draft Campaign in Studio
+              </button>
+            </div>
+
+            <!-- Trend Card 3 -->
+            <div class="trend-card" style="border-top: 3px solid #10b981;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; text-transform: uppercase;">Viral Visual Format</span>
+                <span style="font-size: 0.85rem; font-weight: 800; color: #10b981;">Score: 94/100</span>
+              </div>
+              <h3 style="font-size: 1.15rem; color: #fff; margin-bottom: 8px;">30s Short-Form Video Reel Comparison</h3>
+              <p style="font-size: 0.86rem; color: #94a3b8; line-height: 1.5; margin-bottom: 16px;">
+                Short-form vertical video (9:16) comparing traditional 6-tab ad ops vs automated 1-click publishing drives 3x higher retention on Instagram &amp; Facebook feeds.
+              </p>
+              <div style="font-size: 0.78rem; color: #cbd5e1; margin-bottom: 16px;">
+                <i class="fa-solid fa-bullseye" style="color: #10b981;"></i> <strong>Recommended Channels:</strong> 9:16 Video Reel + Meta Feed
+              </div>
+              <button type="button" class="btn btn-primary btn-sm btn-draft-trend" data-name="Short Video Reel Ops" data-product="Video Studio Ad Automation" data-audience="SaaS Founders &amp; Digital Agencies" data-goal="Generate Leads" style="width: 100%; justify-content: center;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Draft Campaign in Studio
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PUBLISH & ACCOUNTS TAB -->
+      <div id="tab-publish-hub" class="tab-panel hidden">
+        <div class="bos-workspace-wrap">
+          <div class="bos-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 18px;">
+            <h2><i class="fa-solid fa-satellite-dish header-icon" style="color: #06b6d4;"></i> Publish &amp; Safeguards Hub</h2>
+            <p class="panel-subtitle">Manage live platform connections, review campaign launch receipts, and enforce human approval gates.</p>
+          </div>
+
+          <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 18px 24px; margin: 24px 0; display: flex; align-items: center; gap: 16px;">
+            <i class="fa-solid fa-shield-check" style="color: #10b981; font-size: 1.8rem;"></i>
+            <div>
+              <div style="font-size: 1rem; font-weight: 700; color: #fff;">Human-in-the-Loop Safeguards Active</div>
+              <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 2px;">
+                All ad campaigns launch in <strong>PAUSED (Draft)</strong> mode by default. Meta &amp; Google ad accounts will not spend money until explicitly activated in your ad accounts console.
+              </div>
+            </div>
+          </div>
+
+          <div class="bos-grid-2">
+            <!-- Account Connections Status -->
+            <div class="trend-card">
+              <h3 style="font-size: 1.15rem; color: #fff; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-link" style="color: #06b6d4;"></i> Connected Ad Networks
+              </h3>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="background: #020617; border: 1px solid #334155; border-radius: 8px; padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-brands fa-google" style="color: #4285F4; font-size: 1.2rem;"></i>
+                    <div>
+                      <div style="font-weight: 600; color: #fff; font-size: 0.9rem;">Google Ads Platform</div>
+                      <div style="font-size: 0.75rem; color: #94a3b8;">Responsive Search Ads &bull; Conversion Tracking</div>
+                    </div>
+                  </div>
+                  <span style="font-size: 0.75rem; padding: 3px 10px; border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700;">Active Link</span>
+                </div>
+
+                <div style="background: #020617; border: 1px solid #334155; border-radius: 8px; padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-brands fa-facebook" style="color: #1877F2; font-size: 1.2rem;"></i>
+                    <div>
+                      <div style="font-weight: 600; color: #fff; font-size: 0.9rem;">Meta Marketing API</div>
+                      <div style="font-size: 0.75rem; color: #94a3b8;">Feed, Stories, Reels &bull; Real-time Lead Ads</div>
+                    </div>
+                  </div>
+                  <span style="font-size: 0.75rem; padding: 3px 10px; border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700;">Active Link</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Launch Safeguard & Receipts -->
+            <div class="trend-card">
+              <h3 style="font-size: 1.15rem; color: #fff; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-receipt" style="color: #3b82f6;"></i> Launch Audit Receipts
+              </h3>
+              <div id="publish-receipts-list" style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; color: #94a3b8;">
+                <div style="background: #020617; padding: 12px; border-radius: 8px; border: 1px solid #1e293b;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <strong style="color: #fff;">AstraAds Enterprise Blast</strong>
+                    <span style="color: #10b981; font-weight: 600;">Deployed</span>
+                  </div>
+                  <div style="font-size: 0.75rem; color: #64748b;">Channels: Google Search, Meta Feed &bull; Mode: Paused Safety</div>
+                </div>
+                <div style="text-align: center; padding: 10px; font-size: 0.8rem; color: #64748b;">
+                  All future launches generate cryptographic execution receipts in this audit log.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 2. LEADS MANAGER TAB -->
