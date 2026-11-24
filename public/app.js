@@ -515,6 +515,45 @@ document.addEventListener('DOMContentLoaded', () => {
     await triggerCampaignGeneration(params);
   });
 
+  // Live Demo Campaign button handler
+  const btnLoadDemoCampaign = document.getElementById('btn-load-demo-campaign');
+  if (btnLoadDemoCampaign) {
+    btnLoadDemoCampaign.addEventListener('click', async () => {
+      // Pre-fill form inputs for visual clarity
+      const bName = document.getElementById('businessName');
+      const prod = document.getElementById('products');
+      const aud = document.getElementById('targetAudience');
+      const budg = document.getElementById('monthlyBudget');
+      const url = document.getElementById('websiteUrl');
+
+      if (bName && !bName.value) bName.value = 'AstraAds Studio';
+      if (prod && !prod.value) prod.value = 'Autonomous AI Ad & Video Content Production Engine';
+      if (aud && !aud.value) aud.value = 'Growth Marketers, DTC Brands & Marketing Agencies';
+      if (budg && !budg.value) budg.value = '50000';
+      if (url && !url.value) url.value = 'https://astraads.theastraai.com';
+
+      // Ensure mock channels connected for seamless demo experience
+      connections['Google Search'] = connections['Google Search'] || 'act_demo_google';
+      connections['Facebook / Instagram'] = connections['Facebook / Instagram'] || 'act_demo_meta';
+      updateConnectionUI('Google Search', statusGoogle, connectBtnGoogle);
+      updateConnectionUI('Facebook / Instagram', statusMeta, connectBtnMeta);
+
+      const demoParams = {
+        businessName: bName?.value || 'AstraAds Studio',
+        products: prod?.value || 'Autonomous AI Ad & Video Content Production Engine',
+        targetAudience: aud?.value || 'Growth Marketers, DTC Brands & Marketing Agencies',
+        monthlyBudget: Number(budg?.value) || 50000,
+        primaryGoal: 'Lead Generation',
+        websiteUrl: url?.value || 'https://astraads.theastraai.com',
+        platforms: ['Google Search', 'Facebook / Instagram'],
+        leadQuestions: leadQuestionsConfig
+      };
+
+      lastSubmittedParams = demoParams;
+      await triggerCampaignGeneration(demoParams);
+    });
+  }
+
   // Manual banner upload event listeners
   socialImageBlock.addEventListener('click', () => {
     manualBannerInput.click();
