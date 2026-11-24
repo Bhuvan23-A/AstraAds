@@ -213,6 +213,81 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Interactive 9:16 Video Reel Simulator
+  const btnReelPlay = document.getElementById('btn-reel-play');
+  const reelTimecode = document.getElementById('reel-timecode');
+  const reelProgressFill = document.getElementById('reel-progress-fill');
+  const reelSoundwave = document.getElementById('reel-soundwave');
+  const reelBeats = document.querySelectorAll('.reel-beat-item');
+
+  let reelIsPlaying = false;
+  let reelCurrentSeconds = 0;
+  let reelPlaybackTimer = null;
+
+  function setReelActiveBeat(seconds) {
+    if (!reelBeats || reelBeats.length < 3) return;
+    reelBeats.forEach(b => b.classList.remove('playing'));
+    if (seconds < 3) {
+      reelBeats[0]?.classList.add('playing');
+    } else if (seconds < 18) {
+      reelBeats[1]?.classList.add('playing');
+    } else {
+      reelBeats[2]?.classList.add('playing');
+    }
+  }
+
+  function formatTimecode(sec) {
+    const s = Math.floor(sec);
+    const ss = s < 10 ? `0${s}` : `${s}`;
+    return `00:${ss} / 00:30`;
+  }
+
+  function stopReelPlayback() {
+    reelIsPlaying = false;
+    if (reelPlaybackTimer) {
+      clearInterval(reelPlaybackTimer);
+      reelPlaybackTimer = null;
+    }
+    if (btnReelPlay) {
+      btnReelPlay.innerHTML = '<i class="fa-solid fa-play" style="font-size: 0.8rem; margin-left: 2px;"></i>';
+    }
+    if (reelSoundwave) reelSoundwave.style.opacity = '0.4';
+    reelBeats.forEach(b => b.classList.remove('playing'));
+  }
+
+  function startReelPlayback() {
+    reelIsPlaying = true;
+    if (btnReelPlay) {
+      btnReelPlay.innerHTML = '<i class="fa-solid fa-pause" style="font-size: 0.8rem;"></i>';
+    }
+    if (reelSoundwave) reelSoundwave.style.opacity = '1';
+
+    reelPlaybackTimer = setInterval(() => {
+      reelCurrentSeconds += 0.5;
+      if (reelCurrentSeconds > 30) {
+        reelCurrentSeconds = 0;
+        stopReelPlayback();
+        if (reelTimecode) reelTimecode.textContent = '00:00 / 00:30';
+        if (reelProgressFill) reelProgressFill.style.width = '0%';
+        return;
+      }
+
+      if (reelTimecode) reelTimecode.textContent = formatTimecode(reelCurrentSeconds);
+      if (reelProgressFill) reelProgressFill.style.width = `${(reelCurrentSeconds / 30) * 100}%`;
+      setReelActiveBeat(reelCurrentSeconds);
+    }, 150); // Fluid fast-forward simulation: ~9 seconds real time for engaging 30s video preview
+  }
+
+  if (btnReelPlay) {
+    btnReelPlay.addEventListener('click', () => {
+      if (reelIsPlaying) {
+        stopReelPlayback();
+      } else {
+        startReelPlayback();
+      }
+    });
+  }
+
   const useLeadFormCheckbox = document.getElementById('useLeadForm');
   const leadFormInner = document.getElementById('lead-form-inner');
 
@@ -614,6 +689,44 @@ document.addEventListener('DOMContentLoaded', () => {
       dashboardContent.style.opacity = '0.6';
     }
 
+    // Activate Multi-Agent Orchestrator Modal
+    const orchestratorModal = document.getElementById('orchestrator-modal');
+    let currentAgentStep = 1;
+    let agentStepInterval = null;
+
+    if (orchestratorModal) {
+      orchestratorModal.classList.add('active');
+      for (let i = 1; i <= 7; i++) {
+        const step = document.getElementById(`step-agent-${i}`);
+        if (step) {
+          step.className = 'agent-step-item';
+          const icon = step.querySelector('.agent-step-icon');
+          if (icon) icon.innerHTML = i === 1 ? '<i class="fa-solid fa-spinner fa-spin" style="color: #06b6d4;"></i>' : '<i class="fa-regular fa-circle"></i>';
+        }
+      }
+      const firstStep = document.getElementById('step-agent-1');
+      if (firstStep) firstStep.classList.add('active');
+
+      agentStepInterval = setInterval(() => {
+        if (currentAgentStep < 7) {
+          const prev = document.getElementById(`step-agent-${currentAgentStep}`);
+          if (prev) {
+            prev.classList.remove('active');
+            prev.classList.add('done');
+            const icon = prev.querySelector('.agent-step-icon');
+            if (icon) icon.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #10b981;"></i>';
+          }
+          currentAgentStep++;
+          const next = document.getElementById(`step-agent-${currentAgentStep}`);
+          if (next) {
+            next.classList.add('active');
+            const icon = next.querySelector('.agent-step-icon');
+            if (icon) icon.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="color: #06b6d4;"></i>';
+          }
+        }
+      }, 350);
+    }
+
     try {
       const response = await fetch('/api/campaigns/generate', {
         method: 'POST',
@@ -631,6 +744,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const campaignData = await response.json();
       currentCampaignPayload = campaignData;
       
+      // Complete all 7 steps with green checkmarks
+      if (agentStepInterval) clearInterval(agentStepInterval);
+      for (let i = 1; i <= 7; i++) {
+        const step = document.getElementById(`step-agent-${i}`);
+        if (step) {
+          step.className = 'agent-step-item done';
+          const icon = step.querySelector('.agent-step-icon');
+          if (icon) icon.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #10b981;"></i>';
+        }
+      }
+
+      // Smooth delay to showcase consensus approval
+      await new Promise(r => setTimeout(r, 450));
+      if (orchestratorModal) orchestratorModal.classList.remove('active');
+
       renderCampaignToDashboard(campaignData, params.businessName);
 
       placeholderDiv.classList.add('hidden');
@@ -644,9 +772,13 @@ document.addEventListener('DOMContentLoaded', () => {
       regenerateBtn.style.opacity = '1';
 
     } catch (err) {
+      if (agentStepInterval) clearInterval(agentStepInterval);
+      if (orchestratorModal) orchestratorModal.classList.remove('active');
       console.error('Generation request failed:', err);
       alert(`Generation Failed: ${err.message}`);
     } finally {
+      if (agentStepInterval) clearInterval(agentStepInterval);
+      if (orchestratorModal) orchestratorModal.classList.remove('active');
       onboardingForm.classList.remove('loading');
       submitBtn.disabled = false;
     }
@@ -2442,7 +2574,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSyncBrandToStudio = document.getElementById('btn-sync-brand-to-studio');
 
   if (btnAutoLearnBrand) {
-    btnAutoLearnBrand.addEventListener('click', () => {
+    btnAutoLearnBrand.addEventListener('click', async () => {
       const urlInput = document.getElementById('brand-url-input');
       const url = urlInput ? urlInput.value.trim() : '';
       if (!url) {
@@ -2450,7 +2582,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
-      btnAutoLearnBrand.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Learning Brand...`;
       btnAutoLearnBrand.disabled = true;
 
       // Extract dynamic clean brand name from provided URL without any hardcoded fixed text
@@ -2463,32 +2594,40 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const formattedBrand = host ? host.charAt(0).toUpperCase() + host.slice(1) : 'Custom Brand';
 
-      setTimeout(() => {
-        btnAutoLearnBrand.innerHTML = `<i class="fa-solid fa-check"></i> Brand Verified`;
-        btnAutoLearnBrand.disabled = false;
+      // Progressive Radar Scan simulation
+      btnAutoLearnBrand.innerHTML = `<i class="fa-solid fa-radar fa-spin"></i> Ingesting Website DOM...`;
+      await new Promise(r => setTimeout(r, 300));
+      
+      btnAutoLearnBrand.innerHTML = `<i class="fa-solid fa-box-open fa-spin"></i> Extracting Product Catalog...`;
+      await new Promise(r => setTimeout(r, 350));
 
-        const nameInput = document.getElementById('brand-profile-name');
-        if (nameInput) nameInput.value = formattedBrand;
+      btnAutoLearnBrand.innerHTML = `<i class="fa-solid fa-brain fa-spin"></i> Analyzing Brand Voice & Guardrails...`;
+      await new Promise(r => setTimeout(r, 350));
 
-        const prodInput = document.getElementById('brand-profile-products');
-        if (prodInput && !prodInput.value) {
-          prodInput.value = `${formattedBrand} Core Offerings, Premium Products & Digital Services`;
-        }
+      btnAutoLearnBrand.innerHTML = `<i class="fa-solid fa-check"></i> Brand Verified`;
+      btnAutoLearnBrand.disabled = false;
 
-        const audienceInput = document.getElementById('brand-profile-audience');
-        if (audienceInput && !audienceInput.value) {
-          audienceInput.value = 'Target Inbound Customers, High-Intent Buyers & Market Decision Makers';
-        }
+      const nameInput = document.getElementById('brand-profile-name');
+      if (nameInput) nameInput.value = formattedBrand;
 
-        // Also update Discover Trends input with the detected brand
-        const discInput = document.getElementById('discover-industry-input');
-        if (discInput && !discInput.value) {
-          discInput.value = formattedBrand;
-          renderDynamicTrends(formattedBrand);
-        }
+      const prodInput = document.getElementById('brand-profile-products');
+      if (prodInput && !prodInput.value) {
+        prodInput.value = `${formattedBrand} Core Offerings, Premium Products & Digital Services`;
+      }
 
-        showLeadsToast('Brand Ingested', `Learned Brand DNA & offerings from ${url}`, 'success');
-      }, 700);
+      const audienceInput = document.getElementById('brand-profile-audience');
+      if (audienceInput && !audienceInput.value) {
+        audienceInput.value = 'Target Inbound Customers, High-Intent Buyers & Market Decision Makers';
+      }
+
+      // Also update Discover Trends input with the detected brand
+      const discInput = document.getElementById('discover-industry-input');
+      if (discInput && !discInput.value) {
+        discInput.value = formattedBrand;
+        renderDynamicTrends(formattedBrand);
+      }
+
+      showLeadsToast('Brand Ingested', `Learned Brand DNA & offerings from ${url}`, 'success');
     });
   }
 
@@ -2610,4 +2749,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setupTabNavigation();
   setupLeadsEventListeners();
+
+  // Mouse-following Spotlight Glow on Dashboard Cards
+  document.querySelectorAll('.panel, .trend-card, .metric-card, .spotlight-card').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      card.style.setProperty('--mouse-x', `${x}px`);
+      card.style.setProperty('--mouse-y', `${y}px`);
+    });
+  });
 });

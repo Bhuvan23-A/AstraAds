@@ -382,6 +382,28 @@
                         <span style="color: #94a3b8;"><i class="fa-solid fa-music"></i> AI Voiceover Sync</span>
                         <span style="color: #10b981; font-weight: 700;">Verified Ready</span>
                       </div>
+
+                      <!-- Interactive Video Simulator Player Bar -->
+                      <div class="reel-player-bar" style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                          <button type="button" id="btn-reel-play" style="background: linear-gradient(135deg, #06b6d4, #3b82f6); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 10px rgba(6, 182, 212, 0.4); transition: transform 0.2s ease;">
+                            <i class="fa-solid fa-play" style="font-size: 0.8rem; margin-left: 2px;"></i>
+                          </button>
+                          <div style="display: flex; align-items: center; gap: 8px;">
+                            <span id="reel-timecode" style="font-size: 0.78rem; font-family: monospace; color: #94a3b8;">00:00 / 00:30</span>
+                            <div class="soundwave-bars" id="reel-soundwave" style="display: inline-flex; align-items: center; gap: 3px; opacity: 0.4;">
+                              <div class="soundwave-bar"></div>
+                              <div class="soundwave-bar"></div>
+                              <div class="soundwave-bar"></div>
+                              <div class="soundwave-bar"></div>
+                              <div class="soundwave-bar"></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div style="width: 100%; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden; position: relative;">
+                          <div id="reel-progress-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, #06b6d4, #10b981); transition: width 0.1s linear;"></div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1254,6 +1276,57 @@
           <i class="fa-solid fa-circle-check oauth-success-icon"></i>
           <h4>Authorization Successful</h4>
           <p id="oauth-success-text">Ad account has been connected successfully.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Multi-Agent Orchestrator Modal -->
+  <div class="orchestrator-modal" id="orchestrator-modal">
+    <div class="orchestrator-card">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #06b6d4, #3b82f6); display: flex; align-items: center; justify-content: center; color: #020617; font-size: 1.1rem;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </div>
+          <div>
+            <div style="font-weight: 700; font-size: 1.05rem; color: #fff;">AstraAds Multi-Agent Engine</div>
+            <div style="font-size: 0.78rem; color: #94a3b8;">Council of 7 AI Specialists Active</div>
+          </div>
+        </div>
+        <span class="beacon-pulse" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #06b6d4; font-weight: 600;">
+          <span class="beacon-dot"></span> Live
+        </span>
+      </div>
+
+      <div id="orchestrator-agent-steps">
+        <div class="agent-step-item" id="step-agent-1">
+          <div class="agent-step-icon"><i class="fa-solid fa-spinner fa-spin"></i></div>
+          <div style="flex: 1;"><strong>1. Visionary:</strong> Ingesting business goals &amp; defining market angle...</div>
+        </div>
+        <div class="agent-step-item" id="step-agent-2">
+          <div class="agent-step-icon"><i class="fa-regular fa-circle"></i></div>
+          <div style="flex: 1;"><strong>2. Critic:</strong> Stress-testing angle for audience objections...</div>
+        </div>
+        <div class="agent-step-item" id="step-agent-3">
+          <div class="agent-step-icon"><i class="fa-regular fa-circle"></i></div>
+          <div style="flex: 1;"><strong>3. Audience Proxy:</strong> Aligning pain points &amp; hooks...</div>
+        </div>
+        <div class="agent-step-item" id="step-agent-4">
+          <div class="agent-step-icon"><i class="fa-regular fa-circle"></i></div>
+          <div style="flex: 1;"><strong>4. Brand Guardian:</strong> Validating brand tone &amp; compliance rules...</div>
+        </div>
+        <div class="agent-step-item" id="step-agent-5">
+          <div class="agent-step-icon"><i class="fa-regular fa-circle"></i></div>
+          <div style="flex: 1;"><strong>5. Creative Director:</strong> Generating Search Ads, Social Feeds &amp; Reels...</div>
+        </div>
+        <div class="agent-step-item" id="step-agent-6">
+          <div class="agent-step-icon"><i class="fa-regular fa-circle"></i></div>
+          <div style="flex: 1;"><strong>6. Data Analyst:</strong> Calculating keyword projections &amp; budget splits...</div>
+        </div>
+        <div class="agent-step-item" id="step-agent-7">
+          <div class="agent-step-icon"><i class="fa-regular fa-circle"></i></div>
+          <div style="flex: 1;"><strong>7. Decision Maker:</strong> Compiling final campaign consensus...</div>
         </div>
       </div>
     </div>
