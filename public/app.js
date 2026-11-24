@@ -2789,6 +2789,129 @@ document.addEventListener('DOMContentLoaded', () => {
   setupTabNavigation();
   setupLeadsEventListeners();
 
+  // ==========================================
+  // Usability & Accessibility Enhancements
+  // ==========================================
+
+  // 1. Guided Workflow Stepper Navigation
+  const workflowSteppers = document.querySelectorAll('.workflow-stepper-item');
+  workflowSteppers.forEach(item => {
+    item.addEventListener('click', () => {
+      const targetTab = item.getAttribute('data-target-tab');
+      const tabBtn = document.querySelector(`.nav-tab[data-tab="${targetTab}"]`);
+      if (tabBtn) tabBtn.click();
+    });
+  });
+
+  // Sync active state on workflow stepper when nav-tab changes
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const currentTab = tab.getAttribute('data-tab');
+      workflowSteppers.forEach(st => {
+        if (st.getAttribute('data-target-tab') === currentTab) {
+          st.classList.add('active');
+        } else {
+          st.classList.remove('active');
+        }
+      });
+    });
+  });
+
+  // 2. Quick Preset Templates Bar in Content Studio
+  document.querySelectorAll('.btn-preset-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const preset = pill.getAttribute('data-preset');
+      const bName = document.getElementById('businessName');
+      const prod = document.getElementById('products');
+      const aud = document.getElementById('targetAudience');
+      const budg = document.getElementById('monthlyBudget');
+      const url = document.getElementById('websiteUrl');
+
+      if (preset === 'saas') {
+        if (bName) bName.value = 'OmniFlow AI';
+        if (prod) prod.value = 'Enterprise AI Workflow Automation, Real-Time Data Ingestion & API Pipelines';
+        if (aud) aud.value = 'CTOs, VP of Engineering, Operations Leaders & Technical Founders';
+        if (budg) budg.value = '60000';
+        if (url) url.value = 'https://omniflow.ai';
+        showLeadsToast('Template Loaded', 'Applied SaaS / Cloud parameters', 'info');
+      } else if (preset === 'ecommerce') {
+        if (bName) bName.value = 'Lumina Living';
+        if (prod) prod.value = 'Sustainable Minimalist Home Decor, Organic Cotton Bedding & Handcrafted Ceramics';
+        if (aud) aud.value = 'Modern Homeowners, Interior Design Enthusiasts, Eco-Conscious Shoppers';
+        if (budg) budg.value = '45000';
+        if (url) url.value = 'https://luminaliving.com';
+        showLeadsToast('Template Loaded', 'Applied DTC E-Commerce parameters', 'info');
+      } else if (preset === 'realestate') {
+        if (bName) bName.value = 'Astra Luxury Residences';
+        if (prod) prod.value = 'Ultra-Luxury Waterfront Villas, Penthouses & Exclusive Golf Course Estates';
+        if (aud) aud.value = 'High-Net-Worth Individuals, Global Property Investors & Family Offices';
+        if (budg) budg.value = '120000';
+        if (url) url.value = 'https://astraluxury.com';
+        showLeadsToast('Template Loaded', 'Applied Real Estate & Luxury parameters', 'info');
+      } else if (preset === 'clear') {
+        if (bName) bName.value = '';
+        if (prod) prod.value = '';
+        if (aud) aud.value = '';
+        if (budg) budg.value = '';
+        if (url) url.value = '';
+        showLeadsToast('Cleared', 'Form parameters reset', 'info');
+      }
+    });
+  });
+
+  // 3. Sample Domain Chips in Brand Profile
+  document.querySelectorAll('.sample-domain-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const domain = chip.getAttribute('data-domain');
+      const brandUrlInput = document.getElementById('brand-url-input');
+      if (brandUrlInput) {
+        brandUrlInput.value = domain;
+      }
+      if (btnAutoLearnBrand) {
+        btnAutoLearnBrand.click();
+      }
+    });
+  });
+
+  // 4. Sample Industry Chips in Discover Trends
+  document.querySelectorAll('.sample-industry-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const industry = chip.getAttribute('data-industry');
+      const discInput = document.getElementById('discover-industry-input');
+      if (discInput) {
+        discInput.value = industry;
+      }
+      if (btnDiscoverTrends) {
+        btnDiscoverTrends.click();
+      }
+    });
+  });
+
+  // 5. Help & Quick Guide Modal
+  const btnOpenHelpModal = document.getElementById('btn-open-help-modal');
+  const btnCloseHelpModal = document.getElementById('btn-close-help-modal');
+  const helpModal = document.getElementById('help-modal');
+
+  if (btnOpenHelpModal && helpModal) {
+    btnOpenHelpModal.addEventListener('click', () => {
+      helpModal.classList.remove('hidden');
+    });
+  }
+
+  if (btnCloseHelpModal && helpModal) {
+    btnCloseHelpModal.addEventListener('click', () => {
+      helpModal.classList.add('hidden');
+    });
+  }
+
+  if (helpModal) {
+    helpModal.addEventListener('click', (e) => {
+      if (e.target === helpModal) {
+        helpModal.classList.add('hidden');
+      }
+    });
+  }
+
   // Mouse-following Spotlight Glow on Dashboard Cards
   document.querySelectorAll('.panel, .trend-card, .metric-card, .spotlight-card').forEach(card => {
     card.addEventListener('mousemove', (e) => {

@@ -47,11 +47,52 @@
         <button class="nav-tab hidden" id="admin-nav-users" data-tab="user-management">
           <i class="fa-solid fa-building-user"></i> Agency Hub
         </button>
+        <button type="button" id="btn-open-help-modal" class="btn-help" style="background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.35); color: #06b6d4; padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; cursor: pointer; border-radius: 6px; font-weight: 600; font-family: inherit; transition: all 0.2s ease;">
+          <i class="fa-solid fa-circle-question"></i> Help &amp; Guide
+        </button>
         <button type="button" id="btn-logout" style="background: transparent; border: 1px solid #f87171; color: #f87171; padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; cursor: pointer; border-radius: 6px; font-weight: 500; font-family: inherit; transition: all 0.2s ease;">
           <i class="fa-solid fa-right-from-bracket"></i> Logout
         </button>
       </nav>
     </header>
+
+    <!-- Guided Workflow Stepper Bar -->
+    <div class="guided-workflow-bar" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 10px 18px; margin: 12px 24px 0; flex-wrap: wrap;">
+      <div class="workflow-stepper-item" data-target-tab="brand-brain" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: all 0.2s ease;">
+        <span style="width: 24px; height: 24px; border-radius: 50%; background: rgba(6, 182, 212, 0.2); color: #06b6d4; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(6, 182, 212, 0.4);">1</span>
+        <div>
+          <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Brand Profile</div>
+          <div style="font-size: 0.72rem; color: #94a3b8;">Learn voice &amp; facts</div>
+        </div>
+      </div>
+      <i class="fa-solid fa-arrow-right" style="color: #475569; font-size: 0.75rem;"></i>
+
+      <div class="workflow-stepper-item" data-target-tab="discover-trends" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: all 0.2s ease;">
+        <span style="width: 24px; height: 24px; border-radius: 50%; background: rgba(59, 130, 246, 0.2); color: #3b82f6; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(59, 130, 246, 0.4);">2</span>
+        <div>
+          <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Discover &amp; Trends</div>
+          <div style="font-size: 0.72rem; color: #94a3b8;">High-intent angles</div>
+        </div>
+      </div>
+      <i class="fa-solid fa-arrow-right" style="color: #475569; font-size: 0.75rem;"></i>
+
+      <div class="workflow-stepper-item active" data-target-tab="campaign-builder" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: all 0.2s ease;">
+        <span style="width: 24px; height: 24px; border-radius: 50%; background: #06b6d4; color: #020617; font-size: 0.75rem; font-weight: 800; display: flex; align-items: center; justify-content: center;">3</span>
+        <div>
+          <div style="font-size: 0.82rem; font-weight: 700; color: #06b6d4;">Content Studio</div>
+          <div style="font-size: 0.72rem; color: #cbd5e1;">Search, Social &amp; 9:16 Video</div>
+        </div>
+      </div>
+      <i class="fa-solid fa-arrow-right" style="color: #475569; font-size: 0.75rem;"></i>
+
+      <div class="workflow-stepper-item" data-target-tab="leads-manager" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: all 0.2s ease;">
+        <span style="width: 24px; height: 24px; border-radius: 50%; background: rgba(16, 185, 129, 0.2); color: #10b981; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(16, 185, 129, 0.4);">4</span>
+        <div>
+          <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Leads &amp; Telemetry</div>
+          <div style="font-size: 0.72rem; color: #94a3b8;">Real-time results</div>
+        </div>
+      </div>
+    </div>
 
     <!-- Main Workspace -->
     <main class="app-workspace">
@@ -62,6 +103,25 @@
         <div class="panel-header">
           <h2><i class="fa-solid fa-sliders header-icon"></i> Campaign Parameters</h2>
           <p class="panel-subtitle">Define your business profile and objectives to build a tailor-made ad campaign.</p>
+        </div>
+
+        <!-- Quick Preset Templates Bar -->
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; padding: 10px; background: rgba(2, 6, 23, 0.5); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+          <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 5px;">
+            <i class="fa-solid fa-bolt" style="color: #06b6d4;"></i> Quick Templates:
+          </span>
+          <button type="button" class="btn-preset-pill" data-preset="saas" style="font-size: 0.75rem; padding: 4px 10px; border-radius: 5px; background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.3); color: #22d3ee; cursor: pointer; transition: all 0.2s ease;">
+            SaaS / Cloud
+          </button>
+          <button type="button" class="btn-preset-pill" data-preset="ecommerce" style="font-size: 0.75rem; padding: 4px 10px; border-radius: 5px; background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; cursor: pointer; transition: all 0.2s ease;">
+            DTC E-Commerce
+          </button>
+          <button type="button" class="btn-preset-pill" data-preset="realestate" style="font-size: 0.75rem; padding: 4px 10px; border-radius: 5px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; cursor: pointer; transition: all 0.2s ease;">
+            Real Estate &amp; Luxury
+          </button>
+          <button type="button" class="btn-preset-pill" data-preset="clear" style="font-size: 0.72rem; padding: 4px 8px; border-radius: 5px; background: transparent; border: 1px solid #475569; color: #94a3b8; cursor: pointer;">
+            Clear
+          </button>
         </div>
 
         <form id="onboarding-form" class="onboarding-form">
@@ -292,12 +352,15 @@
                   <div class="mockup-header-tabs">
                     <button type="button" class="mockup-tab-btn active" id="tab-btn-search">
                       <i class="fa-brands fa-google"></i> Google Search
+                      <span style="font-size: 0.68rem; background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; color: #94a3b8; font-weight: 500;">Text &bull; 30/90c</span>
                     </button>
                     <button type="button" class="mockup-tab-btn" id="tab-btn-social">
                       <i class="fa-brands fa-facebook"></i> Social Media Feed
+                      <span style="font-size: 0.68rem; background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; color: #94a3b8; font-weight: 500;">Feed &bull; 1:1/16:9</span>
                     </button>
                     <button type="button" class="mockup-tab-btn" id="tab-btn-video">
                       <i class="fa-solid fa-film"></i> 9:16 Video Reel
+                      <span style="font-size: 0.68rem; background: rgba(6,182,212,0.2); padding: 2px 6px; border-radius: 4px; color: #22d3ee; font-weight: 700;">30s &bull; Vertical</span>
                     </button>
                   </div>
                   
@@ -570,6 +633,12 @@
               </button>
             </div>
             <p style="font-size: 0.78rem; color: #94a3b8; margin-top: 6px;">Reads your website pages, extracts core offerings, target audience, and brand tone rules in seconds.</p>
+            <div style="display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap;">
+              <span style="font-size: 0.75rem; color: #64748b;">Try Sample Domain:</span>
+              <button type="button" class="sample-domain-chip" data-domain="https://stripe.com" style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: #cbd5e1; cursor: pointer;">stripe.com</button>
+              <button type="button" class="sample-domain-chip" data-domain="https://shopify.com" style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: #cbd5e1; cursor: pointer;">shopify.com</button>
+              <button type="button" class="sample-domain-chip" data-domain="https://airbnb.com" style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: #cbd5e1; cursor: pointer;">airbnb.com</button>
+            </div>
           </div>
 
           <div class="bos-grid-2">
@@ -642,6 +711,13 @@
               </button>
             </div>
             <p style="font-size: 0.78rem; color: #94a3b8; margin-top: 6px;">Scans current search surges and audience interest spikes to generate campaign briefs with AI scorecards.</p>
+            <div style="display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap;">
+              <span style="font-size: 0.75rem; color: #64748b;">Quick Topics:</span>
+              <button type="button" class="sample-industry-chip" data-industry="AI Automation" style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: #cbd5e1; cursor: pointer;">AI Automation</button>
+              <button type="button" class="sample-industry-chip" data-industry="Fintech SaaS" style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: #cbd5e1; cursor: pointer;">Fintech SaaS</button>
+              <button type="button" class="sample-industry-chip" data-industry="Hospitality & Resorts" style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: #cbd5e1; cursor: pointer;">Hospitality &amp; Resorts</button>
+              <button type="button" class="sample-industry-chip" data-industry="DTC Fashion" style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: #cbd5e1; cursor: pointer;">DTC Fashion</button>
+            </div>
           </div>
 
           <div id="discover-trends-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 10px;">
@@ -1330,6 +1406,71 @@
         <div class="agent-step-item" id="step-agent-7">
           <div class="agent-step-icon"><i class="fa-regular fa-circle"></i></div>
           <div style="flex: 1;"><strong>7. Decision Maker:</strong> Compiling final campaign consensus...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help & Quick Guide Modal -->
+  <div class="modal-overlay hidden" id="help-modal" style="z-index: 10000;">
+    <div class="modal-card" style="max-width: 680px; width: 92%; text-align: left; background: #0f172a; border: 1px solid #334155; border-radius: 16px; padding: 28px;">
+      <div class="modal-header" style="flex-direction: row; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(6, 182, 212, 0.15); display: flex; align-items: center; justify-content: center; color: #06b6d4; font-size: 1.1rem;">
+            <i class="fa-solid fa-circle-question"></i>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem; color: #fff;">Marketing BOS Quick Start Guide</h3>
+            <p style="margin: 0; font-size: 0.8rem; color: #94a3b8;">Everything you need to know in under 60 seconds.</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" id="btn-close-help-modal" style="background: transparent; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 14px; max-height: 480px; overflow-y: auto; padding-right: 6px;">
+        <div style="background: rgba(2, 6, 23, 0.6); padding: 14px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+          <div style="font-weight: 700; color: #06b6d4; font-size: 0.92rem; margin-bottom: 4px;">
+            <i class="fa-solid fa-brain"></i> Step 1: Brand Profile
+          </div>
+          <p style="font-size: 0.84rem; color: #cbd5e1; line-height: 1.5; margin: 0;">
+            Enter your website URL and click <em>"Auto-Learn Brand"</em>. The AI memorizes your products, audience, and guardrails once. Every ad format generated thereafter strictly aligns with your real business facts.
+          </p>
+        </div>
+
+        <div style="background: rgba(2, 6, 23, 0.6); padding: 14px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+          <div style="font-weight: 700; color: #3b82f6; font-size: 0.92rem; margin-bottom: 4px;">
+            <i class="fa-solid fa-compass"></i> Step 2: Discover &amp; Trends
+          </div>
+          <p style="font-size: 0.84rem; color: #cbd5e1; line-height: 1.5; margin: 0;">
+            Search any industry to see live market spikes scored for engagement and buyer intent. Click <em>"Draft Campaign in Studio"</em> to pre-fill your creative inputs in one click.
+          </p>
+        </div>
+
+        <div style="background: rgba(2, 6, 23, 0.6); padding: 14px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+          <div style="font-weight: 700; color: #22d3ee; font-size: 0.92rem; margin-bottom: 4px;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Step 3: Content Studio
+          </div>
+          <p style="font-size: 0.84rem; color: #cbd5e1; line-height: 1.5; margin: 0;">
+            Click <em>"Generate Campaign"</em> (or <em>"Launch Interactive Demo Campaign"</em>). The 7-specialist AI council compiles character-perfect Google Search Ads (30/90 chars), Meta Social cards with built-in Cropper.js image engine, and an interactive 30s 9:16 Video Reel storyboard.
+          </p>
+        </div>
+
+        <div style="background: rgba(2, 6, 23, 0.6); padding: 14px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+          <div style="font-weight: 700; color: #10b981; font-size: 0.92rem; margin-bottom: 4px;">
+            <i class="fa-solid fa-users"></i> Step 4: Leads &amp; Telemetry
+          </div>
+          <p style="font-size: 0.84rem; color: #cbd5e1; line-height: 1.5; margin: 0;">
+            Manage and qualify captured customer leads in real time. Use the Webhook Bridge to stream instant submissions from Meta Lead Forms, and track conversion analytics directly from the pipeline.
+          </p>
+        </div>
+
+        <div style="background: rgba(16, 185, 129, 0.08); padding: 14px; border-radius: 8px; border: 1px dashed rgba(16, 185, 129, 0.3);">
+          <div style="font-weight: 700; color: #10b981; font-size: 0.9rem; margin-bottom: 4px;">
+            <i class="fa-solid fa-shield-halved"></i> 100% Human Approval Guarantee
+          </div>
+          <p style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5; margin: 0;">
+            Nothing ever goes live or spends money without your explicit nod. Campaigns launch in safety Paused mode, and you retain complete editorial control over all headlines, descriptions, budgets, and visual assets.
+          </p>
         </div>
       </div>
     </div>
