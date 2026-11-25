@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- FontAwesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="style.css?v=20261124_02">
+  <link rel="stylesheet" href="style.css?v=20261125_01">
   <!-- Chart.js for leads analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Cropper.js for image resizing and cropping -->
@@ -29,14 +29,14 @@
       <div class="header-tagline">Marketing BOS &bull; Autonomous Ad &amp; Content Operating System</div>
       <!-- Tab Navigation Switcher -->
       <nav class="tab-navigation" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-        <button class="nav-tab active" data-tab="campaign-builder">
-          <i class="fa-solid fa-wand-magic-sparkles"></i> Content Studio
-        </button>
-        <button class="nav-tab" data-tab="brand-brain">
+        <button class="nav-tab active" data-tab="brand-brain">
           <i class="fa-solid fa-brain"></i> Brand Profile
         </button>
         <button class="nav-tab" data-tab="discover-trends">
           <i class="fa-solid fa-compass"></i> Discover &amp; Trends
+        </button>
+        <button class="nav-tab" data-tab="campaign-builder">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Content Studio
         </button>
         <button class="nav-tab" data-tab="leads-manager">
           <i class="fa-solid fa-users"></i> Leads &amp; Telemetry
@@ -58,38 +58,38 @@
 
     <!-- Guided Workflow Stepper Bar -->
     <div class="guided-workflow-bar" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 10px 18px; margin: 12px 24px 0; flex-wrap: wrap;">
-      <div class="workflow-stepper-item" data-target-tab="brand-brain" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: all 0.2s ease;">
-        <span style="width: 24px; height: 24px; border-radius: 50%; background: rgba(6, 182, 212, 0.2); color: #06b6d4; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(6, 182, 212, 0.4);">1</span>
+      <div class="workflow-stepper-item active" data-target-tab="brand-brain">
+        <span class="step-num">1</span>
         <div>
-          <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Brand Profile</div>
-          <div style="font-size: 0.72rem; color: #94a3b8;">Learn voice &amp; facts</div>
+          <div class="step-title">Brand Profile</div>
+          <div class="step-sub">Learn voice &amp; facts</div>
         </div>
       </div>
       <i class="fa-solid fa-arrow-right" style="color: #475569; font-size: 0.75rem;"></i>
 
-      <div class="workflow-stepper-item" data-target-tab="discover-trends" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: all 0.2s ease;">
-        <span style="width: 24px; height: 24px; border-radius: 50%; background: rgba(59, 130, 246, 0.2); color: #3b82f6; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(59, 130, 246, 0.4);">2</span>
+      <div class="workflow-stepper-item" data-target-tab="discover-trends">
+        <span class="step-num">2</span>
         <div>
-          <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Discover &amp; Trends</div>
-          <div style="font-size: 0.72rem; color: #94a3b8;">High-intent angles</div>
+          <div class="step-title">Discover &amp; Trends</div>
+          <div class="step-sub">High-intent angles</div>
         </div>
       </div>
       <i class="fa-solid fa-arrow-right" style="color: #475569; font-size: 0.75rem;"></i>
 
-      <div class="workflow-stepper-item active" data-target-tab="campaign-builder" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: all 0.2s ease;">
-        <span style="width: 24px; height: 24px; border-radius: 50%; background: #06b6d4; color: #020617; font-size: 0.75rem; font-weight: 800; display: flex; align-items: center; justify-content: center;">3</span>
+      <div class="workflow-stepper-item" data-target-tab="campaign-builder">
+        <span class="step-num">3</span>
         <div>
-          <div style="font-size: 0.82rem; font-weight: 700; color: #06b6d4;">Content Studio</div>
-          <div style="font-size: 0.72rem; color: #cbd5e1;">Search, Social &amp; 9:16 Video</div>
+          <div class="step-title">Content Studio</div>
+          <div class="step-sub">Search, Social &amp; 9:16 Video</div>
         </div>
       </div>
       <i class="fa-solid fa-arrow-right" style="color: #475569; font-size: 0.75rem;"></i>
 
-      <div class="workflow-stepper-item" data-target-tab="leads-manager" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: all 0.2s ease;">
-        <span style="width: 24px; height: 24px; border-radius: 50%; background: rgba(16, 185, 129, 0.2); color: #10b981; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(16, 185, 129, 0.4);">4</span>
+      <div class="workflow-stepper-item" data-target-tab="leads-manager">
+        <span class="step-num">4</span>
         <div>
-          <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Leads &amp; Telemetry</div>
-          <div style="font-size: 0.72rem; color: #94a3b8;">Real-time results</div>
+          <div class="step-title">Leads &amp; Telemetry</div>
+          <div class="step-sub">Real-time results</div>
         </div>
       </div>
     </div>
@@ -97,7 +97,7 @@
     <!-- Main Workspace -->
     <main class="app-workspace">
       <!-- 1. CAMPAIGN BUILDER TAB -->
-      <div id="tab-campaign-builder" class="tab-panel active">
+      <div id="tab-campaign-builder" class="tab-panel hidden">
         <!-- Left Panel: Onboarding Form -->
         <section class="panel onboarding-panel" id="onboarding-section">
         <div class="panel-header">
@@ -609,7 +609,7 @@
       </div>
 
       <!-- BRAND PROFILE TAB -->
-      <div id="tab-brand-brain" class="tab-panel hidden">
+      <div id="tab-brand-brain" class="tab-panel active">
         <div class="bos-workspace-wrap">
           <div class="bos-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 18px;">
             <div>
@@ -1476,6 +1476,6 @@
     </div>
   </div>
 
-  <script type="module" src="app.js?v=20261124_02"></script>
+  <script type="module" src="app.js?v=20261125_01"></script>
 </body>
 </html>

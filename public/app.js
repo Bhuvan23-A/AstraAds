@@ -2817,6 +2817,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Initial sync on page load
+  const initialActiveNavTab = document.querySelector('.nav-tab.active');
+  if (initialActiveNavTab) {
+    const initialTab = initialActiveNavTab.getAttribute('data-tab');
+    workflowSteppers.forEach(st => {
+      if (st.getAttribute('data-target-tab') === initialTab) {
+        st.classList.add('active');
+      } else {
+        st.classList.remove('active');
+      }
+    });
+  }
+
   // 2. Quick Preset Templates Bar in Content Studio
   document.querySelectorAll('.btn-preset-pill').forEach(pill => {
     pill.addEventListener('click', () => {
