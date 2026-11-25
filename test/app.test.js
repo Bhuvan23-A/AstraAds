@@ -316,6 +316,46 @@ describe('AstraAds Integration & Completeness Test Suite', () => {
     });
   });
 
+  // 4b. Discover & Live Market Intelligence
+  describe('Discover & Market Trends Intelligence', () => {
+    test('rejects trend discovery with empty query', async () => {
+      const res = await request('POST', '/api/discover-trends', {
+        query: ''
+      });
+      assert.strictEqual(res.status, 400);
+      assert.ok(res.body.error.includes('required'));
+    });
+
+    test('generates genuine, industry-grounded trends for Dental Practice', async () => {
+      const res = await request('POST', '/api/discover-trends', {
+        query: 'Dental Clinic'
+      });
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.body.success, true);
+      assert.ok(res.body.industry_analyzed);
+      assert.ok(Array.isArray(res.body.trends));
+      assert.ok(res.body.trends.length >= 3);
+
+      const firstTrend = res.body.trends[0];
+      assert.ok(firstTrend.title, 'Trend should have a title');
+      assert.ok(firstTrend.real_insight, 'Trend should have a real insight');
+      assert.ok(firstTrend.search_metric, 'Trend should have a search metric');
+      assert.ok(firstTrend.pain_point, 'Trend should identify a customer pain point');
+      assert.ok(firstTrend.recommended_channels, 'Trend should recommend ad channels');
+      assert.ok(firstTrend.creative_hook, 'Trend should provide a creative hook');
+      assert.ok(firstTrend.studio_prefill?.name, 'Trend should provide studio prefill');
+      assert.ok(firstTrend.score >= 90, 'Trend should have realistic score >= 90');
+    });
+
+    test('generates distinct trends via GET /api/discover-trends', async () => {
+      const res = await request('GET', '/api/discover-trends?query=Solar+Panels');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.body.success, true);
+      assert.ok(res.body.trends.length >= 3);
+      assert.ok(res.body.trends.some(t => t.title.toLowerCase().includes('solar') || t.title.toLowerCase().includes('battery') || t.title.toLowerCase().includes('energy')));
+    });
+  });
+
   // 5. Campaign Launch Pipeline & History
   describe('Campaign Launch Pipeline & Audit History', () => {
     let adminCookie = '';

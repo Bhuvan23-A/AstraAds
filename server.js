@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import session from 'express-session';
-import { generateAdCampaign } from './aiService.js';
+import { generateAdCampaign, discoverIndustryTrends } from './aiService.js';
 import { getDatabase, initializeDatabase } from './database.js';
 import bcrypt from 'bcryptjs';
 
@@ -250,6 +250,50 @@ app.post('/api/campaigns/generate', rateLimiter({ windowMs: 60 * 1000, max: 5, m
       error: 'Failed to generate ad campaign. Please verify your API key and try again.',
       details: error.message 
     });
+  }
+});
+
+/**
+ * Route: POST /api/discover-trends
+ * Discovers genuine, fact-based industry trends, search spikes, and campaign angles.
+ */
+app.post('/api/discover-trends', rateLimiter({ windowMs: 60 * 1000, max: 20, message: 'Too many trend discovery requests. Please wait a moment.' }), async (req, res) => {
+  try {
+    const { query, industry, product } = req.body || {};
+    const searchQuery = (query || industry || product || req.query.query || '').trim();
+
+    if (!searchQuery) {
+      return res.status(400).json({ 
+        error: 'Search query or industry keyword is required.' 
+      });
+    }
+
+    const trendsReport = await discoverIndustryTrends(searchQuery);
+    res.json({ success: true, ...trendsReport });
+  } catch (error) {
+    console.error('Error discovering industry trends:', error.message);
+    res.status(500).json({ 
+      error: 'Failed to discover live industry trends. Please try again.',
+      details: error.message 
+    });
+  }
+});
+
+/**
+ * Route: GET /api/discover-trends
+ * Query parameter support for trend discovery
+ */
+app.get('/api/discover-trends', rateLimiter({ windowMs: 60 * 1000, max: 20, message: 'Too many trend discovery requests. Please wait a moment.' }), async (req, res) => {
+  try {
+    const searchQuery = (req.query.query || req.query.industry || req.query.q || '').trim();
+    if (!searchQuery) {
+      return res.status(400).json({ error: 'Query parameter "query" or "q" is required.' });
+    }
+    const trendsReport = await discoverIndustryTrends(searchQuery);
+    res.json({ success: true, ...trendsReport });
+  } catch (error) {
+    console.error('Error discovering industry trends (GET):', error.message);
+    res.status(500).json({ error: 'Failed to discover trends.', details: error.message });
   }
 });
 

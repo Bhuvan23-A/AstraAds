@@ -2693,96 +2693,207 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnDiscoverTrends = document.getElementById('btn-discover-trends');
   const discoverIndustryInput = document.getElementById('discover-industry-input');
   const discoverTrendsContainer = document.getElementById('discover-trends-container');
+  const discoverMarketSummarySlot = document.getElementById('discover-market-summary-slot');
 
-  function renderDynamicTrends(keyword) {
+  async function fetchAndRenderLiveTrends(keyword) {
     if (!discoverTrendsContainer) return;
-    const cleanKw = keyword ? keyword.trim() : 'Digital Innovation';
-    const displayKw = cleanKw.charAt(0).toUpperCase() + cleanKw.slice(1);
+    const cleanKw = keyword ? keyword.trim() : 'Digital Innovation & Growth';
 
+    // Show dynamic scanning radar state
     discoverTrendsContainer.innerHTML = `
-      <div class="trend-card" style="border-top: 3px solid #06b6d4;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <span style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; background: rgba(6, 182, 212, 0.15); color: #06b6d4; font-weight: 700; text-transform: uppercase;">Surge Inbound Demand</span>
-          <span style="font-size: 0.85rem; font-weight: 800; color: #10b981;">Score: 96/100</span>
-        </div>
-        <h3 style="font-size: 1.15rem; color: #fff; margin-bottom: 8px;">High-Intent ${displayKw} Automation</h3>
-        <p style="font-size: 0.86rem; color: #94a3b8; line-height: 1.5; margin-bottom: 16px;">
-          Rising search volume for ${displayKw} solutions seeking immediate ROI and qualified leads. High conversion on interactive live walkthrough offers.
-        </p>
-        <div style="font-size: 0.78rem; color: #cbd5e1; margin-bottom: 16px;">
-          <i class="fa-solid fa-bullseye" style="color: #06b6d4;"></i> <strong>Recommended Channels:</strong> Google Search + Meta Feed
-        </div>
-        <button type="button" class="btn btn-primary btn-sm btn-draft-trend" data-name="${displayKw} Inbound" data-product="${displayKw} Solutions" data-audience="High-Intent Inbound Buyers" data-goal="Generate Leads" style="width: 100%; justify-content: center;">
-          <i class="fa-solid fa-wand-magic-sparkles"></i> Draft Campaign in Studio
-        </button>
-      </div>
-
-      <div class="trend-card" style="border-top: 3px solid #3b82f6;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <span style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; font-weight: 700; text-transform: uppercase;">Cost-Per-Lead Surge</span>
-          <span style="font-size: 0.85rem; font-weight: 800; color: #10b981;">Score: 93/100</span>
-        </div>
-        <h3 style="font-size: 1.15rem; color: #fff; margin-bottom: 8px;">${displayKw} Budget Optimization</h3>
-        <p style="font-size: 0.86rem; color: #94a3b8; line-height: 1.5; margin-bottom: 16px;">
-          Marketing directors and buyers in ${displayKw} are seeking lower acquisition costs and faster turnaround.
-        </p>
-        <div style="font-size: 0.78rem; color: #cbd5e1; margin-bottom: 16px;">
-          <i class="fa-solid fa-bullseye" style="color: #3b82f6;"></i> <strong>Recommended Channels:</strong> Google Search + LinkedIn
-        </div>
-        <button type="button" class="btn btn-primary btn-sm btn-draft-trend" data-name="${displayKw} CPL Boost" data-product="${displayKw} Optimization" data-audience="Decision Makers &amp; Growth Leads" data-goal="Generate Leads" style="width: 100%; justify-content: center;">
-          <i class="fa-solid fa-wand-magic-sparkles"></i> Draft Campaign in Studio
-        </button>
-      </div>
-
-      <div class="trend-card" style="border-top: 3px solid #10b981;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <span style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; text-transform: uppercase;">Viral 9:16 Format</span>
-          <span style="font-size: 0.85rem; font-weight: 800; color: #10b981;">Score: 95/100</span>
-        </div>
-        <h3 style="font-size: 1.15rem; color: #fff; margin-bottom: 8px;">30s Short-Form ${displayKw} Reel</h3>
-        <p style="font-size: 0.86rem; color: #94a3b8; line-height: 1.5; margin-bottom: 16px;">
-          Visual short-form video comparing traditional manual ${displayKw} ops vs automated systems drives 3x higher retention on Instagram &amp; Facebook.
-        </p>
-        <div style="font-size: 0.78rem; color: #cbd5e1; margin-bottom: 16px;">
-          <i class="fa-solid fa-bullseye" style="color: #10b981;"></i> <strong>Recommended Channels:</strong> 9:16 Video Reel + Meta Feed
-        </div>
-        <button type="button" class="btn btn-primary btn-sm btn-draft-trend" data-name="${displayKw} Video Reel" data-product="${displayKw} Video Storyboard" data-audience="Social Media Buyers &amp; Consumers" data-goal="Generate Leads" style="width: 100%; justify-content: center;">
-          <i class="fa-solid fa-wand-magic-sparkles"></i> Draft Campaign in Studio
-        </button>
+      <div class="trend-loading-state" style="grid-column: 1 / -1; text-align: center; padding: 48px 24px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(6, 182, 212, 0.2); border-radius: 12px;">
+        <i class="fa-solid fa-radar fa-spin" style="font-size: 2.4rem; color: #06b6d4; margin-bottom: 16px; display: inline-block;"></i>
+        <h3 style="color: #fff; font-size: 1.15rem; margin-bottom: 8px;">Analyzing Real-World Market Signals for "${cleanKw}"...</h3>
+        <p style="color: #94a3b8; font-size: 0.88rem; max-width: 520px; margin: 0 auto;">Scanning search query clusters, buyer sentiment shifts, commercial intent volume, and high-converting creative angles...</p>
       </div>
     `;
 
-    // Attach click listeners to newly rendered trend buttons
-    discoverTrendsContainer.querySelectorAll('.btn-draft-trend').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const name = btn.getAttribute('data-name');
-        const product = btn.getAttribute('data-product');
-        const audience = btn.getAttribute('data-audience');
-        const goal = btn.getAttribute('data-goal');
+    if (btnDiscoverTrends) {
+      btnDiscoverTrends.disabled = true;
+      btnDiscoverTrends.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Discovering...`;
+    }
 
-        if (businessNameInput && name) businessNameInput.value = name;
-        const productsInput = document.getElementById('products');
-        if (productsInput && product) productsInput.value = product;
-        const audienceInput = document.getElementById('targetAudience');
-        if (audienceInput && audience) audienceInput.value = audience;
-        if (primaryGoalSelect && goal) primaryGoalSelect.value = goal;
-
-        const studioTab = document.querySelector('.nav-tab[data-tab="campaign-builder"]');
-        if (studioTab) studioTab.click();
-        showLeadsToast('Trend Loaded', `Pre-filled parameters for "${name}"`, 'success');
+    try {
+      const response = await fetch('/api/discover-trends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: cleanKw })
       });
-    });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success || !Array.isArray(data.trends) || data.trends.length === 0) {
+        throw new Error(data.error || 'Failed to retrieve live market trends');
+      }
+
+      // Render Market Summary Banner if available
+      if (discoverMarketSummarySlot) {
+        if (data.market_summary) {
+          discoverMarketSummarySlot.innerHTML = `
+            <div class="market-summary-banner" style="background: rgba(6, 182, 212, 0.08); border: 1px solid rgba(6, 182, 212, 0.25); border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 14px;">
+              <i class="fa-solid fa-lightbulb" style="color: #06b6d4; font-size: 1.3rem; margin-top: 2px;"></i>
+              <div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: #06b6d4; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">
+                  Market Sector Intelligence &bull; ${data.industry_analyzed || cleanKw}
+                </div>
+                <div style="font-size: 0.88rem; color: #cbd5e1; line-height: 1.5;">
+                  ${data.market_summary}
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          discoverMarketSummarySlot.innerHTML = '';
+        }
+      }
+
+      // Border accents for cards
+      const borderColors = ['#06b6d4', '#3b82f6', '#10b981', '#f59e0b'];
+
+      // Render the genuine, distinct trend cards
+      discoverTrendsContainer.innerHTML = data.trends.map((trend, idx) => {
+        const accent = borderColors[idx % borderColors.length];
+        const prefill = trend.studio_prefill || {
+          name: `${trend.title.split(' ')[0]} Campaign`,
+          product: trend.title,
+          audience: 'Target High-Intent Inbound Buyers',
+          goal: 'Generate Leads'
+        };
+
+        return `
+          <div class="trend-card" style="border-top: 3px solid ${accent}; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px;">
+                <span style="font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); color: ${accent}; font-weight: 700; text-transform: uppercase;">
+                  ${trend.trend_badge || 'Market Angle'}
+                </span>
+                <span style="font-size: 0.82rem; font-weight: 800; color: #10b981; display: inline-flex; align-items: center; gap: 4px;">
+                  <i class="fa-solid fa-chart-line" style="font-size: 0.75rem;"></i> Score: ${trend.score || 95}/100
+                </span>
+              </div>
+
+              <h3 style="font-size: 1.12rem; color: #fff; margin-bottom: 10px; font-weight: 700; line-height: 1.35;">
+                ${trend.title}
+              </h3>
+
+              <p style="font-size: 0.86rem; color: #94a3b8; line-height: 1.5; margin-bottom: 14px;">
+                ${trend.real_insight}
+              </p>
+
+              ${trend.search_metric ? `
+                <div class="trend-metric-pill" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.25); color: #10b981; font-size: 0.78rem; font-weight: 700; margin-bottom: 12px;">
+                  <i class="fa-solid fa-arrow-trend-up"></i> ${trend.search_metric}
+                </div>
+              ` : ''}
+
+              ${trend.pain_point ? `
+                <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 10px; line-height: 1.4; background: rgba(0, 0, 0, 0.2); padding: 8px 10px; border-radius: 6px; border-left: 2px solid ${accent};">
+                  <strong style="color: #e2e8f0;"><i class="fa-solid fa-shield-halved" style="color: ${accent}; margin-right: 4px;"></i> Solves Friction:</strong> ${trend.pain_point}
+                </div>
+              ` : ''}
+
+              <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 12px; line-height: 1.4;">
+                <strong style="color: #cbd5e1;"><i class="fa-solid fa-bullseye" style="color: ${accent};"></i> Channels:</strong> ${trend.recommended_channels}
+              </div>
+
+              ${trend.creative_hook ? `
+                <div style="font-size: 0.8rem; color: #f1f5f9; font-style: italic; background: rgba(15, 23, 42, 0.6); border: 1px dashed rgba(255, 255, 255, 0.12); padding: 8px 12px; border-radius: 6px; margin-bottom: 16px;">
+                  <i class="fa-solid fa-quote-left" style="color: #64748b; font-size: 0.7rem; margin-right: 4px;"></i>${trend.creative_hook}
+                </div>
+              ` : ''}
+            </div>
+
+            <button type="button" class="btn btn-primary btn-sm btn-draft-trend" 
+              data-name="${escapeHtml(prefill.name || trend.title)}" 
+              data-product="${escapeHtml(prefill.product || trend.title)}" 
+              data-audience="${escapeHtml(prefill.audience || 'Target Decision Makers')}" 
+              data-goal="${escapeHtml(prefill.goal || 'Generate Leads')}" 
+              style="width: 100%; justify-content: center; margin-top: 8px;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Draft Campaign in Studio
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      // Helper function to escape HTML inside data attributes
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+      }
+
+      // Attach click listeners to newly rendered trend buttons
+      discoverTrendsContainer.querySelectorAll('.btn-draft-trend').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const name = btn.getAttribute('data-name');
+          const product = btn.getAttribute('data-product');
+          const audience = btn.getAttribute('data-audience');
+          const goal = btn.getAttribute('data-goal');
+
+          if (businessNameInput && name) businessNameInput.value = name;
+          const productsInput = document.getElementById('products');
+          if (productsInput && product) productsInput.value = product;
+          const audienceInput = document.getElementById('targetAudience');
+          if (audienceInput && audience) audienceInput.value = audience;
+          if (primaryGoalSelect && goal) primaryGoalSelect.value = goal;
+
+          const studioTab = document.querySelector('.nav-tab[data-tab="campaign-builder"]');
+          if (studioTab) studioTab.click();
+          showLeadsToast('Trend Loaded', `Pre-filled parameters for "${name}"`, 'success');
+        });
+      });
+
+      showLeadsToast('Trends Discovered', `Generated genuine market signals for "${cleanKw}"`, 'success');
+    } catch (err) {
+      console.error('Discover Trends Error:', err);
+      discoverTrendsContainer.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 36px 20px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 12px; color: #fca5a5;">
+          <i class="fa-solid fa-triangle-exclamation" style="font-size: 2rem; margin-bottom: 12px; display: block; color: #ef4444;"></i>
+          <h3 style="color: #fff; font-size: 1.05rem; margin-bottom: 6px;">Unable to Retrieve Live Market Trends</h3>
+          <p style="font-size: 0.85rem; max-width: 460px; margin: 0 auto 14px;">${err.message || 'Error communicating with intelligence engine'}</p>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-retry-trends" style="display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-rotate-right"></i> Try Again
+          </button>
+        </div>
+      `;
+      const retryBtn = document.getElementById('btn-retry-trends');
+      if (retryBtn) {
+        retryBtn.addEventListener('click', () => fetchAndRenderLiveTrends(cleanKw));
+      }
+      showLeadsToast('Discovery Error', err.message || 'Failed to fetch live trends', 'error');
+    } finally {
+      if (btnDiscoverTrends) {
+        btnDiscoverTrends.disabled = false;
+        btnDiscoverTrends.innerHTML = `<i class="fa-solid fa-bolt"></i> Discover Live Trends`;
+      }
+    }
   }
+
+  // Alias for backward compatibility
+  const renderDynamicTrends = fetchAndRenderLiveTrends;
 
   if (btnDiscoverTrends) {
     btnDiscoverTrends.addEventListener('click', () => {
       const kw = discoverIndustryInput ? discoverIndustryInput.value.trim() : '';
       if (!kw) {
-        showLeadsToast('Input Required', 'Please enter an industry or product keyword', 'error');
+        showLeadsToast('Input Required', 'Please enter an industry, product, or target keyword', 'error');
         return;
       }
-      renderDynamicTrends(kw);
-      showLeadsToast('Trends Discovered', `Generated live scored angles for "${kw}"`, 'success');
+      fetchAndRenderLiveTrends(kw);
+    });
+  }
+
+  // Allow pressing Enter in discover-industry-input
+  if (discoverIndustryInput) {
+    discoverIndustryInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (btnDiscoverTrends) btnDiscoverTrends.click();
+      }
     });
   }
 
